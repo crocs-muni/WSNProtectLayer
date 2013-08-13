@@ -1,0 +1,32 @@
+4	 /dev/ttyUSB18	
+5	 /dev/ttyUSB1	
+6	 /dev/ttyUSB8	
+7	 /dev/ttyUSB33	
+10	 /dev/ttyUSB4	
+14	 /dev/ttyUSB31	
+15	 /dev/ttyUSB28	
+17	 /dev/ttyUSB34	
+19	 /dev/ttyUSB20	
+22	 /dev/ttyUSB12	
+25	 /dev/ttyUSB6	
+28	 /dev/ttyUSB21	
+29	 /dev/ttyUSB2	
+30	 /dev/ttyUSB10	
+31	 /dev/ttyUSB7	
+32	 /dev/ttyUSB5	
+33	 /dev/ttyUSB19	
+35	 /dev/ttyUSB9	
+36	 /dev/ttyUSB13	
+37	 /dev/ttyUSB32	
+40	 /dev/ttyUSB22	
+41	 /dev/ttyUSB17	
+42	 /dev/ttyUSB11	
+43	 /dev/ttyUSB30	
+44	 /dev/ttyUSB29	
+46	 /dev/ttyUSB15	
+47	 /dev/ttyUSB16	
+48	 /dev/ttyUSB14	
+50	 /dev/ttyUSB3	
+
+
+

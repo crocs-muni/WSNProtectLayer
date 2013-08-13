@@ -1,0 +1,2 @@
+debug-channels	Message	Network
+variables	state	hopCount	counter	numberOfNeighbours	pandaNode	neighboursHops	busy	neighbours
