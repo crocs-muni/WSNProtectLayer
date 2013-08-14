@@ -1,7 +1,7 @@
 /** 
  *  Component providing implementation of KeyDistrib interface.
  *  A module providing actual implementation of Key distribution component.
- * 	@version   0.1
+ * 	@version   0.2
  * 	@date      2012-2013
  */
  #include "ProtectLayerGlobals.h"
