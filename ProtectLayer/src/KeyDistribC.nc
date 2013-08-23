@@ -17,6 +17,9 @@ implementation {
         components CryptoC;
         components SharedDataC;
 
+   	components new AMSenderC(AM_PROTECTLAYERRADIO);
+  	components new AMReceiverC(AM_PROTECTLAYERRADIO);	
+
 	MainC.SoftwareInit -> KeyDistribP.Init;	//auto-initialization
 
 	Init = KeyDistribP.Init;
@@ -24,5 +27,10 @@ implementation {
 	
 	KeyDistribP.Crypto -> CryptoC.Crypto;
         KeyDistribP.SharedData -> SharedDataC.SharedData;
+
+	KeyDistribP.Packet -> AMSenderC;
+  	KeyDistribP.AMPacket -> AMSenderC;
+  	KeyDistribP.AMSend -> AMSenderC;  	
+	KeyDistribP.Receive -> AMReceiverC;
 
 }

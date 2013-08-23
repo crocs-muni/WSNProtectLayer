@@ -99,4 +99,13 @@ interface Crypto {
                 @return error_t status
         */
         command error_t generateKeyBlocking(PL_key_t* newKey);
+        
+    /**
+     * Command: used for pseudorandom numbers generation
+     * @param[out] data returned pseudorandom values
+     * @param[in] offset defines from which position in data start
+     * @param[in] len defines length of generated data
+     * @return error_t status 
+     */    
+    command error_t generateRandomData(uint8_t* data, uint8_t offset, uint8_t len);     
 }

@@ -17,4 +17,6 @@ interface Privacy {
 	 * @returns Current privacy level. 
 	 */
 	command PRIVACY_LEVEL getCurrentPrivacyLevel();
+		
+	
 }

@@ -14,9 +14,11 @@ configuration CryptoC {
 implementation {
 	components MainC;   
 	components CryptoP;   
-  
+  	components RandomC;
   
 	MainC.SoftwareInit -> CryptoP.Init;	//auto-initialization
+	CryptoP.Random -> RandomC;
+
 	
 	Init = CryptoP.Init;
 	Crypto = CryptoP.Crypto;

@@ -590,6 +590,8 @@ implementation {
 	event void Logger.logToPCDone(message_t *msg, error_t error){
 		// TODO Auto-generated method stub
 	}
+
+
 } 
 
 

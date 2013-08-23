@@ -37,7 +37,7 @@ implementation{
       
         
 	uint8_t challengeLength = 8; 
-	uint8_t challenge[challengeLength];	 
+	uint8_t challenge[8];	 
 	uint8_t key[8];
 	typedef nx_struct{		
 		nx_uint8_t challenge[16];
@@ -69,7 +69,7 @@ implementation{
             KDCPrivData_t*  kdcPrivData = NULL;
             uint8_t i;
             
-			message_t* msg;
+	    message_t* msg;
 			
             PrintDbg("KeyDistribP", "KeyDistrib.task_discoverKeys called.\n");
 /*
@@ -118,13 +118,13 @@ implementation{
 			call Init.init();	
 		}
             if (m_currentNodeIndex < MAX_NEIGHBOR_COUNT) {
-            	if(!(call Privacy.getBusy())){
-            		challengeMessage* msg = (challengeMessage*)(call Packet.getPayload(&pkt, sizeof(challengeMessage)));
-					memcpy(msg->challenge, challenge, challengeLength);		
+            	
+            		challengeMessage* challMsg = (challengeMessage*)(call Packet.getPayload(&pkt, sizeof(challengeMessage)));
+					memcpy(challMsg->challenge, challenge, challengeLength);		
 					if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(challengeMessage)) == SUCCESS) {
-       					call Privacy.setBusy(TRUE);
+       					
        					currentState = CHALLENGE_SENT;
-       				}					
+       									
 				}					
                     // repost task to process next node                   
                     m_currentNodeIndex++;
@@ -367,12 +367,15 @@ implementation{
                 return SUCCESS;
         }
         
-	//temporarily added for testing  purposes
+	//connection directly to receive temporarily added for testing  purposes
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
+		uint8_t i;
+		challengeMessage* challMsg;
+		challengeMessage* sentMsg;
 		if (len == sizeof(challengeMessage)){
 			PrintDbg("KeyDistribP", "message received");
-			challengeMessage* challMsg = (challengeMessage*) payload;
-			uint8_t i;
+			challMsg = (challengeMessage*) payload;
+			
 			switch(currentState){
 				case INITIAL: {
 					PrintDbg("KeyDistribP", "wrong state, cannot receive message in initial state");
@@ -380,20 +383,21 @@ implementation{
 				}
 				case CHALLENGE_GENERATED: {
 					PrintDbg("KeyDistribP", "received challenge, generating keys");
+					
 					for (i = 0; i < 8; i++){
 						//xor values
 						key[i] = challenge[i] ^ challMsg->challenge[i];								
 					}
 					currentState = KEYS_GENERATED;
-					PrintDbg("KeyDistribP","key generated: " + key);
+					PrintDbg("KeyDistribP","key generated");
 					//sent back
-					if(!(call Privacy.getBusy())){
-            			challengeMessage* msg = (challengeMessage*)(call Packet.getPayload(&pkt, sizeof(challengeMessage)));
-						memcpy((msg->challenge) + challengeLength, challenge, challengeLength);		
+					
+            			 		sentMsg = (challengeMessage*)(call Packet.getPayload(&pkt, sizeof(challengeMessage)));
+						memcpy((sentMsg->challenge) + challengeLength, challenge, challengeLength);		
 						if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(challengeMessage)) == SUCCESS) {
-       						call Privacy.setBusy(TRUE);
+       						
        						currentState = CHALLENGE_GENERATED;
-       					}					
+       										
 					}
 					break;										
 				}	
@@ -403,7 +407,7 @@ implementation{
 						//xor values
 						key[i] = challMsg->challenge[i] ^ challMsg->challenge[i + challengeLength];
 						currentState = KEYS_GENERATED;
-						PrintDbg("KeyDistribP","key generated: " + key);								
+						PrintDbg("KeyDistribP","key generated: ");								
 					}
 					currentState = CHALLENGE_GENERATED;
 					break;
@@ -415,9 +419,9 @@ implementation{
 	}
 
 	event void AMSend.sendDone(message_t *msg, error_t error){
-		if(error = FAIL){
+		if(error == FAIL){
 			currentState = CHALLENGE_GENERATED;
 		}
-		call Privacy.setBusy(FALSE);
+		
 	}
 }

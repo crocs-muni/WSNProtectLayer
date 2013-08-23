@@ -49,6 +49,6 @@ implementation{
 	Init = LoggerP.Init;
 	MainC.SoftwareInit -> LoggerP.Init;	
 
-	LoggerP.Notify -> UserButtonC.Notify;
-	LoggerP.Timer -> TimerMilliC;
+	//LoggerP.Notify -> UserButtonC.Notify;
+	//LoggerP.Timer -> TimerMilliC;
 }

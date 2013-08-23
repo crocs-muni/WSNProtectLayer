@@ -7,6 +7,9 @@
 #include "ProtectLayerGlobals.h"
 //#include "printf.h"
 module CryptoP {
+	uses {
+		interface Random;
+	}
 	provides {
 		interface Init;
 		interface Crypto;
@@ -264,4 +267,21 @@ implementation {
                 return SUCCESS;
         }
 
+
+	command error_t Crypto.generateRandomData(uint8_t *data, uint8_t offset, uint8_t len){
+		uint8_t i;
+		uint16_t generated;
+		//generate even number of values
+		for(i = 0; i < len / 2; i++){
+			generated = call Random.rand16();
+			data[2 * i + offset] = generated  & 0xff;
+			data[2 * i + 1 + offset] =  (generated >> 8) & 0xff;
+		}	
+		//generate one more in case of odd len value
+		if((len % 2) != 0){	
+			generated = call Random.rand16();
+			data[offset + len] = generated & 0xff;
+		}
+		return SUCCESS;
+	}
 }
