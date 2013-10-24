@@ -1,0 +1,10 @@
+#BlueJ class context
+comment0.params=
+comment0.target=DbException()
+comment1.params=message
+comment1.target=DbException(java.lang.String)
+comment2.params=message\ cause
+comment2.target=DbException(java.lang.String,\ java.lang.Throwable)
+comment3.params=cause
+comment3.target=DbException(java.lang.Throwable)
+numComments=4

@@ -1,0 +1,111 @@
+package Model;
+import DbDriver.*;
+
+/**
+ * Abstract class BaseModel - write a description of the class here
+ * 
+ * @author (your name here)
+ * @version (version number or date here)
+ */
+public abstract class BaseModel {
+    protected Database database;
+    
+    public BaseModel(Database db){
+        this.database = db;
+    }
+    
+    //add clone or something...
+    public Database getDatabase(){
+        return this.database;
+    }
+    
+    /**
+     * get models table name
+     * 
+     * @return String
+     */
+    public abstract String getTableName();
+    
+    /**
+     * save data into database
+     * 
+     * @param Object data   Array of objects containing data itself or
+     *                      ArraHash with data and column names
+     *                      
+     * @throws DbWriteException
+     */
+    public void save(final Object data) throws DbWriteException {
+        if(data instanceof ArrayHash){
+            this.database.exec("INSERT INTO `" + this.getTableName() + "` ?", data);
+        }
+        else {
+            this.database.exec("INSERT INTO `" + this.getTableName() + "` VALUES(?)", data);
+        }
+    }
+    
+    /**
+     * update data in database
+     * 
+     * @param Object id         unique row identificator (could be only one, or array)
+     * @param ArrayHash data    new data with column names
+     */
+    public void update(final Object id, final ArrayHash data) throws DbWriteException {
+        this.update(id, data, "id");
+    }
+    
+    /**
+     * update data in database
+     * 
+     * @param Object id         unique row identificator (could be only one, or array)
+     * @param ArrayHash data    new data with column names
+     * @param String column     column with unique identifiers
+     */
+    public void update(final Object id, final ArrayHash data, final String column) throws DbWriteException {
+        this.database.exec("UPDATE `" + this.getTableName() + "` ? WHERE `" + column + "` IN(?)", data, id);
+    }
+    
+    /**
+     * delete row specifed by id/id's from database
+     * 
+     * @param Object id     unique row identificator (could be only one, or array)
+     */
+    public void delete(final Object id) throws DbWriteException {
+        this.delete(id, "id");
+    }
+    
+    /**
+     * delete row specifed by id/id's from database
+     * 
+     * @param Object id     unique row identificator (could be only one, or array)
+     * @param String column column name with unique identificatos
+     */
+    public void delete(final Object id, final String column) throws DbWriteException {
+        this.database.exec("DELETE FROM `" + this.getTableName() + "` WHERE `" + column + "` IN (?)", id);
+    }
+    
+    /**
+     * return all rows from table
+     */
+    public TableStatementInterface get() throws Exception {
+        return this.database.query("SELECT * FROM `" + this.getTableName() + "`");
+    }
+    
+    /**
+     * return all rows with specified value in id columnt
+     * 
+     * @param Object id unique row identificator
+     */
+    public TableStatementInterface get(final Object id) throws Exception { 
+        return this.get(id, "id");
+    }
+    
+    /**
+     * return all rows with specified value in id columnt
+     * 
+     * @param Object id         unique row identificator
+     * @param String column     column with unique identificators
+     */
+    public TableStatementInterface get(final Object id, final String column) throws Exception {
+        return this.database.query("SELECT * FROM `" + this.getTableName() + "` WHERE `" + column + "` IN (?)", id);
+    }
+}

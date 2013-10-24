@@ -1,0 +1,11 @@
+#BlueJ class context
+comment0.params=row
+comment0.target=RowStatement\ getRowAt(int)
+comment0.text=\n\ return\ row\ at\ given\ index\ or\ null\ if\ index\ is\ out\ of\ bound\n\ \n\ @return\ RowStatementInterface\ |\ null\n\ \n\ @throws\ DbReadException\n
+comment1.params=
+comment1.target=RowStatement\ getNext()
+comment1.text=\n\ return\ next\ row\ from\ current\ selection\ or\ null\ if\ pointer\ is\ at\ the\ end\n\ \n\ @return\ RowStatementInterface\ |\ null\n\ \n\ @throws\ DbReadException\n
+comment2.params=
+comment2.target=RowStatement\ getPrevious()
+comment2.text=\n\ return\ next\ row\ from\ current\ selection\ or\ null\ if\ pointer\ is\ before\ first\ row\n\ \n\ @return\ RowStatementInterface\ |\ null\n\ \n\ @throws\ DbReadException\n
+numComments=3

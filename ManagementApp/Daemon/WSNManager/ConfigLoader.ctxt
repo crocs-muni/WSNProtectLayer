@@ -1,0 +1,8 @@
+#BlueJ class context
+comment0.params=path
+comment0.target=ConfigLoader(java.lang.String)
+comment1.params=
+comment1.target=void\ read()
+comment2.params=
+comment2.target=ConfigLoader.Configuration\ getConfig()
+numComments=3

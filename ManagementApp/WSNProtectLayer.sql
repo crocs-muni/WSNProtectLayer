@@ -1,0 +1,8 @@
+CREATE DATABASE IF NOT EXISTS `WSNProtectLayer`;
+USE `WSNProtectLayer`;
+CREATE TABLE IF NOT EXISTS `node` (
+	`id`		TINYINT(3) 	NOT NULL COMMENT 'Node id',
+	`device`	VARCHAR(100)	NOT NULL COMMENT '/dev io file'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+-- CREATE TABLE 

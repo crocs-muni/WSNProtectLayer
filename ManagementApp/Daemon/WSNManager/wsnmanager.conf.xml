@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<configuration xmlns="http://www.w3.org/2001/XMLSchema">
+	<group id="database">
+		<database>WSNProtectLayer</database>
+		<user>root</user>
+		<password>vrtulnik</password>
+	</group>
+</configuration>
