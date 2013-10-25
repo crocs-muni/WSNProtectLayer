@@ -1,9 +1,0 @@
-#BlueJ class context
-comment0.params=c\ query\ args
-comment0.target=SqlBuilder(java.sql.Connection,\ java.lang.String,\ java.lang.Object[])
-comment0.text=private\ boolean\ insertWithSet\ \=\ false;\n\ \ \ \ private\ boolean\ insertWithoutSet\ \=\ false;\nprivate\ boolean\ update\ \=\ false;
-comment1.params=
-comment1.target=java.sql.PreparedStatement\ getStatement()
-comment2.params=append\ args
-comment2.target=void\ explodeArgs(boolean,\ java.lang.Object[])
-numComments=3

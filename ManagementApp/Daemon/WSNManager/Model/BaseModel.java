@@ -1,5 +1,6 @@
 package Model;
 import DbDriver.*;
+import App.*;
 
 /**
  * Abstract class BaseModel - write a description of the class here
@@ -7,15 +8,17 @@ import DbDriver.*;
  * @author (your name here)
  * @version (version number or date here)
  */
-public abstract class BaseModel {
-    protected Database database;
+public abstract class BaseModel extends App.Service {
+    protected DatabaseInterface database;
     
-    public BaseModel(Database db){
-        this.database = db;
+    //public BaseModel(DatabaseInterface db){
+    public BaseModel(Context context){
+        super(context);
+        this.database = (DatabaseInterface)context.get("database");
     }
     
     //add clone or something...
-    public Database getDatabase(){
+    public final DatabaseInterface getDatabase(){
         return this.database;
     }
     
@@ -35,7 +38,7 @@ public abstract class BaseModel {
      * @throws DbWriteException
      */
     public void save(final Object data) throws DbWriteException {
-        if(data instanceof ArrayHash){
+        if(data instanceof App.ArrayHash){
             this.database.exec("INSERT INTO `" + this.getTableName() + "` ?", data);
         }
         else {
@@ -49,7 +52,7 @@ public abstract class BaseModel {
      * @param Object id         unique row identificator (could be only one, or array)
      * @param ArrayHash data    new data with column names
      */
-    public void update(final Object id, final ArrayHash data) throws DbWriteException {
+    public void update(final Object id, final App.ArrayHash data) throws DbWriteException {
         this.update(id, data, "id");
     }
     
@@ -60,7 +63,7 @@ public abstract class BaseModel {
      * @param ArrayHash data    new data with column names
      * @param String column     column with unique identifiers
      */
-    public void update(final Object id, final ArrayHash data, final String column) throws DbWriteException {
+    public void update(final Object id, final App.ArrayHash data, final String column) throws DbWriteException {
         this.database.exec("UPDATE `" + this.getTableName() + "` ? WHERE `" + column + "` IN(?)", data, id);
     }
     
