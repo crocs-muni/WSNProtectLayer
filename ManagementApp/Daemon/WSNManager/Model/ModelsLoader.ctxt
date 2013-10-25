@@ -1,8 +1,8 @@
 #BlueJ class context
-comment0.params=database\ user\ password
-comment0.target=ModelsLoader(java.lang.String,\ java.lang.String,\ java.lang.String)
+comment0.params=c
+comment0.target=ModelsLoader(App.Context)
 comment1.params=
-comment1.target=DbDriver.Database\ getDatabase()
+comment1.target=DbDriver.DatabaseInterface\ getDatabase()
 comment2.params=
-comment2.target=DbDriver.Database\ db()
+comment2.target=DbDriver.DatabaseInterface\ db()
 numComments=3

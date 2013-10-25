@@ -1,6 +1,6 @@
 #BlueJ class context
-comment0.params=db
-comment0.target=Nodes(DbDriver.Database)
+comment0.params=c
+comment0.target=Nodes(App.Context)
 comment1.params=
 comment1.target=java.lang.String\ getTableName()
 numComments=2

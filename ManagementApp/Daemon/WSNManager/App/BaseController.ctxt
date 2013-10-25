@@ -2,5 +2,6 @@
 comment0.params=c
 comment0.target=BaseController(Context)
 comment1.params=
-comment1.target=Context\ getContext()
+comment1.target=Model.ModelsLoader\ getModels()
+comment1.text=\n\ returns\ all\ loaded\ models\ in\ model\ loader\n\ \n\ @return\ Model.ModelsLoader\n
 numComments=2

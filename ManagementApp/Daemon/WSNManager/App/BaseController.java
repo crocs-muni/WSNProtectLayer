@@ -2,21 +2,27 @@ package App;
 import Model.ModelsLoader;
 
 /**
- * Write a description of class BaseController here.
+ * Extended controller service. Provides automatically loaded
+ * context and modules for further operations.
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author Bc. Marcel Gazdik
+ * @version 2013-10-25
  */
-abstract public class BaseController {
-    protected Context context;
+abstract public class BaseController extends Service {
     protected ModelsLoader models;
     
     public BaseController(Context c){
-        this.context = c;
-        this.models = ((ModelsLoader)c.get("models"));
+        super(c);
+
+        this.models = ((ModelsLoader)c.get("model.modelsloader"));
     }
     
-    public Context getContext(){
-        return context;
+    /**
+     * returns all loaded models in model loader
+     * 
+     * @return Model.ModelsLoader
+     */
+    public ModelsLoader getModels(){
+        return this.models;
     }
 }

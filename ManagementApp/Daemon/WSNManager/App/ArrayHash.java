@@ -32,7 +32,10 @@ public class ArrayHash implements Iterable<String>, Countable {
      * @return Object
      */
     public Object get(final String key){
-        return data.get(key);
+        if(this.hasItem(key))
+            return data.get(key);
+        else
+            return null;
     }
     
     /**
@@ -41,11 +44,11 @@ public class ArrayHash implements Iterable<String>, Countable {
      * @param String key    value key
      */
     public void unset(final String key){
-        this.data.remove(key);
+        if(this.hasItem(key))
+            this.data.remove(key);
     }
     
     public boolean hasItem(final String key){
-        System.out.println(this.data);
         return this.data.containsKey(key);
     }
     

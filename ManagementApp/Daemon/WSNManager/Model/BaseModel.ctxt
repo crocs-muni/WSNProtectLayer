@@ -1,8 +1,8 @@
 #BlueJ class context
-comment0.params=db
-comment0.target=BaseModel(DbDriver.Database)
+comment0.params=context
+comment0.target=BaseModel(App.Context)
 comment1.params=
-comment1.target=DbDriver.Database\ getDatabase()
+comment1.target=DbDriver.DatabaseInterface\ getDatabase()
 comment10.params=id\ column
 comment10.target=DbDriver.TableStatementInterface\ get(java.lang.Object,\ java.lang.String)
 comment10.text=\n\ return\ all\ rows\ with\ specified\ value\ in\ id\ columnt\n\ \n\ @param\ Object\ id\ \ \ \ \ \ \ \ \ unique\ row\ identificator\n\ @param\ String\ column\ \ \ \ \ column\ with\ unique\ identificators\n
@@ -13,10 +13,10 @@ comment3.params=data
 comment3.target=void\ save(java.lang.Object)
 comment3.text=\n\ save\ data\ into\ database\n\ \n\ @param\ Object\ data\ \ \ Array\ of\ objects\ containing\ data\ itself\ or\n\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ArraHash\ with\ data\ and\ column\ names\n\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \n\ @throws\ DbWriteException\n
 comment4.params=id\ data
-comment4.target=void\ update(java.lang.Object,\ DbDriver.ArrayHash)
+comment4.target=void\ update(java.lang.Object,\ App.ArrayHash)
 comment4.text=\n\ update\ data\ in\ database\n\ \n\ @param\ Object\ id\ \ \ \ \ \ \ \ \ unique\ row\ identificator\ (could\ be\ only\ one,\ or\ array)\n\ @param\ ArrayHash\ data\ \ \ \ new\ data\ with\ column\ names\n
 comment5.params=id\ data\ column
-comment5.target=void\ update(java.lang.Object,\ DbDriver.ArrayHash,\ java.lang.String)
+comment5.target=void\ update(java.lang.Object,\ App.ArrayHash,\ java.lang.String)
 comment5.text=\n\ update\ data\ in\ database\n\ \n\ @param\ Object\ id\ \ \ \ \ \ \ \ \ unique\ row\ identificator\ (could\ be\ only\ one,\ or\ array)\n\ @param\ ArrayHash\ data\ \ \ \ new\ data\ with\ column\ names\n\ @param\ String\ column\ \ \ \ \ column\ with\ unique\ identifiers\n
 comment6.params=id
 comment6.target=void\ delete(java.lang.Object)

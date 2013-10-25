@@ -10,7 +10,7 @@ import java.util.TreeMap;
  * @author Bc. Marcel Gazdik
  * @version 2013-10-21
  */
-public class Database implements DatabaseInterface {
+public class Database extends App.Service implements DatabaseInterface {
     private Connection          connection;
 
     private DatabaseMetaData    dbMetadata;
@@ -21,11 +21,14 @@ public class Database implements DatabaseInterface {
     private String password = null;
        
     
-    public Database(final String dbName, final String user, final String password){
+    //public Database(final String dbName, final String user, final String password){
+    public Database(App.Context c){
+        super(c);
         try{
-            this.dbName = dbName;
-            this.user = user;
-            this.password = password;
+            App.ArrayHash config = (App.ArrayHash)c.get("configuration");
+            this.dbName = config.get("database").toString();
+            this.user = config.get("user").toString();
+            this.password = config.get("password").toString();
             
             this.connect();
         }
@@ -33,6 +36,10 @@ public class Database implements DatabaseInterface {
             System.err.println(e.getMessage());
             System.err.println();
         }
+    }
+    
+    protected String getServiceName(){
+        return "database";
     }
     
     
