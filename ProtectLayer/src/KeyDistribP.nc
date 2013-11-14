@@ -1,7 +1,7 @@
 /** 
  *  Component providing implementation of KeyDistrib interface.
  *  A module providing actual implementation of Key distribution component.
- * 	@version   0.2
+ * 	@version   0.1
  * 	@date      2012-2013
  */
  #include "ProtectLayerGlobals.h"
@@ -11,14 +11,7 @@ module KeyDistribP{
 	/*@{*/
 	uses {
 		interface Crypto; /**< Crypto interface is used */
-        interface SharedData;
-        interface Privacy;
-        //interface Random;  //for challenge generation
-           
-        interface AMSend; //temporarily just for testing purposes
-        interface Receive; //temporarily just for testing purposes
-        interface Packet;
-    	interface AMPacket;
+                interface SharedData;
 	}
 	provides {
 		interface Init; /**< Init interface is provided to initialize component on startup */
@@ -32,28 +25,10 @@ implementation{
         //uint8_t m_neighborsID[MAX_NEIGHBOR_COUNT]; /**< array of neighbors IDs - use for lookup into shared data structures */
 	uint16_t m_state;			/**< current state of the component - used to decice on next step inside task */
 	PL_key_t m_keyToBS;			/**< handle to key shared with base station */ 
-	uint8_t  m_getKeyToNodeID;  /**< ID of node from which getKeyToNode command was issued */
+	uint8_t  m_getKeyToNodeID;  /**< ID of node fro which getKeyToNode command was issued */
         //PL_key_t m_keysToNodes[MAX_NEIGHBOR_COUNT]; /**< handles to keys shared with separate neighbors */
-      
-        
-	uint8_t challengeLength = 8; 
-	uint8_t challenge[challengeLength];	 
-	uint8_t key[8];
-	typedef nx_struct{		
-		nx_uint8_t challenge[16];
-	} challengeMessage;
-	message_t pkt;
-	uint8_t hashLength = 32;
+
 	
-	typedef enum state {
-		INITIAL = 0,
-		CHALLENGE_GENERATED = 1,
-		CHALLENGE_SENT = 2,
-		KEYS_GENERATED = 3
-		
-	} state;
-	
-	uint8_t currentState;
 	//
 	//	KeyDistrib interface
 	//
@@ -68,11 +43,9 @@ implementation{
             SavedData_t*    pSavedData = NULL;
             KDCPrivData_t*  kdcPrivData = NULL;
             uint8_t i;
-            
-			message_t* msg;
-			
+
             PrintDbg("KeyDistribP", "KeyDistrib.task_discoverKeys called.\n");
-/*
+
             // BUGBUG: simulation of key discovery: key value is formed as X|Y where X and Y are nodeIDs of two neighbours.
             // First part (X) is lower ID, Y is higher ID (so that task_discoverKeys on pair node will result in same key value)
             pSavedData = call SharedData.getSavedData();
@@ -105,89 +78,27 @@ implementation{
 
 
             signal KeyDistrib.discoverKeysDone(status);
-*/
- //THIS IS BETTER VERSION WITH SEPARATE TASK FOR EVERY NODE
+
+/* THIS IS BETTER VERSION WITH SEPARATE TASK FOR EVERY NODE
                     PrintDbg("KeyDistribP", "KeyDistrib.task_discoverKeys for node '%d' called.\n", m_currentNodeIndex);
                 // TODO: initiate discovery
 		// We will have multiple nodes, make task for every separate node
 		// for_each neigh_node post task process
-		
-		//challenge should be already generated, if not, repost init 
-		if (currentState != CHALLENGE_GENERATED ){
-			PrintDbg("KeyDistribP", "Challenge not generated, repeating Init");
-			call Init.init();	
-		}
-            if (m_currentNodeIndex < MAX_NEIGHBOR_COUNT) {
-            	if(!(call Privacy.getBusy())){
-            		challengeMessage* msg = (challengeMessage*)(call Packet.getPayload(&pkt, sizeof(challengeMessage)));
-					memcpy(msg->challenge, challenge, challengeLength);		
-					if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(challengeMessage)) == SUCCESS) {
-       					call Privacy.setBusy(TRUE);
-       					currentState = CHALLENGE_SENT;
-       				}					
-				}					
-                    // repost task to process next node                   
+                if (m_currentNodeIndex < MAX_NEIGHBOR_COUNT) {
+                    // TODO: process current node
+			
+                    // repost task to process next node
                     m_currentNodeIndex++;
                     post task_discoverKeys();
 		}
-        if (m_currentNodeIndex == MAX_NEIGHBOR_COUNT) {
-        	// we are done
-        	m_state &= ~FLAG_STATE_KDP_DISCOVERKEYS;
-        	//TODO: remember status results from all keys
-        	signal KeyDistrib.discoverKeysDone(SUCCESS);
+                if (m_currentNodeIndex == MAX_NEIGHBOR_COUNT) {
+                    // we are done
+                    m_state &= ~FLAG_STATE_KDP_DISCOVERKEYS;
+                    // TODO: remember status results from all keys
+                    signal KeyDistrib.discoverKeysDone(SUCCESS);
+                }
+*/
         }
-
-   	}        
-	
-	/*
-    // Method DeriveKey derives key from provided master key.
-    // KDF is a deterministic algorithm to derive a key of a given size from 
-    // a single master key. Implementation was done according to following 
-    // documentation: http://csrc.nist.gov/publications/nistpubs/800-108/sp800-108.pdf.
-    // <param name="key">Master key</param>
-    // <param name="label">Identifies the purpose for the derived key</param>
-    // <param name="context">Containing information related to the derived key</param>
-    // <param name="derivedKeyLength">Length of derived key (bits)</param>
-    // <returns>Derived key</returns>
-	uint8_t* deriveKey(uint8_t* key, uint8_t label[keyLabelLength], uint8_t context[challengeLength * 2], int16_t derivedKeyLength){
-		uint16_t const h = 256; //length of the output of the PRF (HMACSHA256 - 32 bytes) in bits 
-		uint8_t const separationIndicator = 0x00; // separation indicator
-		//exceptions skipped
-		int32_t n = (derivedKeyLength + (h - 1)) / h;
-		int32_t x;
-		uint8_t K_i[hashLength];
-		uint8_t result_i[n * hashLength];
-		uint8_t data[1 + keyLabelLength + 1 + (challengeLength * 2) + 2];
-		uint8_t i;
-		
-		// copy arrays to data in order: Label, sep., context, sep., + at two last add derived key length
-		for (i = 0; i < keyLabelLength; i++){
-			data[i] = label[i];	
-		}
-		data[keyLabelLength] = separationIndicator;
-		for (i = 0; i < challengeLength * 2; i++){
-			data[i + keyLabelLength +1] = context[i];
-		}
-		data[keyLabelLength + challengeLength * 2 + 1] = separationIndicator;
-		data[keyLabelLength + challengeLength * 2 + 2] = (uint8_t)(derivedKeyLength >> 8);
-        data[keyLabelLength + challengeLength * 2 + 3] = (uint8_t)derivedKeyLength;	
-        
-        for (x = 1; x <= n; x++){
-        	data[0] = (uint8_t)x;
-            K_i = ComputeHash(key, data);
-
-			for (i = 0; i < hashLength; i++){
-				result_i[((x - 1) * hashLength) + i] = K_i[i];
-			}			            
-        }
-        
-        uint8_t K_0[derivedKeyLength / 8];
-        for (i = 0; i < (derivedKeyLength / 8); i++){
-        	K_0[i] = result_i[i];
-        }	
-        return K_0;
-	}
-*/	
 	
 	/**
 		Command: Posts taks for key task_discoverKeys for key discovery
@@ -346,78 +257,13 @@ implementation{
                 PrintDbg("KeyDistribP", "KeyDistribP.Init.init() entered");
 
                 // TODO: do other initialization
-                // listen for initialization from other nodes 
-                currentState = INITIAL;
                 m_state = 0;
-                
-				//generate challenge
-				PrintDbg("KeyDistribP", "generating challenge");
-				if (call Crypto.generateRandomData(challenge, 0, challengeLength) != SUCCESS){
-					PrintDbg("KeyDistribP", "challenge generator failed, init repeat");
-					call Init.init();
-					return FAIL;
-				} 
-				currentState = CHALLENGE_GENERATED;
-				
-				call KeyDistrib.discoverKeys();
+
+                //call KeyDistrib.discoverKeys();
 
                 // m_keyToBS initialization
                 m_keyToBS.keyType = KEY_TOBS;
                 for (i = 0; i < KEY_LENGTH; i++) m_keyToBS.keyValue[i] = 0;
                 return SUCCESS;
         }
-        
-	//temporarily added for testing  purposes
-	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
-		if (len == sizeof(challengeMessage)){
-			PrintDbg("KeyDistribP", "message received");
-			challengeMessage* challMsg = (challengeMessage*) payload;
-			uint8_t i;
-			switch(currentState){
-				case INITIAL: {
-					PrintDbg("KeyDistribP", "wrong state, cannot receive message in initial state");
-					break;	
-				}
-				case CHALLENGE_GENERATED: {
-					PrintDbg("KeyDistribP", "received challenge, generating keys");
-					for (i = 0; i < 8; i++){
-						//xor values
-						key[i] = challenge[i] ^ challMsg->challenge[i];								
-					}
-					currentState = KEYS_GENERATED;
-					PrintDbg("KeyDistribP","key generated: " + key);
-					//sent back
-					if(!(call Privacy.getBusy())){
-            			challengeMessage* msg = (challengeMessage*)(call Packet.getPayload(&pkt, sizeof(challengeMessage)));
-						memcpy((msg->challenge) + challengeLength, challenge, challengeLength);		
-						if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(challengeMessage)) == SUCCESS) {
-       						call Privacy.setBusy(TRUE);
-       						currentState = CHALLENGE_GENERATED;
-       					}					
-					}
-					break;										
-				}	
-				case CHALLENGE_SENT: {
-					PrintDbg("KeyDistribP", "received challenge response, generating keys");
-					for (i = 0; i < 8; i++){
-						//xor values
-						key[i] = challMsg->challenge[i] ^ challMsg->challenge[i + challengeLength];
-						currentState = KEYS_GENERATED;
-						PrintDbg("KeyDistribP","key generated: " + key);								
-					}
-					currentState = CHALLENGE_GENERATED;
-					break;
-				}
-				//add case for challenge sent 
-			}
-		}
-		return msg;
-	}
-
-	event void AMSend.sendDone(message_t *msg, error_t error){
-		if(error = FAIL){
-			currentState = CHALLENGE_GENERATED;
-		}
-		call Privacy.setBusy(FALSE);
-	}
 }
