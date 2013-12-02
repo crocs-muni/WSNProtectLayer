@@ -3,7 +3,7 @@
  * 
  * @author Filip Jurnecka
  */
-
+#include "printf.h"
 #include "ProtectLayerGlobals.h"
 interface Configuration {
 	/**

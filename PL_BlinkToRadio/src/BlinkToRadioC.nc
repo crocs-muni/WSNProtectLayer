@@ -38,6 +38,7 @@
  */
 #include <Timer.h>
 #include "BlinkToRadio.h"
+#include "../../ProtectLayer/src/ProtectLayerGlobals.h"
 
 module BlinkToRadioC {
   uses interface Boot;

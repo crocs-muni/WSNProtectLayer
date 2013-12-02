@@ -5,6 +5,8 @@
  * 	@date      2012-2013
  */
 
+#include "printf.h"
+
 module LoggerP {
 	provides {
 		interface Logger;
@@ -62,6 +64,7 @@ implementation {
    		
    		return SUCCESS;
                 */
+        return SUCCESS;
   	}
   	
   	/** 

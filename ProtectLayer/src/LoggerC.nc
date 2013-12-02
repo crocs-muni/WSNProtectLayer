@@ -27,7 +27,7 @@ implementation{
 	
 	components MainC;
 	components LedsC;
-	components UserButtonC;
+	//components UserButtonC;
 	components new TimerMilliC();
 	
 	LoggerP.Leds -> LedsC;
@@ -49,6 +49,6 @@ implementation{
 	Init = LoggerP.Init;
 	MainC.SoftwareInit -> LoggerP.Init;	
 
-	LoggerP.Notify -> UserButtonC.Notify;
-	LoggerP.Timer -> TimerMilliC;
+	//LoggerP.Notify -> UserButtonC.Notify;
+	//LoggerP.Timer -> TimerMilliC;
 }
