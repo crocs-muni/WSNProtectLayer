@@ -12,21 +12,23 @@ interface Crypto {
 			Command: Blocking version. Used by other components to start encryption of supplied buffer by supplied key.
 			Enough additional space in buffer to fit encrypted content is assumed.
 			@param[in] key handle to the key that should be used for encryption
+			@param[in out] counter counter value before, updated to new value after encryption
 			@param[in out] buffer buffer to be encrypted, wil contain encrypted data
 			@param[in] offset
 			@param[in out] pLen length of buffer to be encrypted, will contain resulting length
 			@return error_t status
 	*/
-	command error_t encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t encryptBufferB(PL_key_t* key, uint16_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 
 	/**
 			Command: Blocking version. Used by other components to start decryption of supplied buffer by supplied key.
 			@param[in] key handle to the key that should be used for decryption
+			@param[in out] counter counter value before, updated to new value after decryption
 			@param[in] buffer buffer to be decrypted
 			@param[in] len length of buffer to be decrypted
 			@return error_t status
 	*/
-	command error_t decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t decryptBufferB(PL_key_t* key, uint16_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 		
 		
 	/**

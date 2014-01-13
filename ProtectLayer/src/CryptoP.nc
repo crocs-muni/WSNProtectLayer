@@ -41,16 +41,18 @@ implementation {
 	//
 	//	Crypto interface
 	//	
-	command error_t Crypto.encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
-		uint8_t         i = 0;
-	   // PrintDbg("CryptoP", "KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
+	command error_t Crypto.encryptBufferB(PL_key_t* key, uint8_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
 		
 		PrintDbg("CryptoP", "KeyDistrib.encryptBufferB(offset = '%d' buffer = '%d', 1 = '%d', 6 = '%d'.\n", buffer[0],buffer[1],buffer[6]);
 		
-		buffer += offset;
-		
 		PrintDbg("CryptoP", "KeyDistrib.encryptBufferB(buffer = '%d', 1 = '%d', 2 = '%d'.\n", buffer[0],buffer[1],buffer[2]);
-
+		
+		
+		#ifdef FAKE
+		uint8_t         i = 0;
+	   // PrintDbg("CryptoP", "KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
+		
+		buffer += offset;
 		// TODO: na define prepinani mezi AES vs. FAKE
 		 
 		// BUGBUG: no real encryption is performed, only transformation from DATA into form ENC|keyID|DATA (without |) is performed
@@ -68,17 +70,29 @@ implementation {
 		// Increase length of encrypted data by header
 		*pLen = *pLen + FAKEHEADERLEN;
 		
-		
+		#endif /* FAKE */
 		#ifdef AES
 		
 		uint8_t exp[240]; //expanded key
 		uint8_t i;
+		uint8_t j;
+		uint8_t plainCounter[16];			
+		uint8_t encCounter[16];
 		
-		call AES.keyExpansion( exp, key);
+		//set rest of counter to zeros to fit AES block
+		memset(plainCounter, 0, 16);	
 		
-		//process buffer by blocks (counter increment issue? + padding issue?)
-		for(i = 0; i < pLen / BLOCK_SIZE; i++){
-		    call AES.encrypt(buffer + offset + i, exp, buffer + offset + i);
+		call AES.keyExpansion( exp, key->keyValue);
+		
+		//process buffer by blocks 
+		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
+		
+			plainCounter[0] = counter;
+			call AES.encrypt( plainCounter, exp, encCounter);
+			for (j := 0; i < BLOCK_SIZE; j++){
+				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
+			}
+			counter++;
 		}
 		
 		#endif /* AES */
@@ -87,11 +101,16 @@ implementation {
 	}
 	
 	
-	command error_t Crypto.decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
+	command error_t Crypto.decryptBufferB(PL_key_t* key, uint8_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
+		
 		error_t status = SUCCESS;
+		
+		PrintDbg("CryptoP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
+		
+		#ifdef FAKE
 		uint8_t i = 0;
 
-		PrintDbg("CryptoP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
+		
 
 		buffer += offset;
 
@@ -121,7 +140,33 @@ implementation {
 		}
 
 		//m_len = Decrypt(m_key1, m_buffer + m_offset, m_len);
-
+		
+		#endif /* FAKE */
+		#ifdef AES
+		
+		uint8_t exp[240]; //expanded key
+		uint8_t i;
+		uint8_t j;
+		uint8_t plainCounter[16];			
+		uint8_t encCounter[16];
+		
+		//set rest of counter to zeros to fit AES block
+		memset(plainCounter, 0, 16);	
+		
+		call AES.keyExpansion( exp, key->keyValue);
+		
+		//process buffer by blocks 
+		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
+		
+			plainCounter[0] = counter;
+			call AES.decrypt( plainCounter, exp, encCounter);
+			for (j := 0; i < BLOCK_SIZE; j++){
+				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
+			}
+			counter++;
+		}
+		
+		#endif /* AES */
 		return status;
 	}
 	
@@ -134,7 +179,14 @@ implementation {
 		
 		// TODO: Mod derivace s vyuzitim AESem
 		// derivedKey = E_masterKey(derivationData)
+		#ifdef AES
+		uint8_t exp[240]; //expanded key
+		call AES.keyExpansion( exp, masterKey->keyValue);
 		
+		
+		#endif /* AES */
+		
+		#ifdef FAKE // Split-Phase verze
 		if (m_state & FLAG_STATE_CRYPTO_DERIV) {
 			return EALREADY;	
 		}
@@ -144,11 +196,9 @@ implementation {
 			m_key1 = masterKey; 
 			m_key2 = derivedKey; 
 			m_buffer = derivationData; m_offset = offset; m_len = len;
-			
-			/*
-			zmena na blocking verzi
+						
 			post task_deriveKey();
-			*/
+			
 			return SUCCESS;
 		}
 		
@@ -156,6 +206,7 @@ implementation {
 		memcpy(m_key2->keyValue, m_buffer + m_offset, KEY_LENGTH);
 		// we are done
 		m_key2->dbgKeyID = m_dbgKeyID++;	// assign debug key id
+		#endif
 		PrintDbg("CryptoP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
 			m_state &= ~FLAG_STATE_CRYPTO_DERIV;
 		
