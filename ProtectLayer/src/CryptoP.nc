@@ -7,6 +7,10 @@
 #include "ProtectLayerGlobals.h"
 //#include "printf.h"
 module CryptoP {
+
+	//added AES
+	uses interface AES;
+	
 	provides {
 		interface Init;
 		interface Crypto;
