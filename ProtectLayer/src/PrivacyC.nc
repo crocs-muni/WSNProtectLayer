@@ -31,15 +31,16 @@ implementation {
 	components PrivacyP;   
 	components ActiveMessageC;
 	components new AMSenderC(AM_PROTECTLAYERRADIO);
-	components new AMReceiverC(AM_PROTECTLAYERRADIO);
+	//components new AMReceiverC(AM_PROTECTLAYERRADIO); replaced by dispatcherc
 	components IntrusionDetectC; 
 	components PrivacyLevelC;
 	components RouteC;
 	components SharedDataC;
 	components KeyDistribC;
-        components CryptoC;
-        components ForwarderC;
-        components LoggerC;
+    components CryptoC;
+    components ForwarderC;
+    components LoggerC;
+    components DispatcherC;
        
         //components PrintfC, SerialStartC;  // support for printf over serial console. Can be removed
   
@@ -59,7 +60,7 @@ implementation {
 	MessagePacket = PrivacyP.MessagePacket;
 	
 	PrivacyP.LowerAMSend -> AMSenderC;
-	PrivacyP.LowerReceive -> AMReceiverC;
+	PrivacyP.LowerReceive -> DispatcherC.PL_Receive;
 	PrivacyP.Packet -> AMSenderC;
 	PrivacyP.AMPacket -> AMSenderC;
 	PrivacyP.AMControl -> ActiveMessageC;

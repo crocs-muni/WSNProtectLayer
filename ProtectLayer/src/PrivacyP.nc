@@ -358,6 +358,7 @@ implementation {
 		call Crypto.encryptBufferB(key, (uint8_t *)spHeader, sizeof(SPHeader_t), &encLen);
 		sReq.len = encLen + sizeof(SPHeader_t);
 
+
 		//behavior switch based on interface parameter (id) 
 		switch (m_nextId) {
 			case (MSG_APP): {
