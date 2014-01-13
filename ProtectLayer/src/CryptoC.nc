@@ -16,14 +16,11 @@ implementation {
 	components MainC;   
 	components CryptoP;   
 	
-	//added AES
-	components AESC;
-	
 	MainC.SoftwareInit -> CryptoP.Init;	//auto-initialization
 	
 	Init = CryptoP.Init;
 	Crypto = CryptoP.Crypto;
 	
 	//added AES
-	Crypto.AES -> AESC;
+	Crypto.CryptoRaw -> CryptoRawC;
 }

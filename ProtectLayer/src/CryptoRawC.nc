@@ -1,29 +1,29 @@
 /** 
- *  Wiring component for cryptographic functions providing Crypto interface via CryptoP implementation.
- *  This component wires CryptoC to implementation from CryptoP and connects to Init interface for automatic initialization.
+ *  Wiring component for cryptographic functions providing CryptoRaw interface via CryptoRawP implementation.
+ *  This component wires CryptoRawC to implementation from CryptoRawP and connects to Init interface for automatic initialization.
  *  @version   0.1
  * 	@date      2012-2013
  */
 #include "ProtectLayerGlobals.h"
-configuration CryptoC {
+configuration CryptoRawC {
 	provides {
 		interface Init;
-		interface Crypto;
+		interface CryptoRaw;
 	}
 	
 }
 implementation {
 	components MainC;   
-	components CryptoP;   
+	components CryptoRawP;   
 	
 	//added AES
 	components AESC;
 	
-	MainC.SoftwareInit -> CryptoP.Init;	//auto-initialization
+	MainC.SoftwareInit -> CryptoRawP.Init;	//auto-initialization
 	
 	Init = CryptoP.Init;
-	Crypto = CryptoP.Crypto;
+	CryptoRaw = CryptoRawP.Crypto;
 	
 	//added AES
-	Crypto.AES -> AESC;
+	CryptoRaw.AES -> AESC;
 }

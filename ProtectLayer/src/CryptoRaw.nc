@@ -1,12 +1,12 @@
 /** 
  *  Interface for cryptographic functions.
- *  This interface specifies cryptographic functions available in split-phase manner. 
+ *  This interface specifies cryptographic functions available in blocking and split-phase manner. 
  *  
  *  @version   0.1
  *  @date      2012-2013
  */
 #include "ProtectLayerGlobals.h"
-interface Crypto {
+interface CryptoRaw {
 
 	/**
 			Command: Blocking version. Used by other components to start encryption of supplied buffer by supplied key.

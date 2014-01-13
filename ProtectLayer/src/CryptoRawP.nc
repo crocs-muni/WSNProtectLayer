@@ -1,6 +1,6 @@
 /** 
- *  Component providing implementation of Crypto interface.
- *  A module providing actual implementation of Crypto interafce in split-phase manner.
+ *  Component providing implementation of CryptoRaw interface.
+ *  A module providing actual implementation of CryptoRaw interafce in split-phase manner.
  *  @version   0.1
  * 	@date      2012-2013
  */
@@ -8,14 +8,14 @@
 #include "aes.h" //AES constants
 //#include "printf.h"
 
-module CryptoP {
+module CryptoRawP {
 
 	//added AES
 	uses interface AES;
 	
 	provides {
 		interface Init;
-		interface Crypto;
+		interface CryptoRaw;
 	}
 }
 implementation {
@@ -31,7 +31,7 @@ implementation {
 	//	Init interface
 	//
 	command error_t Init.init() {
-                PrintDbg("CryptoP", "Init.init() called.\n");
+                PrintDbg("CryptoRawP", "Init.init() called.\n");
 		// TODO: do other initialization
 		m_state = 0;
 		m_dbgKeyID = 0;
@@ -39,18 +39,18 @@ implementation {
 	}
 	
 	//
-	//	Crypto interface
+	//	CryptoRaw interface
 	//	
-	command error_t Crypto.encryptBufferB(PL_key_t* key, uint8_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
+	command error_t CryptoRaw.encryptBufferB(PL_key_t* key, uint8_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
 		
-		PrintDbg("CryptoP", "KeyDistrib.encryptBufferB(offset = '%d' buffer = '%d', 1 = '%d', 6 = '%d'.\n", buffer[0],buffer[1],buffer[6]);
+		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(offset = '%d' buffer = '%d', 1 = '%d', 6 = '%d'.\n", buffer[0],buffer[1],buffer[6]);
 		
-		PrintDbg("CryptoP", "KeyDistrib.encryptBufferB(buffer = '%d', 1 = '%d', 2 = '%d'.\n", buffer[0],buffer[1],buffer[2]);
+		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(buffer = '%d', 1 = '%d', 2 = '%d'.\n", buffer[0],buffer[1],buffer[2]);
 		
 		
 		#ifdef FAKE
 		uint8_t         i = 0;
-	   // PrintDbg("CryptoP", "KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
+	   // PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
 		
 		buffer += offset;
 		// TODO: na define prepinani mezi AES vs. FAKE
@@ -101,11 +101,11 @@ implementation {
 	}
 	
 	
-	command error_t Crypto.decryptBufferB(PL_key_t* key, uint8_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
+	command error_t CryptoRaw.decryptBufferB(PL_key_t* key, uint8_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
 		
 		error_t status = SUCCESS;
 		
-		PrintDbg("CryptoP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
+		PrintDbg("CryptoRawP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
 		
 		#ifdef FAKE
 		uint8_t i = 0;
@@ -129,13 +129,13 @@ implementation {
 				*pLen -= FAKEHEADERLEN;
 			}
 			else {
-				PrintDbg("CryptoP", "Different key used for encryption \n");
+				PrintDbg("CryptoRawP", "Different key used for encryption \n");
 				status = EDIFFERENTKEY;
 			}
 
 		}
 		else {
-			PrintDbg("CryptoP", "ENC tag not detected.\n");
+			PrintDbg("CryptoRawP", "ENC tag not detected.\n");
 			status = EINVALIDDECRYPTION;
 		}
 
@@ -172,8 +172,8 @@ implementation {
 	
 	
 	
-	command error_t Crypto.deriveKey(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
-        PrintDbg("CryptoP", "KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID);
+	command error_t CryptoRaw.deriveKey(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
+        PrintDbg("CryptoRawP", "KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID);
 		
 		//TODO: predelat na blocking verzi
 		
@@ -212,7 +212,7 @@ implementation {
 		// we are done
 		m_key2->dbgKeyID = m_dbgKeyID++;	// assign debug key id
 		#endif
-		PrintDbg("CryptoP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
+		PrintDbg("CryptoRawP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
 			m_state &= ~FLAG_STATE_CRYPTO_DERIV;
 		
 	}
@@ -253,14 +253,14 @@ implementation {
 	
 	
 	//
-	//	Crypto interface
+	//	CryptoRaw interface
 	//
 	task void task_encryptBuffer() {
-                error_t status = call Crypto.encryptBufferB(m_key1, m_buffer, m_offset, &m_len);
+                error_t status = call CryptoRaw.encryptBufferB(m_key1, m_buffer, m_offset, &m_len);
 
 /*
                 uint8_t         i = 0;
-                PrintDbg("CryptoP", "KeyDistrib.task_encryptBuffer(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue[0], m_key1->keyValue[1]);
+                PrintDbg("CryptoRawP", "KeyDistrib.task_encryptBuffer(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue[0], m_key1->keyValue[1]);
 
                 // BUGBUG: no real encryption is performed, only transformation from DATA into form ENC|keyID|DATA (without |) is performed
                 #define FAKEHEADERLEN 5
@@ -281,13 +281,13 @@ implementation {
 */
 
 		// we are done
-                signal Crypto.encryptBufferDone(status, m_buffer, m_len);
+                signal CryptoRaw.encryptBufferDone(status, m_buffer, m_len);
 		// Cleanup
  		m_buffer = NULL;
 		m_state &= ~FLAG_STATE_CRYPTO_ENCRYPTION;
 	}
-	command error_t Crypto.encryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len) {
-                PrintDbg("CryptoP", "KeyDistrib.encryptBuffer(keyID = '%d') called.\n", key->dbgKeyID);
+	command error_t CryptoRaw.encryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len) {
+                PrintDbg("CryptoRawP", "KeyDistrib.encryptBuffer(keyID = '%d') called.\n", key->dbgKeyID);
 		if (m_state & FLAG_STATE_CRYPTO_ENCRYPTION) {
 			return EALREADY;	
 		}
@@ -299,15 +299,15 @@ implementation {
 			return SUCCESS;
 		}
 	}	
-        //default event void Crypto.encryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen) {}
+        //default event void CryptoRaw.encryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen) {}
 
 	task void task_decryptBuffer() {
-               error_t status = call Crypto.decryptBufferB(m_key1, m_buffer, m_offset, &m_len);
+               error_t status = call CryptoRaw.decryptBufferB(m_key1, m_buffer, m_offset, &m_len);
 /*
                 uint8_t i = 0;
 
 
-                PrintDbg("CryptoP", "KeyDistrib.task_decryptBuffer(keyID = '%d', keyValue = '0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue);
+                PrintDbg("CryptoRawP", "KeyDistrib.task_decryptBuffer(keyID = '%d', keyValue = '0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue);
 
                 // BUGBUG: no real decryption is performed, only transformation from ENC|keyID|DATA into DATA and check for expected key value
                 #define FAKEHEADERLEN 5
@@ -322,27 +322,27 @@ implementation {
                         m_len -= FAKEHEADERLEN;
                     }
                     else {
-                        PrintDbg("CryptoP", "Different key used for encryption \n");
+                        PrintDbg("CryptoRawP", "Different key used for encryption \n");
                         status = EDIFFERENTKEY;
                     }
 
                 }
                 else {
-                    PrintDbg("CryptoP", "ENC tag not detected.\n");
+                    PrintDbg("CryptoRawP", "ENC tag not detected.\n");
                     status = EINVALIDDECRYPTION;
                 }
 
 		//m_len = Decrypt(m_key1, m_buffer + m_offset, m_len);
 */
 		// we are done
-                signal Crypto.decryptBufferDone(status, m_buffer, m_len);
+                signal CryptoRaw.decryptBufferDone(status, m_buffer, m_len);
 		// Cleanup
  		m_buffer = NULL;
 		m_state &= ~FLAG_STATE_CRYPTO_DECRYPTION;
 	}
 	
-	command error_t Crypto.decryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len) {
-                PrintDbg("CryptoP", "KeyDistrib.decryptBuffer(keyID = '%d') called.\n", key->dbgKeyID);
+	command error_t CryptoRaw.decryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len) {
+                PrintDbg("CryptoRawP", "KeyDistrib.decryptBuffer(keyID = '%d') called.\n", key->dbgKeyID);
 		if (m_state & FLAG_STATE_CRYPTO_DECRYPTION) {
 			return EALREADY;	
 		}
@@ -354,22 +354,22 @@ implementation {
 			return SUCCESS;
 		}
 	}
-	//default event void Crypto.decryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen) {}
+	//default event void CryptoRaw.decryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen) {}
 
 
 	task void task_deriveKey() {
-                PrintDbg("CryptoP", "KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID);
+                PrintDbg("CryptoRawP", "KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID);
                 //m_len = Encrypt(m_key1, m_buffer + m_offset, m_len);
                 memcpy(m_key2->keyValue, m_buffer + m_offset, KEY_LENGTH);
 		// we are done
 		m_key2->dbgKeyID = m_dbgKeyID++;	// assign debug key id
-                PrintDbg("CryptoP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
+                PrintDbg("CryptoRawP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
 		m_state &= ~FLAG_STATE_CRYPTO_DERIV;
-		signal Crypto.deriveKeyDone(SUCCESS, m_key2);
+		signal CryptoRaw.deriveKeyDone(SUCCESS, m_key2);
 	}
 	
-	command error_t Crypto.deriveKey(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
-                PrintDbg("CryptoP", "KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID);
+	command error_t CryptoRaw.deriveKey(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
+                PrintDbg("CryptoRawP", "KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID);
 		if (m_state & FLAG_STATE_CRYPTO_DERIV) {
 			return EALREADY;	
 		}
@@ -384,20 +384,20 @@ implementation {
 		}
 	}
 
-	//default event void Crypto.deriveKeyDone(error_t status, PL_key_t* derivedKey) {}
+	//default event void CryptoRaw.deriveKeyDone(error_t status, PL_key_t* derivedKey) {}
 
 	task void task_generateKey() {
-                PrintDbg("CryptoP", "KeyDistrib.task_generateKey() called.\n");
+                PrintDbg("CryptoRawP", "KeyDistrib.task_generateKey() called.\n");
 		// RNG(m_key1->keyValue, KEY_LENGTH);
 		// we are done
 		m_key1->dbgKeyID = m_dbgKeyID++;	// assign debug key id
-                dbg("CryptoP", "\t newKey = '%d')\n", m_key1->dbgKeyID);
+                dbg("CryptoRawP", "\t newKey = '%d')\n", m_key1->dbgKeyID);
 		m_state &= ~FLAG_STATE_CRYPTO_GENERATE;
-		signal Crypto.generateKeyDone(SUCCESS, m_key1);
+		signal CryptoRaw.generateKeyDone(SUCCESS, m_key1);
 	}
 	
-	command error_t Crypto.generateKey(PL_key_t* newKey) {
-                PrintDbg("CryptoP", "KeyDistrib.generateKey().\n");
+	command error_t CryptoRaw.generateKey(PL_key_t* newKey) {
+                PrintDbg("CryptoRawP", "KeyDistrib.generateKey().\n");
 		if (m_state & FLAG_STATE_CRYPTO_GENERATE) {
 			return EALREADY;	
 		}
@@ -410,14 +410,14 @@ implementation {
 		}
 	}
 
-	//default event void Crypto.generateKeyDone(error_t status, PL_key_t* newKey) {}
+	//default event void CryptoRaw.generateKeyDone(error_t status, PL_key_t* newKey) {}
 
-        command error_t Crypto.generateKeyBlocking(PL_key_t* newKey) {
-                PrintDbg("CryptoP", "KeyDistrib.generateKeyBlocking().\n");
+        command error_t CryptoRaw.generateKeyBlocking(PL_key_t* newKey) {
+                PrintDbg("CryptoRawP", "KeyDistrib.generateKeyBlocking().\n");
                 newKey->keyType = KEY_TONODE;
                 newKey->dbgKeyID = m_dbgKeyID++;	// assign debug key id
                 // TODO: RNG(newKey->keyValue, KEY_LENGTH);
-                PrintDbg("CryptoP", "\t newKey = '%d')\n", newKey->dbgKeyID);
+                PrintDbg("CryptoRawP", "\t newKey = '%d')\n", newKey->dbgKeyID);
                 return SUCCESS;
         }
 
