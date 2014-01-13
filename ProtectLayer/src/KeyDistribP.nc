@@ -140,6 +140,7 @@ implementation{
 			return SUCCESS;
 		}
 	}
+	
 	/**
 		Event: Default handler for KeyDistrib.discoverKeysDone event
 		@param error_t status returned by task_discoverKeys task
@@ -164,7 +165,8 @@ implementation{
 	}
 
 	command PL_key_t* getKeyToBSB(uint8_t nodeID) {
-		// TODO: implementovat
+		// TODO: implementovat + změnit hlavičku (není třeba NodeID, spíše typ klíče)
+		
 		return SUCCESS;
 	}	
 	

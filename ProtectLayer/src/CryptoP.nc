@@ -123,16 +123,20 @@ implementation {
 			m_key1 = masterKey; 
 			m_key2 = derivedKey; 
 			m_buffer = derivationData; m_offset = offset; m_len = len;
+			
+			/*
+			zmena na blocking verzi
 			post task_deriveKey();
+			*/
 			return SUCCESS;
 		}
 		
 		
-        memcpy(m_key2->keyValue, m_buffer + m_offset, KEY_LENGTH);
+		memcpy(m_key2->keyValue, m_buffer + m_offset, KEY_LENGTH);
 		// we are done
 		m_key2->dbgKeyID = m_dbgKeyID++;	// assign debug key id
-        PrintDbg("CryptoP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
-		m_state &= ~FLAG_STATE_CRYPTO_DERIV;
+		PrintDbg("CryptoP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
+			m_state &= ~FLAG_STATE_CRYPTO_DERIV;
 		
 	}
 	
