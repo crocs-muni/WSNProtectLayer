@@ -5,7 +5,9 @@
  * 	@date      2012-2013
  */
 #include "ProtectLayerGlobals.h"
+#include "aes.h" //AES constants
 //#include "printf.h"
+
 module CryptoP {
 
 	//added AES
@@ -65,7 +67,22 @@ implementation {
 
 		// Increase length of encrypted data by header
 		*pLen = *pLen + FAKEHEADERLEN;
-
+		
+		
+		#ifdef AES
+		
+		uint8_t exp[240]; //expanded key
+		uint8_t i;
+		
+		call AES.keyExpansion( exp, key);
+		
+		//process buffer by blocks (counter increment issue? + padding issue?)
+		for(i = 0; i < pLen / BLOCK_SIZE; i++){
+		    call AES.encrypt(buffer + offset + i, exp, buffer + offset + i);
+		}
+		
+		#endif /* AES */
+		
 		return SUCCESS;
 	}
 	
