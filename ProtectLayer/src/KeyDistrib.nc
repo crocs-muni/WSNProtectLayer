@@ -18,6 +18,29 @@ interface KeyDistrib {
 	*/	
 	event void discoverKeysDone(error_t result);
 	
+	command PL_key_t* getKeyToNodeB(uint8_t nodeID);
+	command PL_key_t* getKeyToBSB(uint8_t nodeID);	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+/*** DEPRICATED ***/
+
+
 	/**
 		Command: Posts task for obtaining key to base station
 		@return error_t status. SUCCESS or EALREADY if already pending	
@@ -45,6 +68,5 @@ interface KeyDistrib {
 		@return nothing
 	*/	
 	event void getKeyToNodeDone(error_t result, PL_key_t* pNodeKey);
-	
-	command PL_key_t* getKeyToNodeB(uint8_t nodeID);
+
 }

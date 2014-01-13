@@ -28,6 +28,29 @@ implementation{
 	uint8_t  m_getKeyToNodeID;  /**< ID of node fro which getKeyToNode command was issued */
         //PL_key_t m_keysToNodes[MAX_NEIGHBOR_COUNT]; /**< handles to keys shared with separate neighbors */
 
+		
+	//
+	//	Init interface
+	//
+	/**
+			Command: Perform initialization of KeyDistribP component (should be called only once after reset)
+			@todo if internal state was already established (only reset occured), initializtion should load values from shared memory
+			@return error_t status. SUCCESS only
+	*/
+	command error_t Init.init() {
+			uint8_t i = 0;
+			PrintDbg("KeyDistribP", "KeyDistribP.Init.init() entered");
+
+			// TODO: do other initialization
+			m_state = 0;
+
+			//call KeyDistrib.discoverKeys();
+
+			// m_keyToBS initialization
+			m_keyToBS.keyType = KEY_TOBS;
+			for (i = 0; i < KEY_LENGTH; i++) m_keyToBS.keyValue[i] = 0;
+			return SUCCESS;
+	}		
 	
 	//
 	//	KeyDistrib interface
@@ -52,7 +75,7 @@ implementation{
             for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
                 if (pSavedData[i].nodeId > 0) {
                     //TODO: we should call Crypto.generateKey(&(pSavedData[i].kdcData.shared_key)); and wait for generation of new key
-                    if ((tmpStatus = call Crypto.generateKeyBlocking(&(pSavedData[i].kdcData.shared_key))) == SUCCESS) {
+                    if ((tmpStatus = call Crypto.deriveKeyB(&(pSavedData[i].kdcData.shared_key))) == SUCCESS) {
                         pSavedData[i].kdcData.shared_key.keyType = KEY_TONODE;
                         pSavedData[i].kdcData.shared_key.keyValue[0] = (pSavedData[i].nodeId < TOS_NODE_ID) ? pSavedData[i].nodeId : TOS_NODE_ID;
                         pSavedData[i].kdcData.shared_key.keyValue[1] = (pSavedData[i].nodeId < TOS_NODE_ID) ? TOS_NODE_ID : pSavedData[i].nodeId;
@@ -66,7 +89,7 @@ implementation{
 
             // Create key to BS
             kdcPrivData = call SharedData.getKDCPrivData();
-            if ((tmpStatus = call Crypto.generateKeyBlocking(&(kdcPrivData->keyToBS))) == SUCCESS) {
+            if ((tmpStatus = call Crypto.deriveKeyB(&(kdcPrivData->keyToBS))) == SUCCESS) {
                 kdcPrivData->keyToBS.keyType = KEY_TOBS;
                 kdcPrivData->keyToBS.keyValue[0] = TOS_NODE_ID;
                 kdcPrivData->keyToBS.keyValue[1] = 0xff;
@@ -123,6 +146,62 @@ implementation{
 		@return nothing
 	*/	
 	default event void KeyDistrib.discoverKeysDone(error_t result) {}
+	
+	
+	command PL_key_t* KeyDistrib.getKeyToNodeB(uint8_t nodeID) {
+            SavedData_t* pSavedData = NULL;
+            //PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%d' .\n", nodeID);
+
+            pSavedData = call SharedData.getNodeState(nodeID);
+            if (pSavedData != NULL) {
+                //PrintDbg("KeyDistribP", "Shared key returned.\n");
+                return &(pSavedData->kdcData.shared_key);
+            }
+            else {
+                PrintDbg("KeyDistribP", "Failed to obtain SharedData.getNodeState.\n");
+                return NULL;
+            }
+	}
+
+	command PL_key_t* getKeyToBSB(uint8_t nodeID) {
+		// TODO: implementovat
+		return SUCCESS;
+	}	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+/*
+*	DEPRICATED
+*
+*/	
+	
+	
+	
+	
+	
 	
 	/**
 		Task: Returns handle to key shared between node and base station
@@ -203,21 +282,6 @@ implementation{
 	default event void KeyDistrib.getKeyToNodeDone(error_t result, PL_key_t* pNodeKey) {}
 
 	
-	command PL_key_t* KeyDistrib.getKeyToNodeB(uint8_t nodeID) {
-            SavedData_t* pSavedData = NULL;
-            //PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%d' .\n", nodeID);
-
-            pSavedData = call SharedData.getNodeState(nodeID);
-            if (pSavedData != NULL) {
-                //PrintDbg("KeyDistribP", "Shared key returned.\n");
-                return &(pSavedData->kdcData.shared_key);
-            }
-            else {
-                PrintDbg("KeyDistribP", "Failed to obtain SharedData.getNodeState.\n");
-                return NULL;
-            }
-	}
-
 
 
 
@@ -244,26 +308,5 @@ implementation{
 
 
 
-        //
-        //	Init interface
-        //
-        /**
-                Command: Perform initialization of KeyDistribP component (should be called only once after reset)
-                @todo if internal state was already established (only reset occured), initializtion should load values from shared memory
-                @return error_t status. SUCCESS only
-        */
-        command error_t Init.init() {
-                uint8_t i = 0;
-                PrintDbg("KeyDistribP", "KeyDistribP.Init.init() entered");
 
-                // TODO: do other initialization
-                m_state = 0;
-
-                //call KeyDistrib.discoverKeys();
-
-                // m_keyToBS initialization
-                m_keyToBS.keyType = KEY_TOBS;
-                for (i = 0; i < KEY_LENGTH; i++) m_keyToBS.keyValue[i] = 0;
-                return SUCCESS;
-        }
 }
