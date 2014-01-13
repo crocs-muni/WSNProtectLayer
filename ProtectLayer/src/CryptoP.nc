@@ -179,10 +179,15 @@ implementation {
 		
 		// TODO: Mod derivace s vyuzitim AESem
 		// derivedKey = E_masterKey(derivationData)
-		#ifdef AES
-		uint8_t exp[240]; //expanded key
-		call AES.keyExpansion( exp, masterKey->keyValue);
 		
+		#ifdef AES
+		
+		uint8_t exp[240]; //expanded key
+		
+		call AES.keyExpansion( exp, masterKey->keyValue);
+		call AES.encrypt( derivationData + offset, exp, derivedKey->keyValue);		
+		
+		return SUCCESS;
 		
 		#endif /* AES */
 		
@@ -213,6 +218,8 @@ implementation {
 	}
 	
 	command error_t generateKeyB(PL_key_t* newKey) {
+	
+		//TODO pokud potřeba
 		return SUCCESS;
 	}
 	

@@ -36,7 +36,7 @@ interface Crypto {
 		@param[in] masterKey handle to the master key that will be used to derive new one
 		@param[in] derivationData buffer containing derivation data
 		@param[in] offset offset inside derivationData buffer from which derivation data start
-		@param[in] len length of derivation data
+		@param[in] len length of derivation data, should be AES block size
 		@param[out] derivedKey resulting derived key
 		@return error_t status
 	*/	 
