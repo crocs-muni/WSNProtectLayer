@@ -27,6 +27,7 @@ implementation {
 	uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
 	uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
 	uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
+	uint8_t         exp[240]; //expanded key
 	//
 	//	Init interface
 	//
@@ -49,7 +50,7 @@ implementation {
 		
 		#ifdef AES
 		
-		uint8_t exp[240]; //expanded key
+		
 		uint8_t i;
 		uint8_t j;
 		uint8_t plainCounter[16];			
@@ -107,7 +108,6 @@ implementation {
 		PrintDbg("CryptoRawP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
 		#ifdef AES
 		
-		uint8_t exp[240]; //expanded key
 		uint8_t i;
 		uint8_t j;
 		uint8_t plainCounter[16];			
@@ -179,8 +179,6 @@ implementation {
 		// derivedKey = E_masterKey(derivationData)
 		
 		#ifdef AES
-		
-		uint8_t exp[240]; //expanded key
 		
 		call AES.keyExpansion( exp, masterKey->keyValue);
 		call AES.encrypt( derivationData + offset, exp, derivedKey->keyValue);		
