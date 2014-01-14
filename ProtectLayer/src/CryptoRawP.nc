@@ -47,30 +47,6 @@ implementation {
 		
 		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(buffer = '%d', 1 = '%d', 2 = '%d'.\n", buffer[0],buffer[1],buffer[2]);
 		
-		
-		#ifdef FAKE
-		uint8_t         i = 0;
-	   // PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
-		
-		buffer += offset;
-		// TODO: na define prepinani mezi AES vs. FAKE
-		 
-		// BUGBUG: no real encryption is performed, only transformation from DATA into form ENC|keyID|DATA (without |) is performed
-		#define FAKEHEADERLEN 5
-		// Backup first 5 bytes (needed for ENC|keyID)
-		for (i = 0; i < FAKEHEADERLEN; i++) m_bufferTmp[i] = buffer[i];
-		// Insert encryption header
-		buffer[0] = 'E'; buffer[1] = 'N'; buffer[2] = 'C';
-		buffer[3] = key->keyValue[0]; buffer[4] = key->keyValue[1];
-		// Move data in buffer
-		for (i = *pLen - 1; i >= FAKEHEADERLEN; i--) buffer[i + FAKEHEADERLEN] = buffer[i];
-		// Insert data overwriten by fake header
-		for (i = 0; i < FAKEHEADERLEN; i++) buffer[i+FAKEHEADERLEN] = m_bufferTmp[i];
-
-		// Increase length of encrypted data by header
-		*pLen = *pLen + FAKEHEADERLEN;
-		
-		#endif /* FAKE */
 		#ifdef AES
 		
 		uint8_t exp[240]; //expanded key
@@ -95,7 +71,30 @@ implementation {
 			counter++;
 		}
 		
+		#else /* No AES, FAKE encryption*/
+		uint8_t         i = 0;
+	   // PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
+		
+		buffer += offset;
+		// TODO: na define prepinani mezi AES vs. FAKE
+		 
+		// BUGBUG: no real encryption is performed, only transformation from DATA into form ENC|keyID|DATA (without |) is performed
+		#define FAKEHEADERLEN 5
+		// Backup first 5 bytes (needed for ENC|keyID)
+		for (i = 0; i < FAKEHEADERLEN; i++) m_bufferTmp[i] = buffer[i];
+		// Insert encryption header
+		buffer[0] = 'E'; buffer[1] = 'N'; buffer[2] = 'C';
+		buffer[3] = key->keyValue[0]; buffer[4] = key->keyValue[1];
+		// Move data in buffer
+		for (i = *pLen - 1; i >= FAKEHEADERLEN; i--) buffer[i + FAKEHEADERLEN] = buffer[i];
+		// Insert data overwriten by fake header
+		for (i = 0; i < FAKEHEADERLEN; i++) buffer[i+FAKEHEADERLEN] = m_bufferTmp[i];
+
+		// Increase length of encrypted data by header
+		*pLen = *pLen + FAKEHEADERLEN;
+		
 		#endif /* AES */
+		
 		
 		return SUCCESS;
 	}
@@ -106,8 +105,31 @@ implementation {
 		error_t status = SUCCESS;
 		
 		PrintDbg("CryptoRawP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
+		#ifdef AES
 		
-		#ifdef FAKE
+		uint8_t exp[240]; //expanded key
+		uint8_t i;
+		uint8_t j;
+		uint8_t plainCounter[16];			
+		uint8_t encCounter[16];
+		
+		//set rest of counter to zeros to fit AES block
+		memset(plainCounter, 0, 16);	
+		
+		call AES.keyExpansion( exp, key->keyValue);
+		
+		//process buffer by blocks 
+		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
+		
+			plainCounter[0] = counter;
+			call AES.decrypt( plainCounter, exp, encCounter);
+			for (j := 0; i < BLOCK_SIZE; j++){
+				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
+			}
+			counter++;
+		}
+		
+		#else /* No AES, FAKE encryption*/
 		uint8_t i = 0;
 
 		
@@ -141,32 +163,8 @@ implementation {
 
 		//m_len = Decrypt(m_key1, m_buffer + m_offset, m_len);
 		
-		#endif /* FAKE */
-		#ifdef AES
-		
-		uint8_t exp[240]; //expanded key
-		uint8_t i;
-		uint8_t j;
-		uint8_t plainCounter[16];			
-		uint8_t encCounter[16];
-		
-		//set rest of counter to zeros to fit AES block
-		memset(plainCounter, 0, 16);	
-		
-		call AES.keyExpansion( exp, key->keyValue);
-		
-		//process buffer by blocks 
-		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
-		
-			plainCounter[0] = counter;
-			call AES.decrypt( plainCounter, exp, encCounter);
-			for (j := 0; i < BLOCK_SIZE; j++){
-				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
-			}
-			counter++;
-		}
-		
 		#endif /* AES */
+		
 		return status;
 	}
 	
@@ -189,9 +187,7 @@ implementation {
 		
 		return SUCCESS;
 		
-		#endif /* AES */
-		
-		#ifdef FAKE // Split-Phase verze
+		#else /* No AES, use previous split-phase version */
 		if (m_state & FLAG_STATE_CRYPTO_DERIV) {
 			return EALREADY;	
 		}
@@ -211,7 +207,7 @@ implementation {
 		memcpy(m_key2->keyValue, m_buffer + m_offset, KEY_LENGTH);
 		// we are done
 		m_key2->dbgKeyID = m_dbgKeyID++;	// assign debug key id
-		#endif
+		#endif /* AES */
 		PrintDbg("CryptoRawP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
 			m_state &= ~FLAG_STATE_CRYPTO_DERIV;
 		
