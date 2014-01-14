@@ -37,31 +37,25 @@ implementation {
 		return SUCCESS;
 	}
 	
-	command error_t encryptBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+	command error_t protectBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
 	//TODO: implement
 		return SUCCESS;
-	}
-	
-	command error_t decryptBufferFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
-	//TODO: implement
-		return SUCCESS;
-	}
-	
-	command error_t encryptBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
-	//TODO: implement
-		return SUCCESS;
-	}
+	}	
 
-	command error_t decryptBufferFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+	command error_t unprotectBufferFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
 	//TODO: implement
 		return SUCCESS;
-	}
+	}		
 	
-	//will be used??? encrypt/decrypt takes nodeID, not key ...
-	command error_t deriveKeyToNodeB( uint8_t nodeID, PL_key_t* derivedKey){
+	command error_t protectBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
 	//TODO: implement
 		return SUCCESS;
-	}
+	}	
+	
+	command error_t unprotectBufferFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+	//TODO: implement
+		return SUCCESS;
+	}		
 
 	command error_t macBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
 	//TODO: implement

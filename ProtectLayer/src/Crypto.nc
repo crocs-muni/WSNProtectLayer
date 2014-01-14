@@ -13,59 +13,61 @@ interface Crypto {
 	//Node variants
 	/**
 			Command: Blocking version. Used by other components to start encryption of supplied buffer.
+			In addition function appends mac of encrypted buffer.
 			Enough additional space in buffer to fit encrypted content is assumed.
 			Function keeps track of couter values for independent nodes.
 			@param[in] nodeID node identification of node
 			@param[in out] buffer buffer to be encrypted, wil contain encrypted data
 			@param[in] offset
-			@param[in out] pLen length of buffer to be encrypted, will contain resulting length
+			@param[in out] pLen length of buffer to be encrypted, will contain resulting length with mac
 			@return error_t status
 	*/
-	command error_t encryptBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t protectBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 
 	/**
 			Command: Blocking version. Used by other components to start decryption of supplied buffer.
-			Function keeps track of couter values for independent nodes.
+			Function verified appended mac. Function keeps track of couter values for independent nodes.
 			@param[in] nodeID node identification of node			
 			@param[in] buffer buffer to be decrypted
 			@param[in] offset
 			@param[in] len length of buffer to be decrypted
 			@return error_t status
 	*/
-	command error_t decryptBufferFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t unprotectBufferFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 	
 	//BS variants
 	/**
 			Command: Blocking version. Used by other components to start encryption of supplied buffer from BS.
+			In addition function appends mac of encrypted buffer.
 			Enough additional space in buffer to fit encrypted content is assumed.
 			Function keeps track of couter values.
 			@param[in out] buffer buffer to be encrypted, wil contain encrypted data
 			@param[in] offset
-			@param[in out] pLen length of buffer to be encrypted, will contain resulting length
+			@param[in out] pLen length of buffer to be encrypted, will contain resulting length with mac
 			@return error_t status
 	*/
-	command error_t encryptBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t protectBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 
 	/**
 			Command: Blocking version. Used by other components to start decryption of supplied buffer from BS.
-			Function keeps track of couter values.
+			Function verified appended mac. Function keeps track of couter values.
 			@param[in] buffer buffer to be decrypted
 			@param[in] offset
 			@param[in] len length of buffer to be decrypted
 			@return error_t status
 	*/
-	command error_t decryptBufferFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t unprotectBufferFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 	
-	//derive key to node
 	
+	//derive key to node	
 	/**
 			Command: Used by other components to derive new key from master key and derivation data. 
 			@param[in] nodeID node identification of node		
 			@param[out] derivedKey resulting derived key
 			@return error_t status
 	*/	
-	//will be used??? encrypt/decrypt takes nodeID, not key ...
-	command error_t deriveKeyToNodeB( uint8_t nodeID, PL_key_t* derivedKey);
+	//probably will not be used because encrypt/decrypt takes nodeID, not key ...
+	//command error_t deriveKeyToNodeB( uint8_t nodeID, PL_key_t* derivedKey);
 	
 	
 	//mac (aes based)
