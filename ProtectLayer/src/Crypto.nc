@@ -59,10 +59,10 @@ interface Crypto {
 	//derive key to node
 	
 	/**
-		Command: Used by other components to derive new key from master key and derivation data. 
-		@param[in] nodeID node identification of node		
-		@param[out] derivedKey resulting derived key
-		@return error_t status
+			Command: Used by other components to derive new key from master key and derivation data. 
+			@param[in] nodeID node identification of node		
+			@param[out] derivedKey resulting derived key
+			@return error_t status
 	*/	
 	//will be used??? encrypt/decrypt takes nodeID, not key ...
 	command error_t deriveKeyToNodeB( uint8_t nodeID, PL_key_t* derivedKey);
@@ -71,7 +71,7 @@ interface Crypto {
 	//mac (aes based)
 	
 	/**
-			Command: Blocking version. Used by other components to calculate mac of data.
+			Command: Blocking version. Used by other components to calculate mac of data for node.
 			Enough additional space in buffer to fit mac content is assumed.			
 			@param[in] nodeID node identification of node
 			@param[in out] buffer buffer for mac calculation, mac will be appended to data
@@ -80,4 +80,14 @@ interface Crypto {
 			@return error_t status
 	*/
 	command error_t macBufferForNodeB(uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	
+	/**
+			Command: Blocking version. Used by other components to calculate mac of data for BS.
+			Enough additional space in buffer to fit mac content is assumed.			
+			@param[in out] buffer buffer for mac calculation, mac will be appended to data
+			@param[in] offset
+			@param[in out] pLen length of buffer for mac calculation, will contain length with appended mac
+			@return error_t status
+	*/
+	command error_t macBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 }
