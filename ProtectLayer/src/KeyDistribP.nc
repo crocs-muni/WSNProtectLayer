@@ -148,24 +148,25 @@ implementation{
 	*/	
 	default event void KeyDistrib.discoverKeysDone(error_t result) {}
 	
-	
-	command PL_key_t* KeyDistrib.getKeyToNodeB(uint8_t nodeID) {
+	//changed header to unify interface with getKeyToBS, thus changed functionality 
+	command error_t getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey){
             SavedData_t* pSavedData = NULL;
             //PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%d' .\n", nodeID);
 
             pSavedData = call SharedData.getNodeState(nodeID);
             if (pSavedData != NULL) {
-                //PrintDbg("KeyDistribP", "Shared key returned.\n");
-                return &(pSavedData->kdcData.shared_key);
+                //PrintDbg("KeyDistribP", "Shared key retrieved.\n");
+                pNodeKey = kdcData.shared_key);
+                return SUCCESS;
             }
             else {
                 PrintDbg("KeyDistribP", "Failed to obtain SharedData.getNodeState.\n");
-                return NULL;
+                return EKEYNOTFOUND;
             }
 	}
 
-	command PL_key_t* getKeyToBSB(uint8_t nodeID) {
-		// TODO: implementovat + změnit hlavičku (není třeba NodeID, spíše typ klíče)
+	command error_t getKeyToBSB(PL_key_t* pBSKey) {
+		// TODO: implementovat 
 		
 		return SUCCESS;
 	}	
