@@ -21,7 +21,7 @@ interface Crypto {
 			@param[in out] pLen length of buffer to be encrypted, will contain resulting length
 			@return error_t status
 	*/
-	command error_t encryptBufferForNodeB(uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t encryptBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 
 	/**
 			Command: Blocking version. Used by other components to start decryption of supplied buffer.
@@ -32,7 +32,7 @@ interface Crypto {
 			@param[in] len length of buffer to be decrypted
 			@return error_t status
 	*/
-	command error_t decryptBufferFromNodeB(uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t decryptBufferFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 	
 	//BS variants
 	/**
@@ -44,7 +44,7 @@ interface Crypto {
 			@param[in out] pLen length of buffer to be encrypted, will contain resulting length
 			@return error_t status
 	*/
-	command error_t encryptBufferForBSB(uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t encryptBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 
 	/**
 			Command: Blocking version. Used by other components to start decryption of supplied buffer from BS.
@@ -54,7 +54,7 @@ interface Crypto {
 			@param[in] len length of buffer to be decrypted
 			@return error_t status
 	*/
-	command error_t decryptBufferFromBSB(uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t decryptBufferFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 	
 	//derive key to node
 	
@@ -79,7 +79,7 @@ interface Crypto {
 			@param[in out] pLen length of buffer for mac calculation, will contain length with appended mac
 			@return error_t status
 	*/
-	command error_t macBufferForNodeB(uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t macBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 	
 	/**
 			Command: Blocking version. Used by other components to calculate mac of data for BS.
