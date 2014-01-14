@@ -124,4 +124,11 @@ implementation {
 		}
 		return status;
 	}
+	
+	command error_t initCryptoIIB(){
+		PrintDbg("CryptoP", " initCryptoIIB called.\n");
+		error_t status = SUCCESS;
+		
+		return status;
+	}
 }

@@ -92,4 +92,10 @@ interface Crypto {
 			@return error_t status
 	*/
 	command error_t macBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	
+	/**
+			Command: Blocking function to initialize shared keys between nodes.
+			@return error_t status
+	*/
+	command error_t initCryptoIIB();
 }
