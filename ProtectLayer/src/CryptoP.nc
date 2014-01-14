@@ -13,6 +13,7 @@ module CryptoP {
 	uses interface CryptoRaw;
 	uses interface KeyDistrib;
 	uses interface AES;
+	uses interface SharedData;
 	provides {
 		interface Init;
 		interface Crypto;
@@ -128,6 +129,36 @@ implementation {
 	command error_t initCryptoIIB(){
 		PrintDbg("CryptoP", " initCryptoIIB called.\n");
 		error_t status = SUCCESS;
+		
+		SavedData_t* SavedData = NULL;
+		KDCPrivData_t* KDCPrivData = NULL;
+		KDCPrivData = call SharedData.getKDCPrivData();
+		SavedData = call SharedData.getSavedData();
+		if(SavedData == NULL || KDCPrivData == NULL){
+		    status = EDATANOTFOUND;
+		    return status;
+		}
+		SavedData_t* SavedDataEnd = SavedData + sizeof(SavedData) / sizeof(SavedData[0]);
+		//process all saved data items
+		while ( SavedData < SavedDataEnd ){
+			m_key1 = (KDCPrivData->preKeys[SavedData->nodeId]); //predistributed key
+			//get derivation data
+			memset(m_buffer, 0, BLOCK_SIZE);
+				
+			m_buffer = nodeId; //addition of other derivation data needed
+			//m_buffer + 2 = ... 
+			
+			//derive key from data and predistributed key
+			status = call CryptoRaw.deriveKey(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
+			if(status != SUCCESS){
+				PrintDbg("CryptoP", " key derivation for nodeID %d completed with status %d.\n", SavedData->nodeId, status);
+			}
+			
+			//save key to KDCData shared key		
+			memcpy( (SavedData->KDCData)->shared_key, m_key2, sizeof(m_key2));
+			
+			SavedData++;
+		}
 		
 		return status;
 	}

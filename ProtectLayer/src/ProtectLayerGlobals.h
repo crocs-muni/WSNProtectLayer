@@ -23,7 +23,8 @@ typedef enum _error_values {
     EDIFFERENTKEY = 100,            /**< different key was used to protect message */
     EINVALIDDECRYPTION = 101,       /**< invalid format of message to be decrypted */
     ENOTALLKEYSDISCOVERED = 102,    /**< not all keys were discovered */
-    EKEYNOTFOUND = 103              /**< requested key was not found */
+    EKEYNOTFOUND = 103,             /**< requested key was not found */
+    EDATANOTFOUND = 104 	    /**<requested data structure was not found*/
 } _error_values;
 
 /**
@@ -240,7 +241,8 @@ typedef nx_struct RoutePrivData {
 } RoutePrivData_t;
 
 typedef nx_struct KDCPrivData {
-    PL_key_t    keyToBS;
+    PL_key_t	keyToBS;
+    PL_key_t*	preKeys;
 } KDCPrivData_t;
 /**
  * Structure combining all the data that need to be stored on the node by the protection layer

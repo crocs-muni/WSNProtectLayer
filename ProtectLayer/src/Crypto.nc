@@ -95,6 +95,8 @@ interface Crypto {
 	
 	/**
 			Command: Blocking function to initialize shared keys between nodes.
+			Gets nodeID of neighbours from SavedData, for these finds predistributed keys in KDCPrivData.
+			derives new shared key and stores key in KDCData.
 			@return error_t status
 	*/
 	command error_t initCryptoIIB();
