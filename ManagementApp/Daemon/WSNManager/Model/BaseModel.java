@@ -5,8 +5,8 @@ import App.*;
 /**
  * Abstract class BaseModel - write a description of the class here
  * 
- * @author (your name here)
- * @version (version number or date here)
+ * @author Bc. Marcel Gazdik
+ * @version 2013-10-26
  */
 public abstract class BaseModel extends App.Service {
     protected DatabaseInterface database;
@@ -38,11 +38,33 @@ public abstract class BaseModel extends App.Service {
      * @throws DbWriteException
      */
     public void save(final Object data) throws DbWriteException {
-        if(data instanceof App.ArrayHash){
+        if(data instanceof App.ArrayHash || data instanceof RowHash){
             this.database.exec("INSERT INTO `" + this.getTableName() + "` ?", data);
         }
         else {
             this.database.exec("INSERT INTO `" + this.getTableName() + "` VALUES(?)", data);
+        }
+    }
+    
+    /**
+     * save data into database, or update row with same key
+     * 
+     * @param Object data   ArraHash/RowHash with data and column names
+     *                      
+     * @throws DbWriteException
+     */
+    public void saveOrUpdate(final Object data) throws DbWriteException {
+        if(data instanceof ArrayHash || data instanceof RowHash){  
+            StringBuilder newValues = new StringBuilder();
+            
+            for(String key: (ArrayHash) data){
+                if(newValues.length() != 0)
+                    newValues.append(", ");
+                    
+                newValues.append("`" + key + "` = '" + ((ArrayHash)data).get(key) + "'");
+            }
+            
+            this.database.exec("INSERT INTO `" + this.getTableName() + "` ? ON DUPLICATE KEY UPDATE " + newValues.toString(), data);
         }
     }
     

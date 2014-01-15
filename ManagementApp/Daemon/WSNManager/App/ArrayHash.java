@@ -8,7 +8,7 @@ import java.util.*;
  * @author Bc. Marcel Gazdik
  * @version 2013-10-21
  */
-public class ArrayHash implements Iterable<String>, Countable {
+public class ArrayHash implements Iterable<String>, Countable, Freezable {
     private Map<String, Object> data = new TreeMap<String, Object>();
     boolean freezed = false;
     
@@ -48,15 +48,26 @@ public class ArrayHash implements Iterable<String>, Countable {
             this.data.remove(key);
     }
     
+    /**
+     * check if array has item with given key
+     * 
+     * @param String key    item's key
+     */
     public boolean hasItem(final String key){
         return this.data.containsKey(key);
     }
     
+    // FREEZABLE Interface
     public void freeze(){
         //this.freeze(); //causes stacowerflow error
         this.freezed = true;
     }
     
+    public boolean isFrozen(){
+        return this.freezed;
+    }
+    
+    @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();
         
@@ -94,6 +105,9 @@ public class ArrayHash implements Iterable<String>, Countable {
         }
     }
     
+    /**
+     * return size of array
+     */
     public int count(){
         return this.data.size();
     }

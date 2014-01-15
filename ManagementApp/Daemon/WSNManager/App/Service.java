@@ -2,14 +2,15 @@ package App;
 
 
 /**
- * Abstract class Service Objects implementing this class
- * will be automatically registered as a service and they
- * 
+ * Abstract class Service is basic implementation of service.
+ * This implementation automatically register all descendant 
+ * implementation as services and provides protected context
+ * class parameter for all their descendant.
  * 
  * @author Bc. Marcel Gazdik
  * @version 2013-10-25
  */
-public abstract class Service {
+public abstract class Service implements ServiceInterface {
     protected Context context;
     
     public Service(Context c){
@@ -33,7 +34,13 @@ public abstract class Service {
      * 
      * @return String
      */
-    protected String getServiceName(){
+    public String getServiceName(){
         return this.getClass().getName().toLowerCase();
+    }
+    
+    /**
+     * Clearly close service
+     */
+    public void close(){
     }
 }

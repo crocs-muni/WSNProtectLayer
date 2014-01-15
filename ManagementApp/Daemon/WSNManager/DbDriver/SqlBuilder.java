@@ -36,7 +36,6 @@ public class SqlBuilder {
             sb.append(parts[0]);
             
             
-            
             this.explodeArgs(true, args);
             
             this.query = this.sb.toString();
@@ -62,14 +61,14 @@ public class SqlBuilder {
     protected void explodeArgs(boolean append, Object ... args){
         int partIndex = 1;
         for(Object o: args){
-            if(o instanceof RowHash){
+            if(o instanceof App.ArrayHash){
                 this.sb.append(" SET ");
-                for(String i: (RowHash)o){
+                for(String i: (App.ArrayHash)o){
                     this.sb.append("`");
                     this.sb.append(i);
                     this.sb.append("`");
                     this.sb.append(" = ?,");
-                    this.explodeArgs(false, ((RowHash)o).get(i));
+                    this.explodeArgs(false, ((App.ArrayHash)o).get(i));
                 }
                 this.sb.deleteCharAt(this.sb.length() - 1);
             }

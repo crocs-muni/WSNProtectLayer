@@ -1,4 +1,22 @@
 #BlueJ class context
-comment0.params=key
-comment0.target=java.lang.Object\ get(java.lang.String)
-numComments=1
+comment0.params=
+comment0.target=Context()
+comment1.params=key\ s
+comment1.target=void\ set(java.lang.String,\ ServiceInterface)
+comment1.text=\n\ register\ service\ into\ context\n\ \n\ @param\ String\ key\ \ \ \ \ \ \ \ service\ name\n\ @param\ ServiceInterface\ \ service\ class\n\ \n\ @throws\ RuntimeException\ this\ container\ is\ frozen\n
+comment2.params=key
+comment2.target=java.lang.Object\ get(java.lang.String)
+comment2.text=\n\ returns\ service\ object\ (need\ to\ be\ cast)\n\ \n\ @param\ String\ key\ \ \ \ service\ name\n\ \n\ @return\ Object\n\ \n\ @throws\ RuntimeException\ if\ service\ is\ not\ registered\n
+comment3.params=
+comment3.target=int\ count()
+comment4.params=
+comment4.target=java.util.Iterator\ iterator()
+comment5.params=
+comment5.target=java.util.Iterator\ reverseIterator()
+comment6.params=
+comment6.target=void\ freeze()
+comment7.params=
+comment7.target=boolean\ isFrozen()
+comment8.params=
+comment8.target=java.lang.String\ toString()
+numComments=9

@@ -17,6 +17,11 @@ public interface DatabaseInterface
      */
     void connect() throws DbException;
     
+    /**
+     * disconnect database
+     */
+    void disconnect();
+    
     
     /**
      * return data from table

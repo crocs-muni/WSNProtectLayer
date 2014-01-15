@@ -2,10 +2,10 @@ package Model;
 import DbDriver.*;
 
 /**
- * Write a description of class Logs here.
+ * Log table model
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author Bc.Marcel Gazdik
+ * @version 2013-10-26
  */
 public class Logs extends BaseModel {
     public Logs(App.Context c){

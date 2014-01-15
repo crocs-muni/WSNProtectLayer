@@ -11,11 +11,14 @@ import java.util.Iterator;
 public class TableStatement implements TableStatementInterface {
     private PreparedStatement   ps;
     private ResultSet           rs;
+    
+    private int                 count;
     //private DatabaseMetaData    dbmd;
     
     public TableStatement(PreparedStatement ps) throws DbReadException {
         try {
             this.rs = ps.executeQuery();
+            this.count = -1;
         }
         catch (Exception e){
             throw new DbReadException(e);
@@ -63,11 +66,19 @@ public class TableStatement implements TableStatementInterface {
     
     public int count(){
         try {
-            this.rs.last();
-            int count = this.rs.getRow();
-            this.rs.beforeFirst();
+            if(this.count < 0){
+                int tmp = this.rs.getRow();
+                
+                this.rs.last();
+                this.count = this.rs.getRow();
+                
+                if(tmp != 0)
+                    this.rs.absolute(tmp);
+                else
+                    this.rs.beforeFirst();
+            }
             
-            return count;
+            return this.count;
         }
         catch (Exception e){
             return 0;

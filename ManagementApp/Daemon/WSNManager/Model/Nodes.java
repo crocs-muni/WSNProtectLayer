@@ -2,10 +2,10 @@ package Model;
 import DbDriver.*;
 
 /**
- * Write a description of class Nodes here.
+ * Node table model
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author Bc. Marcel Gazdik 
+ * @version 2013-10-26
  */
 public class Nodes extends BaseModel {
     public Nodes(App.Context c){

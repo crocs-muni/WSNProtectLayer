@@ -5,6 +5,8 @@ import Model.ModelsLoader;
  * Extended controller service. Provides automatically loaded
  * context and modules for further operations.
  * 
+ * Provides models as an protected class argument
+ * 
  * @author Bc. Marcel Gazdik
  * @version 2013-10-25
  */

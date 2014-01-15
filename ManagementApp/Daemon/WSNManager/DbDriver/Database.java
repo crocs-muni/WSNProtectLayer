@@ -4,6 +4,8 @@ import java.sql.*;
 import java.util.Map;
 import java.util.TreeMap;
 
+import Config.Configuration;
+
 /**
  * SQL database driver
  * 
@@ -19,13 +21,24 @@ public class Database extends App.Service implements DatabaseInterface {
     private String dbName = null;
     private String user = null;
     private String password = null;
-       
+     
+    //SERVICE MEHODS
+    public String getServiceName(){
+        return "database";
+    }
+    
+    public void close(){
+        this.disconnect();
+    }
+    ////////////////////////////////
     
     //public Database(final String dbName, final String user, final String password){
     public Database(App.Context c){
         super(c);
         try{
-            App.ArrayHash config = (App.ArrayHash)c.get("configuration");
+            c.get("configuration");
+           
+            Configuration config = (Configuration)c.get("configuration");
             this.dbName = config.get("database").toString();
             this.user = config.get("user").toString();
             this.password = config.get("password").toString();
@@ -37,11 +50,7 @@ public class Database extends App.Service implements DatabaseInterface {
             System.err.println();
         }
     }
-    
-    protected String getServiceName(){
-        return "database";
-    }
-    
+        
     
     public void connect() throws DbException {
         try {
@@ -56,6 +65,12 @@ public class Database extends App.Service implements DatabaseInterface {
         }
     }
     
+    public void disconnect(){
+        try {
+            this.connection.close();
+        }
+        catch (Exception e){}
+    }
     
     public TableStatement query(final String query, Object ... args) throws DbReadException {
         //return new TableStatement(query, this.connection);

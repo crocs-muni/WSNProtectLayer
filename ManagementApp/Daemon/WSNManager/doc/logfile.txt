@@ -12,9 +12,9 @@ Class documentation
 -source
 1.7
 -classpath
-/usr/share/java/bluej/bluejcore.jar:/usr/share/java/bluej/junit-4.8.2.jar:/usr/share/java/mysql-jdbc/mysql-connector-java-bin.jar:/opt/tinyos-2.1.2/support/sdk/java/tinyos.jar:/home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager
+/usr/share/java/bluej/bluejcore.jar:/usr/share/java/bluej/junit-4.8.2.jar:/usr/share/java/mysql-jdbc/mysql-connector-java-bin.jar:/opt/tinyos-2.1.2/support/sdk/java/tinyos.jar:/usr/share/java/commons-math/commons-math.jar:/usr/share/java/commons-math/commons-math-2.2.jar:/usr/share/java/jmagick/jmagick-6.4.0.jar:/media/sda5/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager
 -d
-/home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/doc
+/media/sda5/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/doc
 -encoding
 UTF-8
 -charset
@@ -23,19 +23,19 @@ UTF-8
 /usr/share/java/bluej/bjdoclet.jar
 -doclet
 bluej.doclet.doclets.formats.html.HtmlDoclet
-/home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/Main.java
+/media/sda5/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/Telos/NodeDriver.java
 <---- end of javadoc command ---->
-Loading source file /home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/Main.java...
-Constructing Javadoc information...
-Standard Doclet version 1.7.0_40
-Building tree for all the packages and classes...
-Generating /home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/doc/Main.html...
-Generating /home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/doc/package-frame.html...
-Generating /home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/doc/package-summary.html...
-Generating /home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/doc/constant-values.html...
-Building index for all the packages and classes...
-Building index for all classes...
-Generating /home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/doc/allclasses-frame.html...
-Generating /home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/doc/allclasses-noframe.html...
-Generating /home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/doc/index.html...
-Generating /home/marcel/Desktop/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/doc/stylesheet.css...
+Loading source file /media/sda5/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/Telos/NodeDriver.java...
+/media/sda5/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/Telos/NodeDriver.java:41: error: <identifier> expected
+                this.
+                     ^
+/media/sda5/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/Telos/NodeDriver.java:41: error: not a statement
+                this.
+                    ^
+/media/sda5/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/Telos/NodeDriver.java:44: error: illegal start of expression
+                this.nodesToApp.put(r.get("id"), r.get("application_id"));
+                    ^
+/media/sda5/vyuka/WSNProtectLayer/ManagementApp/Daemon/WSNManager/Telos/NodeDriver.java:44: error: ';' expected
+                this.nodesToApp.put(r.get("id"), r.get("application_id"));
+                               ^
+4 errors
