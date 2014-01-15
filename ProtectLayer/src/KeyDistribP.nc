@@ -149,14 +149,15 @@ implementation{
 	default event void KeyDistrib.discoverKeysDone(error_t result) {}
 	
 	//changed header to unify interface with getKeyToBS, thus changed functionality 
-	command error_t getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey){
+	command error_t getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey, uint8_t* counter){
             SavedData_t* pSavedData = NULL;
             //PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%d' .\n", nodeID);
 
             pSavedData = call SharedData.getNodeState(nodeID);
             if (pSavedData != NULL) {
                 //PrintDbg("KeyDistribP", "Shared key retrieved.\n");
-                pNodeKey = kdcData.shared_key);
+                pNodeKey =  (pSavedData->kdcData).shared_key;
+                counter = (pSavedData->kdcData).counter;
                 return SUCCESS;
             }
             else {
@@ -165,7 +166,7 @@ implementation{
             }
 	}
 
-	command error_t getKeyToBSB(PL_key_t* pBSKey) {
+	command error_t getKeyToBSB(PL_key_t* pBSKey, uint8_t* counter) {
 		// TODO: implementovat 
 		
 		return SUCCESS;

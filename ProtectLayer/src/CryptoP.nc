@@ -42,33 +42,83 @@ implementation {
 	
 	command error_t protectBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
 		PrintDbg("CryptoP", " protectBufferForNodeB called.\n");
-		error_t status = SUCCESS;
-	//TODO: implement
-	
-		status = call macBufferForNodeB(nodeID, buffer, offset, pLen);
+		error_t status = SUCCESS;		
+		uint8_t counter;
+		
+		if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1, &counter)!= SUCCESS){
+			PrintDbg("CryptoP", " protectBufferForNodeB key not retrieved.\n");
+			return status;
+		}
+		if((status = call CryptoRaw.encryptBufferB( m_key1, &counter, buffer, offset, pLen)!= SUCCESS){
+			PrintDbg("CryptoP", " protectBufferForNodeB key not retrieved.\n");
+			return status;
+		}
+		if((status = call macBufferForNodeB(nodeID, buffer, offset, pLen)!= SUCCESS){
+			PrintDbg("CryptoP", " protectBufferForNodeB key not retrieved.\n");
+			return status;
+		}
 		return status;
 	}	
 
 	command error_t unprotectBufferFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
 		PrintDbg("CryptoP", " unprotectBufferFromNodeB called.\n");
-	//TODO: implement
-		return SUCCESS;
+		error_t status = SUCCESS;		
+		uint8_t counter;
+		
+		if((status = verifyMacFromNodeB(nodeID, buffer, offset, pLen) != SUCCESS){
+			PrintDbg("CryptoP", " unprotectBufferFromNodeB mac verification failed.\n");
+			return status;
+		}
+		if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1, &counter)!= SUCCESS){	
+			PrintDbg("CryptoP", " unprotectBufferFromNodeB key not retrieved.\n");
+			return status;
+		}
+		if((status = call CryptoRaw.decryptBufferB( m_key1, &counter, buffer, offset, pLen)!= SUCCESS){	
+			PrintDbg("CryptoP", " unprotectBufferFromNodeB decryption failed.\n");
+			return status;
+		}
+		
+		return status;
 	}		
 	
 	command error_t protectBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
 		PrintDbg("CryptoP", " protectBufferForBSB called.\n");
-		error_t status = SUCCESS;
-	//TODO: implement
-	
-		status = call macBufferForBSB(buffer, offset, pLen)
+		error_t status = SUCCESS;			
+		uint8_t counter;
+		
+		if((status = call KeyDistrib.getKeyToBSB( m_key1, &counter) != SUCCESS){	
+			PrintDbg("CryptoP", " protectBufferForBSB key not retrieved.\n");
+			return status;		
+		}
+		if((status = call CryptoRaw.encryptBufferB( m_key1, &counter, buffer, offset, pLen) != SUCCESS){
+			PrintDbg("CryptoP", " protectBufferForBSB encrypt failed.\n");
+			return status;		
+		}
+		if((status = call macBufferForBSB( buffer, offset, pLen) != SUCCESS){
+			PrintDbg("CryptoP", " protectBufferForBSB mac failed.\n");
+			return status;		
+		}
 		
 		return status;
 	}	
 	
 	command error_t unprotectBufferFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
 		PrintDbg("CryptoP", " unprotectBufferFromBSB called.\n");
-		error_t status = SUCCESS;
-	//TODO: implement
+		error_t status = SUCCESS;		
+		uint8_t counter;
+		
+		if((status = verifyMacFromBSB( buffer, offset, pLen) != SUCCESS){
+			PrintDbg("CryptoP", " unprotectBufferFromBSB mac verification failed.\n");
+			return status;
+		}
+		if((status = call KeyDistrib.getKeyToBSB( m_key1, &counter) != SUCCESS){
+			PrintDbg("CryptoP", " unprotectBufferFromBSB BS key not retrieved.\n");
+			return status;
+		}
+		if((status = call CryptoRaw.decryptBufferB( m_key1, &counter, buffer, offset, pLen) != SUCCESS){
+			PrintDbg("CryptoP", " unprotectBufferFromBSB decrypt buffer failed.\n");
+			return status;
+		}		
 		return status;
 	}		
 
@@ -126,7 +176,43 @@ implementation {
 		return status;
 	}
 	
+	command error_t verifyMacFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+		uint8_t mac[BLOCK_SIZE];
+		error_t status = SUCCESS;
+		
+		memcpy(mac, buffer + offset + pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
+		status = call macBufferForNodeB(nodeID, buffer, offset, pLen - BLOCK_SIZE); //calculate new mac
+		if((memcmp(mac, buffer + offset + pLen - BLOCK_SIZE, BLOCK_SIZE))){ //compare new with received
+		    status = EWRONGMAC;
+		    PrintDbg("CryptoP", " verifyMacFromNodeB message MAC does not match.\n");
+		    return status;		
+		}
+		return status;
+	}	
+	
+	command error_t verifyMacFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+		uint8_t mac[BLOCK_SIZE];
+		error_t status = SUCCESS;
+		
+		memcpy(mac, buffer + offset + pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
+		status = call macBufferForBSB(buffer, offset, pLen - BLOCK_SIZE); //calculate new mac
+		if((memcmp(mac, buffer + offset + pLen - BLOCK_SIZE, BLOCK_SIZE))){ //compare new with received
+		    status = EWRONGMAC;
+		    PrintDbg("CryptoP", " verifyMacFromBSB message MAC does not match.\n");
+		    return status;		
+		}
+		return status;
+	}
+	
 	command error_t initCryptoIIB(){
+		#ifndef max
+			#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
+		#endif
+
+		#ifnef min
+			#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
+		#endif
+	
 		PrintDbg("CryptoP", " initCryptoIIB called.\n");
 		error_t status = SUCCESS;
 		
@@ -142,11 +228,12 @@ implementation {
 		//process all saved data items
 		while ( SavedData < SavedDataEnd ){
 			m_key1 = (KDCPrivData->preKeys[SavedData->nodeId]); //predistributed key
+			
 			//get derivation data
-			memset(m_buffer, 0, BLOCK_SIZE);
+			memset(m_buffer, 0, BLOCK_SIZE); //pad whole block with zeros
 				
-			m_buffer = nodeId; //addition of other derivation data needed
-			//m_buffer + 2 = ... 
+			m_buffer = min(SavedData->nodeId, TOS_NODE_ID); //add two ID's in same manner for both nodes
+			m_buffer + 2 = max(SavedData->nodeId, TOS_NODE_ID);
 			
 			//derive key from data and predistributed key
 			status = call CryptoRaw.deriveKey(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
@@ -156,7 +243,7 @@ implementation {
 			
 			//save key to KDCData shared key		
 			memcpy( (SavedData->KDCData)->shared_key, m_key2, sizeof(m_key2));
-			
+			(SavedData->KDCData)->counter = 0;
 			SavedData++;
 		}
 		

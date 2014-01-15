@@ -94,6 +94,25 @@ interface Crypto {
 	command error_t macBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 	
 	/**
+			Command: Blocking version. Used by other components to verify mac of data for node.						
+			@param[in] nodeID node identification of node
+			@param[in out] buffer buffer containing data and appended mac
+			@param[in] offset
+			@param[in out] pLen length of buffer with mac
+			@return error_t status
+	*/
+	command error_t verifyMacFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	
+	/**
+			Command: Blocking version. Used by other components to verify mac of data for BS.
+			@param[in out] buffer buffer containing data and appended mac
+			@param[in] offset
+			@param[in out] pLen length of buffer with mac
+			@return error_t status
+	*/
+	command error_t verifyMacFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	
+	/**
 			Command: Blocking function to initialize shared keys between nodes.
 			Gets nodeID of neighbours from SavedData, for these finds predistributed keys in KDCPrivData.
 			derives new shared key and stores key in KDCData.
