@@ -198,7 +198,7 @@ typedef uint16_t node_id_t;
 // nx_struct only cause of the sending it via serial port
 typedef nx_struct KDCData {
     PL_key_t shared_key;
-    uint8_t counter; 
+    nx_uint8_t counter; 
 } KDCData_t;
 
 /**
@@ -244,7 +244,7 @@ typedef nx_struct RoutePrivData {
 
 typedef nx_struct KDCPrivData {
     PL_key_t	keyToBS;
-    PL_key_t*	preKeys;
+    PL_key_t	preKeys[20];
 } KDCPrivData_t;
 /**
  * Structure combining all the data that need to be stored on the node by the protection layer
