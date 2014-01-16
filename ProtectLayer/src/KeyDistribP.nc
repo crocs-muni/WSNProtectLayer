@@ -75,6 +75,11 @@ implementation{
             for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
                 if (pSavedData[i].nodeId > 0) {
                     //TODO: we should call Crypto.generateKey(&(pSavedData[i].kdcData.shared_key)); and wait for generation of new key
+                    
+                    
+                    //TODO: new: do not save generated key to kdcData, use generate key from crypto.
+                    //		 here just discover neighbours, fill their IDs to SavedData structure and call crypto init II to 
+                    //		 process key generation
                     if ((tmpStatus = call Crypto.deriveKeyB(&(pSavedData[i].kdcData.shared_key))) == SUCCESS) {
                         pSavedData[i].kdcData.shared_key.keyType = KEY_TONODE;
                         pSavedData[i].kdcData.shared_key.keyValue[0] = (pSavedData[i].nodeId < TOS_NODE_ID) ? pSavedData[i].nodeId : TOS_NODE_ID;

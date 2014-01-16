@@ -28,6 +28,7 @@ implementation {
 	uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
 	uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
 	uint8_t         exp[240]; //expanded key
+	
 	//
 	//	Init interface
 	//
