@@ -27,7 +27,9 @@ implementation{
 	PL_key_t m_keyToBS;			/**< handle to key shared with base station */ 
 	uint8_t  m_getKeyToNodeID;  /**< ID of node fro which getKeyToNode command was issued */
         //PL_key_t m_keysToNodes[MAX_NEIGHBOR_COUNT]; /**< handles to keys shared with separate neighbors */
-
+	
+	//blocking version of key derivation
+	#define BLOCKING 
 		
 	//
 	//	Init interface
@@ -127,13 +129,27 @@ implementation{
                 }
 */
         }
+        
+        
 	
 	/**
-		Command: Posts taks for key task_discoverKeys for key discovery
-		@return error_t status. SUCCESS or EALREADY if already pending
+		Command: depending on define of BLOCKING either posts task for 
+		key task_discoverKeys for key discovery or initialization of Crypto II.		
+		@return error_t status. 
 	*/	
 	command error_t KeyDistrib.discoverKeys() {
-                PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys called.\n");
+		error_t status = SUCCESS;
+		
+		PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys called.\n");
+		#ifdef BLOCKING
+		if((status = call Crypto.initCryptoIIB()) != SUCCESS){
+			PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys failed.\n");
+			return status;
+		}
+		// + generate key to BS or check if available or something else ...
+		
+		#else /* use non blocking variant */
+               
 		if (m_state & FLAG_STATE_KDP_DISCOVERKEYS) {
 			return EALREADY;	
 		}
@@ -144,6 +160,7 @@ implementation{
 			post task_discoverKeys();
 			return SUCCESS;
 		}
+		#endif /* Blocking */
 	}
 	
 	/**
