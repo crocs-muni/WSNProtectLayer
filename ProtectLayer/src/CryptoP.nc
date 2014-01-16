@@ -1,12 +1,19 @@
 /** 
  *  Component providing implementation of Crypto interface.
- *  A module providing actual implementation of Crypto interafce in split-phase manner.
+ *  A module providing actual implementation of Crypto interface in split-phase manner.
  *  @version   0.1
  * 	@date      2012-2013
  */
 #include "ProtectLayerGlobals.h"
+#include "aes.h" //AES constants
 //#include "printf.h"
+
 module CryptoP {
+	
+	uses interface CryptoRaw;
+	uses interface KeyDistrib;
+	uses interface AES;
+	uses interface SharedData;
 	provides {
 		interface Init;
 		interface Crypto;
@@ -16,252 +23,230 @@ implementation {
 	uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
 	PL_key_t* 	m_key1;		/**< handle to the key used as first (or only) one in cryptographic operations. Value is set before task is posted. */
 	PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
-        uint8_t* 	m_buffer;	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-        uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
-        uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	uint8_t* 	m_buffer;	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
+	uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
 	uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
 	uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
+	uint8_t         exp[240]; //expanded key
 	//
 	//	Init interface
 	//
 	command error_t Init.init() {
-                PrintDbg("CryptoP", "Init.init() called.\n");
+                PrintDbg("CryptoP", " Init.init() called.\n");
 		// TODO: do other initialization
 		m_state = 0;
 		m_dbgKeyID = 0;
 		return SUCCESS;
 	}
 	
-	//
-	//	Crypto interface
-	//
-	task void task_encryptBuffer() {
-                error_t status = call Crypto.encryptBufferB(m_key1, m_buffer, m_offset, &m_len);
-
-/*
-                uint8_t         i = 0;
-                PrintDbg("CryptoP", "KeyDistrib.task_encryptBuffer(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue[0], m_key1->keyValue[1]);
-
-                // BUGBUG: no real encryption is performed, only transformation from DATA into form ENC|keyID|DATA (without |) is performed
-                #define FAKEHEADERLEN 5
-                // Backup first 5 bytes (needed for ENC|keyID)
-                for (i = 0; i < FAKEHEADERLEN; i++) m_bufferTmp[i] = m_buffer[i];
-                // Insert encryption header
-                m_buffer[0] = 'E'; m_buffer[1] = 'N'; m_buffer[2] = 'C';
-                m_buffer[3] = m_key1->keyValue[0]; m_buffer[4] = m_key1->keyValue[1];
-                // Move data in buffer
-                for (i = m_len; i >= FAKEHEADERLEN; i--) m_buffer[i + FAKEHEADERLEN] = m_buffer[i];
-                // Insert data overwriten by fake header
-                for (i = 0; i < FAKEHEADERLEN; i++) m_buffer[i+FAKEHEADERLEN] = m_bufferTmp[i];
-
-                // Increase length of encrypted data by header
-                m_len += FAKEHEADERLEN;
-
-		//m_len = Encrypt(m_key1, m_buffer + m_offset, m_len);
-*/
-
-		// we are done
-                signal Crypto.encryptBufferDone(status, m_buffer, m_len);
-		// Cleanup
- 		m_buffer = NULL;
-		m_state &= ~FLAG_STATE_CRYPTO_ENCRYPTION;
-	}
-	command error_t Crypto.encryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len) {
-                PrintDbg("CryptoP", "KeyDistrib.encryptBuffer(keyID = '%d') called.\n", key->dbgKeyID);
-		if (m_state & FLAG_STATE_CRYPTO_ENCRYPTION) {
-			return EALREADY;	
+	command error_t protectBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+		PrintDbg("CryptoP", " protectBufferForNodeB called.\n");
+		error_t status = SUCCESS;		
+		uint8_t counter;
+		
+		if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1, &counter)!= SUCCESS){
+			PrintDbg("CryptoP", " protectBufferForNodeB key not retrieved.\n");
+			return status;
 		}
-		else {
-			// Change state to encryption and post task to encrypt
-			m_state |= FLAG_STATE_CRYPTO_ENCRYPTION;
-			m_key1 = key; m_buffer = buffer; m_offset = offset; m_len = len;
-			post task_encryptBuffer();
-			return SUCCESS;
+		if((status = call CryptoRaw.encryptBufferB( m_key1, &counter, buffer, offset, pLen)!= SUCCESS){
+			PrintDbg("CryptoP", " protectBufferForNodeB key not retrieved.\n");
+			return status;
 		}
+		if((status = call macBufferForNodeB(nodeID, buffer, offset, pLen)!= SUCCESS){
+			PrintDbg("CryptoP", " protectBufferForNodeB key not retrieved.\n");
+			return status;
+		}
+		return status;
 	}	
-        command error_t Crypto.encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
-                uint8_t         i = 0;
-               // PrintDbg("CryptoP", "KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
-                
-                PrintDbg("CryptoP", "KeyDistrib.encryptBufferB(offset = '%d' buffer = '%d', 1 = '%d', 6 = '%d'.\n", buffer[0],buffer[1],buffer[6]);
-                
-                buffer += offset;
-                
-                 PrintDbg("CryptoP", "KeyDistrib.encryptBufferB(buffer = '%d', 1 = '%d', 2 = '%d'.\n", buffer[0],buffer[1],buffer[2]);
 
-                // BUGBUG: no real encryption is performed, only transformation from DATA into form ENC|keyID|DATA (without |) is performed
-                #define FAKEHEADERLEN 5
-                // Backup first 5 bytes (needed for ENC|keyID)
-                for (i = 0; i < FAKEHEADERLEN; i++) m_bufferTmp[i] = buffer[i];
-                // Insert encryption header
-                buffer[0] = 'E'; buffer[1] = 'N'; buffer[2] = 'C';
-                buffer[3] = key->keyValue[0]; buffer[4] = key->keyValue[1];
-                // Move data in buffer
-                for (i = *pLen - 1; i >= FAKEHEADERLEN; i--) buffer[i + FAKEHEADERLEN] = buffer[i];
-                // Insert data overwriten by fake header
-                for (i = 0; i < FAKEHEADERLEN; i++) buffer[i+FAKEHEADERLEN] = m_bufferTmp[i];
+	command error_t unprotectBufferFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+		PrintDbg("CryptoP", " unprotectBufferFromNodeB called.\n");
+		error_t status = SUCCESS;		
+		uint8_t counter;
+		
+		if((status = verifyMacFromNodeB(nodeID, buffer, offset, pLen) != SUCCESS){
+			PrintDbg("CryptoP", " unprotectBufferFromNodeB mac verification failed.\n");
+			return status;
+		}
+		if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1, &counter)!= SUCCESS){	
+			PrintDbg("CryptoP", " unprotectBufferFromNodeB key not retrieved.\n");
+			return status;
+		}
+		if((status = call CryptoRaw.decryptBufferB( m_key1, &counter, buffer, offset, pLen)!= SUCCESS){	
+			PrintDbg("CryptoP", " unprotectBufferFromNodeB decryption failed.\n");
+			return status;
+		}
+		
+		return status;
+	}		
+	
+	command error_t protectBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+		PrintDbg("CryptoP", " protectBufferForBSB called.\n");
+		error_t status = SUCCESS;			
+		uint8_t counter;
+		
+		if((status = call KeyDistrib.getKeyToBSB( m_key1, &counter) != SUCCESS){	
+			PrintDbg("CryptoP", " protectBufferForBSB key not retrieved.\n");
+			return status;		
+		}
+		if((status = call CryptoRaw.encryptBufferB( m_key1, &counter, buffer, offset, pLen) != SUCCESS){
+			PrintDbg("CryptoP", " protectBufferForBSB encrypt failed.\n");
+			return status;		
+		}
+		if((status = call macBufferForBSB( buffer, offset, pLen) != SUCCESS){
+			PrintDbg("CryptoP", " protectBufferForBSB mac failed.\n");
+			return status;		
+		}
+		
+		return status;
+	}	
+	
+	command error_t unprotectBufferFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+		PrintDbg("CryptoP", " unprotectBufferFromBSB called.\n");
+		error_t status = SUCCESS;		
+		uint8_t counter;
+		
+		if((status = verifyMacFromBSB( buffer, offset, pLen) != SUCCESS){
+			PrintDbg("CryptoP", " unprotectBufferFromBSB mac verification failed.\n");
+			return status;
+		}
+		if((status = call KeyDistrib.getKeyToBSB( m_key1, &counter) != SUCCESS){
+			PrintDbg("CryptoP", " unprotectBufferFromBSB BS key not retrieved.\n");
+			return status;
+		}
+		if((status = call CryptoRaw.decryptBufferB( m_key1, &counter, buffer, offset, pLen) != SUCCESS){
+			PrintDbg("CryptoP", " unprotectBufferFromBSB decrypt buffer failed.\n");
+			return status;
+		}		
+		return status;
+	}		
 
-                // Increase length of encrypted data by header
-                *pLen = *pLen + FAKEHEADERLEN;
-
-                return SUCCESS;
-        }
-        //default event void Crypto.encryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen) {}
-
-	task void task_decryptBuffer() {
-               error_t status = call Crypto.decryptBufferB(m_key1, m_buffer, m_offset, &m_len);
-/*
-                uint8_t i = 0;
-
-
-                PrintDbg("CryptoP", "KeyDistrib.task_decryptBuffer(keyID = '%d', keyValue = '0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue);
-
-                // BUGBUG: no real decryption is performed, only transformation from ENC|keyID|DATA into DATA and check for expected key value
-                #define FAKEHEADERLEN 5
-
-                // Check ENC tag
-                if (m_buffer[0] == 'E' && m_buffer[1] == 'N' && m_buffer[2] == 'C') {
-                    if ((m_buffer[3] == m_key1->keyValue[0]) && (m_buffer[4] == m_key1->keyValue[1])) {
-                        // Remove encryption header
-                        for (i = FAKEHEADERLEN; i < m_len; i++) m_buffer[i - FAKEHEADERLEN] = m_buffer[i];
-
-                        // Decrease length of decrypted data by fake header
-                        m_len -= FAKEHEADERLEN;
-                    }
-                    else {
-                        PrintDbg("CryptoP", "Different key used for encryption \n");
-                        status = EDIFFERENTKEY;
-                    }
-
-                }
-                else {
-                    PrintDbg("CryptoP", "ENC tag not detected.\n");
-                    status = EINVALIDDECRYPTION;
-                }
-
-		//m_len = Decrypt(m_key1, m_buffer + m_offset, m_len);
-*/
-		// we are done
-                signal Crypto.decryptBufferDone(status, m_buffer, m_len);
-		// Cleanup
- 		m_buffer = NULL;
-		m_state &= ~FLAG_STATE_CRYPTO_DECRYPTION;
+	command error_t macBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+		PrintDbg("CryptoP", " macBufferForNodeB called.\n");
+		uint8_t i;
+		uint8_t xor[16];
+		error_t status = SUCCESS;
+		memcpy(xor, buffer + offset, BLOCK_SIZE);
+		if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1)) == SUCCESS){	
+			
+			call AES.keyExpansion( exp, m_key1->keyValue);
+			
+			//process buffer by blocks 
+			for(i = 0; i < (pLen / BLOCK_SIZE); i++){
+						
+				call AES.encrypt( xor, exp, xor);
+				for (j := 0; i < BLOCK_SIZE; j++){
+					xor[j] = buffer[offset + i + j] ^ xor[j];
+				}			
+			}
+		
+		//append mac
+		memcpy(buffer + offset + pLen, xor, BLOCK_SIZE);
+		} else {
+			PrintDbg("CryptoP", " macBufferForNodeB failed, key to nodeID %d not found.\n", nodeID);
+		}
+		return status;
+	}	
+	
+	command error_t macBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+		PrintDbg("CryptoP", " macBufferForBSB called.\n");
+		uint8_t i;
+		uint8_t xor[16];
+		error_t status = SUCCESS;
+		memcpy(xor, buffer + offset, BLOCK_SIZE);
+		if((status = call KeyDistrib.getKeyToBSB(m_key1)) == SUCCESS){	
+			
+			call AES.keyExpansion( exp, m_key1->keyValue);
+			
+			//process buffer by blocks 
+			for(i = 0; i < (pLen / BLOCK_SIZE); i++){
+						
+				call AES.encrypt( xor, exp, xor);
+				for (j := 0; i < BLOCK_SIZE; j++){
+					xor[j] = buffer[offset + i + j] ^ xor[j];
+				}			
+			}
+		
+		//append mac
+		memcpy(buffer + offset + pLen, xor, BLOCK_SIZE);
+		} else {			
+			PrintDbg("CryptoP", " macBufferForBSB failed, key to BS not found.\n");
+		}
+		return status;
 	}
 	
-	command error_t Crypto.decryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len) {
-                PrintDbg("CryptoP", "KeyDistrib.decryptBuffer(keyID = '%d') called.\n", key->dbgKeyID);
-		if (m_state & FLAG_STATE_CRYPTO_DECRYPTION) {
-			return EALREADY;	
+	command error_t verifyMacFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+		uint8_t mac[BLOCK_SIZE];
+		error_t status = SUCCESS;
+		
+		memcpy(mac, buffer + offset + pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
+		status = call macBufferForNodeB(nodeID, buffer, offset, pLen - BLOCK_SIZE); //calculate new mac
+		if((memcmp(mac, buffer + offset + pLen - BLOCK_SIZE, BLOCK_SIZE))){ //compare new with received
+		    status = EWRONGMAC;
+		    PrintDbg("CryptoP", " verifyMacFromNodeB message MAC does not match.\n");
+		    return status;		
 		}
-		else {
-			// Change state to decryption and post task to decrypt
-			m_state |= FLAG_STATE_CRYPTO_DECRYPTION;
-			m_key1 = key; m_buffer = buffer; m_offset = offset; m_len = len;
-			post task_decryptBuffer();
-			return SUCCESS;
+		return status;
+	}	
+	
+	command error_t verifyMacFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+		uint8_t mac[BLOCK_SIZE];
+		error_t status = SUCCESS;
+		
+		memcpy(mac, buffer + offset + pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
+		status = call macBufferForBSB(buffer, offset, pLen - BLOCK_SIZE); //calculate new mac
+		if((memcmp(mac, buffer + offset + pLen - BLOCK_SIZE, BLOCK_SIZE))){ //compare new with received
+		    status = EWRONGMAC;
+		    PrintDbg("CryptoP", " verifyMacFromBSB message MAC does not match.\n");
+		    return status;		
 		}
-	}
-	//default event void Crypto.decryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen) {}
-
-        command error_t Crypto.decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
-            error_t status = SUCCESS;
-            uint8_t i = 0;
-
-            PrintDbg("CryptoP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
-
-            buffer += offset;
-
-
-            // BUGBUG: no real decryption is performed, only transformation from ENC|keyID|DATA into DATA and check for expected key value
-            #define FAKEHEADERLEN 5
-
-            // Check ENC tag
-            if (buffer[0] == 'E' && buffer[1] == 'N' && buffer[2] == 'C') {
-                if ((buffer[3] == key->keyValue[0]) && (buffer[4] == key->keyValue[1])) {
-                    // Remove encryption header
-                    for (i = FAKEHEADERLEN; i < *pLen; i++) buffer[i - FAKEHEADERLEN] = buffer[i];
-
-                    // Decrease length of decrypted data by fake header
-                    *pLen -= FAKEHEADERLEN;
-                }
-                else {
-                    PrintDbg("CryptoP", "Different key used for encryption \n");
-                    status = EDIFFERENTKEY;
-                }
-
-            }
-            else {
-                PrintDbg("CryptoP", "ENC tag not detected.\n");
-                status = EINVALIDDECRYPTION;
-            }
-
-            //m_len = Decrypt(m_key1, m_buffer + m_offset, m_len);
-
-            return status;
-        }
-
-	task void task_deriveKey() {
-                PrintDbg("CryptoP", "KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID);
-                //m_len = Encrypt(m_key1, m_buffer + m_offset, m_len);
-                memcpy(m_key2->keyValue, m_buffer + m_offset, KEY_LENGTH);
-		// we are done
-		m_key2->dbgKeyID = m_dbgKeyID++;	// assign debug key id
-                PrintDbg("CryptoP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
-		m_state &= ~FLAG_STATE_CRYPTO_DERIV;
-		signal Crypto.deriveKeyDone(SUCCESS, m_key2);
+		return status;
 	}
 	
-	command error_t Crypto.deriveKey(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
-                PrintDbg("CryptoP", "KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID);
-		if (m_state & FLAG_STATE_CRYPTO_DERIV) {
-			return EALREADY;	
-		}
-		else {
-			// Change state to enecryption and post task to encrypt
-			m_state |= FLAG_STATE_CRYPTO_DERIV;
-			m_key1 = masterKey; 
-			m_key2 = derivedKey; 
-			m_buffer = derivationData; m_offset = offset; m_len = len;
-			post task_deriveKey();
-			return SUCCESS;
-		}
-	}
+	command error_t initCryptoIIB(){
+		#ifndef max
+			#define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
+		#endif
 
-	//default event void Crypto.deriveKeyDone(error_t status, PL_key_t* derivedKey) {}
-
-	task void task_generateKey() {
-                PrintDbg("CryptoP", "KeyDistrib.task_generateKey() called.\n");
-		// RNG(m_key1->keyValue, KEY_LENGTH);
-		// we are done
-		m_key1->dbgKeyID = m_dbgKeyID++;	// assign debug key id
-                dbg("CryptoP", "\t newKey = '%d')\n", m_key1->dbgKeyID);
-		m_state &= ~FLAG_STATE_CRYPTO_GENERATE;
-		signal Crypto.generateKeyDone(SUCCESS, m_key1);
-	}
+		#ifnef min
+			#define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
+		#endif
 	
-	command error_t Crypto.generateKey(PL_key_t* newKey) {
-                PrintDbg("CryptoP", "KeyDistrib.generateKey().\n");
-		if (m_state & FLAG_STATE_CRYPTO_GENERATE) {
-			return EALREADY;	
+		PrintDbg("CryptoP", " initCryptoIIB called.\n");
+		error_t status = SUCCESS;
+		
+		SavedData_t* SavedData = NULL;
+		KDCPrivData_t* KDCPrivData = NULL;
+		KDCPrivData = call SharedData.getKDCPrivData();
+		SavedData = call SharedData.getSavedData();
+		if(SavedData == NULL || KDCPrivData == NULL){
+		    status = EDATANOTFOUND;
+		    return status;
 		}
-		else {
-			// Change state to generation and post task to generate
-			m_state |= FLAG_STATE_CRYPTO_GENERATE;
-			m_key1 = newKey; 
-			post task_generateKey();
-			return SUCCESS;
+		SavedData_t* SavedDataEnd = SavedData + sizeof(SavedData) / sizeof(SavedData[0]);
+		//process all saved data items
+		while ( SavedData < SavedDataEnd ){
+			m_key1 = (KDCPrivData->preKeys[SavedData->nodeId]); //predistributed key
+			
+			//get derivation data
+			memset(m_buffer, 0, BLOCK_SIZE); //pad whole block with zeros
+				
+			m_buffer = min(SavedData->nodeId, TOS_NODE_ID); //add two ID's in same manner for both nodes
+			m_buffer + 2 = max(SavedData->nodeId, TOS_NODE_ID);
+			
+			//derive key from data and predistributed key
+			status = call CryptoRaw.deriveKey(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
+			if(status != SUCCESS){
+				PrintDbg("CryptoP", " key derivation for nodeID %d completed with status %d.\n", SavedData->nodeId, status);
+			}
+			
+			//save key to KDCData shared key		
+			memcpy( (SavedData->KDCData)->shared_key, m_key2, sizeof(m_key2));
+			(SavedData->KDCData)->counter = 0;
+			SavedData++;
 		}
+		
+		return status;
 	}
-
-	//default event void Crypto.generateKeyDone(error_t status, PL_key_t* newKey) {}
-
-        command error_t Crypto.generateKeyBlocking(PL_key_t* newKey) {
-                PrintDbg("CryptoP", "KeyDistrib.generateKeyBlocking().\n");
-                newKey->keyType = KEY_TONODE;
-                newKey->dbgKeyID = m_dbgKeyID++;	// assign debug key id
-                // TODO: RNG(newKey->keyValue, KEY_LENGTH);
-                PrintDbg("CryptoP", "\t newKey = '%d')\n", newKey->dbgKeyID);
-                return SUCCESS;
-        }
-
 }

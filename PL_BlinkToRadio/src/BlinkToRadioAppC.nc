@@ -56,7 +56,7 @@ implementation {
   ---> Replaced by new ProtectLayerC	
 */
   components ProtectLayerC;
-
+  components PrintfC;
 
   App.Boot -> MainC;
   App.Leds -> LedsC;

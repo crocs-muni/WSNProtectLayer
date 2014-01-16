@@ -1,4 +1,5 @@
 #include "ProtectLayerGlobals.h"
+#include "printf.h"
 configuration ControllerAppC {}
 implementation {
 	components MainC, ControllerAppP, ProtectLayerC, UserApp1C, ConfigurationC, TestFlashC, LoggerC;   

@@ -19,6 +19,41 @@ interface KeyDistrib {
 	event void discoverKeysDone(error_t result);
 	
 	/**
+		Command: Get key to node.
+		@param[in] nodeID node identification of node for which the key should be searched for
+		@param[out] pNodeKey handle to key shared between node and base station 
+		@return error_t status.
+	*/	
+	command error_t getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey);
+	
+	/**
+		Command: Get key to base station
+		@param[out] pBSKey handle to key shared between node and base station 
+		@return error_t status.
+	*/
+	command error_t getKeyToBSB(PL_key_t* pBSKey);	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+/*** DEPRICATED ***/
+
+
+	/**
 		Command: Posts task for obtaining key to base station
 		@return error_t status. SUCCESS or EALREADY if already pending	
 	*/	
@@ -45,6 +80,5 @@ interface KeyDistrib {
 		@return nothing
 	*/	
 	event void getKeyToNodeDone(error_t result, PL_key_t* pNodeKey);
-	
-	command PL_key_t* getKeyToNodeB(uint8_t nodeID);
+
 }
