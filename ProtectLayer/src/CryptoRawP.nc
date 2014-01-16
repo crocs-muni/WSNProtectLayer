@@ -42,7 +42,11 @@ implementation {
 	//
 	//	CryptoRaw interface
 	//	
-	command error_t CryptoRaw.encryptBufferB(PL_key_t* key, uint8_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
+	command error_t CryptoRaw.encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
+		uint8_t i;
+		uint8_t j;
+		uint8_t plainCounter[16];			
+		uint8_t encCounter[16];
 		
 		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(offset = '%d' buffer = '%d', 1 = '%d', 6 = '%d'.\n", buffer[0],buffer[1],buffer[6]);
 		
@@ -51,10 +55,7 @@ implementation {
 		#ifdef AES
 		
 		
-		uint8_t i;
-		uint8_t j;
-		uint8_t plainCounter[16];			
-		uint8_t encCounter[16];
+		
 		
 		//set rest of counter to zeros to fit AES block
 		memset(plainCounter, 0, 16);	
@@ -64,16 +65,16 @@ implementation {
 		//process buffer by blocks 
 		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
 		
-			plainCounter[0] = counter;
+			plainCounter[0] = key->counter;
 			call AES.encrypt( plainCounter, exp, encCounter);
 			for (j := 0; i < BLOCK_SIZE; j++){
 				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
 			}
-			counter++;
+			(key->counter)++;
 		}
 		
 		#else /* No AES, FAKE encryption*/
-		uint8_t         i = 0;
+		//uint8_t         i = 0;
 	   // PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
 		
 		buffer += offset;
@@ -101,17 +102,18 @@ implementation {
 	}
 	
 	
-	command error_t CryptoRaw.decryptBufferB(PL_key_t* key, uint8_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
+	command error_t CryptoRaw.decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
 		
 		error_t status = SUCCESS;
-		
-		PrintDbg("CryptoRawP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
-		#ifdef AES
-		
 		uint8_t i;
 		uint8_t j;
 		uint8_t plainCounter[16];			
 		uint8_t encCounter[16];
+		
+		PrintDbg("CryptoRawP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
+		#ifdef AES
+		
+		
 		
 		//set rest of counter to zeros to fit AES block
 		memset(plainCounter, 0, 16);	
@@ -121,16 +123,16 @@ implementation {
 		//process buffer by blocks 
 		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
 		
-			plainCounter[0] = counter;
+			plainCounter[0] =  key->counter;
 			call AES.decrypt( plainCounter, exp, encCounter);
 			for (j := 0; i < BLOCK_SIZE; j++){
 				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
 			}
-			counter++;
+			(key->counter)++;
 		}
 		
 		#else /* No AES, FAKE encryption*/
-		uint8_t i = 0;
+		//uint8_t i = 0;
 
 		
 
@@ -165,7 +167,8 @@ implementation {
 		
 		#endif /* AES */
 		
-		return status;
+		return status;clear
+		
 	}
 	
 	

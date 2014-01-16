@@ -21,7 +21,8 @@ implementation {
 	Init = CryptoP.Init;
 	Crypto = CryptoP.Crypto;
 	
-	Crypto.CryptoRaw -> CryptoRawC;
-	Crypto.KeyDistrib -> KeyDistribC;
-	Crypto.AES -> AESC;
+	Crypto.CryptoRaw -> CryptoRawC.CryptoRaw;
+	Crypto.KeyDistrib -> KeyDistribC.KeyDistrib;
+	Crypto.AES -> AESC.AES;
+	Crypto.SharedData -> SharedDataC.SharedData;
 }

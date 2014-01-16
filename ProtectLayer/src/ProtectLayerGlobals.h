@@ -184,12 +184,17 @@ KDCPrivData_t.txt
 enum {
 	KEY_TOBS = 1,
 	KEY_TONODE = 2,
+	KEY_TOBSCRYPT = 3,
+	KEY_TONODECRYPT = 4,
+	KEY_TOBSMAC = 5,
+	KEY_TONODEMAC = 6,
 } KEY_TYPE;
 
 typedef nx_struct _key {
   nx_uint8_t    keyType;
   nx_uint8_t    keyValue[KEY_LENGTH];
   nx_uint16_t	dbgKeyID;
+  nx_uint8_t 	counter;
 } PL_key_t;
 
 typedef uint16_t node_id_t;

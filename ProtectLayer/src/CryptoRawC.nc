@@ -14,15 +14,12 @@ configuration CryptoRawC {
 }
 implementation {
 	components MainC;   
-	components CryptoRawP;   
-	
-	//added AES
-	components AESC;
+	components CryptoRawP;
 	
 	MainC.SoftwareInit -> CryptoRawP.Init;	//auto-initialization
 	
-	Init = CryptoP.Init;
-	CryptoRaw = CryptoRawP.Crypto;
+	Init = CryptoRawP.Init;
+	CryptoRaw = CryptoRawP.CryptoRaw;
 	
 	//added AES
 	CryptoRaw.AES -> AESC;
