@@ -71,6 +71,10 @@ implementation {
 				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
 			}
 			(key->counter)++;
+			if((key->counter) == 0){
+				PrintDbg("CryptoRawP", " encryptBufferB counter overflow, generate new key requiered.\n");
+				//deal with new key and counter value reset
+			}
 		}
 		
 		#else /* No AES, FAKE encryption*/
@@ -129,6 +133,10 @@ implementation {
 				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
 			}
 			(key->counter)++;
+			if((key->counter) == 0){
+				PrintDbg("CryptoRawP", " decryptBufferB counter overflow, generate new key requiered.\n");
+				//deal with new key and counter value reset
+			}
 		}
 		
 		#else /* No AES, FAKE encryption*/
