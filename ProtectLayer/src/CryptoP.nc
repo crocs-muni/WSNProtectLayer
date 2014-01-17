@@ -263,4 +263,31 @@ implementation {
 		
 		return status;
 	}
+	
+	command error_t hashDataB( uint8_t* buffer, uint8_t offset, PL_key_t* key, uint8_t iterations){
+		error_t status = SUCCESS;
+		uint8_t i;
+		PrintDbg("CryptoP", " hashDataB called.\n");
+		for(i = 0; i < iterations; i++){
+			if((status = call hashDataBlockB(buffer, offset, key)) != SUCCESS){
+				PrintDbg("CryptoP", " hashDataB failed.\n");
+				return status;
+			}
+		}
+		return status;
+	}
+	
+	command error_t hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key){
+		error_t status = SUCCESS;
+		uint8_t previous[16];
+		uint8_t i;
+		PrintDbg("CryptoP", " hashDataBlockB called.\n");
+		call AES.keyExpansion( exp, key->keyValue);
+		memcpy( previous, buffer + offset, BLOCK_SIZE);
+		call AES.encrypt( buffer + offset, exp, buffer + offset);
+		for(i = 0; i < BLOCK_SIZE; i++){
+			buffer[i + offset] = buffer[i + offset] ^ previous[i];
+		}		
+		return status;
+	}
 }

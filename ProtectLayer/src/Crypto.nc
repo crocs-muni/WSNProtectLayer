@@ -119,4 +119,26 @@ interface Crypto {
 			@return error_t status
 	*/
 	command error_t initCryptoIIB();
+	
+	/**	
+			Command: function to calculate AES based hash of data in buffer.
+			makes number of rounds specified in iterations.
+			Length of data is aes block size
+			@param[in out] buffer with data, replaced with calculated hash
+			@param[in] offset
+			@param[in] key key for encryption
+			@param[in] iterations number of rounds
+			@return error_t status
+	*/
+	command error_t hashDataB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, PL_key_t* key, uint8_t iterations);
+	
+	/**	
+			Command: function to calculate AES based hash of data in buffer.
+			makes one iteration. Length of data is aes block size
+			@param[in out] buffer with data, replaced with calculated hash
+			@param[in] offset			
+			@param[in] key key for encryption			
+			@return error_t status
+	*/
+	command error_t hashDataBlockB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, PL_key_t* key);
 }
