@@ -10,10 +10,19 @@ configuration CryptoC {
 		interface Init;
 		interface Crypto;
 	}
+	
 }
-implementation {  
+implementation {
+	components MainC;   
 	components CryptoP;   
+	
+	MainC.SoftwareInit -> CryptoP.Init;	//auto-initialization
 	
 	Init = CryptoP.Init;
 	Crypto = CryptoP.Crypto;
+	
+	Crypto.CryptoRaw -> CryptoRawC.CryptoRaw;
+	Crypto.KeyDistrib -> KeyDistribC.KeyDistrib;
+	Crypto.AES -> AESC.AES;
+	Crypto.SharedData -> SharedDataC.SharedData;
 }
