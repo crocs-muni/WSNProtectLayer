@@ -85,7 +85,7 @@ implementation {
 		
 		
 		dbg("NodeState", "Privacy component initialization...\n");
-		call IntrusionDetectInit.init();
+		
 		return SUCCESS;
 	}
 	
@@ -357,6 +357,7 @@ implementation {
 		key = call KeyDistrib.getKeyToNodeB(spHeader->receiver);
 		call Crypto.encryptBufferB(key, (uint8_t *)spHeader, sizeof(SPHeader_t), &encLen);
 		sReq.len = encLen + sizeof(SPHeader_t);
+
 
 		//behavior switch based on interface parameter (id) 
 		switch (m_nextId) {

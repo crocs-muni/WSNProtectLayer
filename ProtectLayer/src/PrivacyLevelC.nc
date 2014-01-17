@@ -18,7 +18,8 @@ implementation{
 	components PrivacyC;
 	components CryptoC;
 	components PrivacyLevelP;
-        components new TimerMilliC() as TimerPL; //testing
+    components DispatcherC;
+    components new TimerMilliC() as TimerPL; //testing
 	
 	PrivacyLevelP.TimerP-> TimerPL; //testing
 	
@@ -28,7 +29,7 @@ implementation{
 	
 		
 	PrivacyLevelP.AMSend -> PrivacyC.MessageSend[MSG_PLEVEL];
-	PrivacyLevelP.Receive -> PrivacyC.MessageReceive[MSG_PLEVEL];
+	PrivacyLevelP.Receive -> DispatcherC.ChangePL_Receive;
 	
 	PrivacyLevelP.Crypto -> CryptoC.Crypto;
 	

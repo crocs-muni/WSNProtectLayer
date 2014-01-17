@@ -36,5 +36,5 @@ implementation{
 	SharedDataP.SharedDataWrite -> SharedDataStorage.BlockWrite;
 	#endif
 	
-	MainC.SoftwareInit -> SharedDataP.Init;
+	
 }

@@ -5,7 +5,7 @@
  * 	@date      2012-2013
  */
 #include "ProtectLayerGlobals.h"
-//#include "printf.h"
+#include "printf.h"
 module CryptoP {
 	provides {
 		interface Init;
