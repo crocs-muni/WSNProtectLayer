@@ -11,12 +11,8 @@ configuration CryptoC {
 		interface Crypto;
 	}
 }
-implementation {
-	components MainC;   
+implementation {  
 	components CryptoP;   
-  
-  
-	MainC.SoftwareInit -> CryptoP.Init;	//auto-initialization
 	
 	Init = CryptoP.Init;
 	Crypto = CryptoP.Crypto;

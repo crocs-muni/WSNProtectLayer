@@ -43,11 +43,6 @@ implementation {
     components DispatcherC;
        
         //components PrintfC, SerialStartC;  // support for printf over serial console. Can be removed
-  
-	MainC.SoftwareInit -> PrivacyP.Init;	//auto-initialization
-        MainC.SoftwareInit -> PrivacyLevelC.Init;
-        MainC.SoftwareInit -> ForwarderC.Init;
-
 	
 	Init = PrivacyP.Init;
 	Privacy = PrivacyP.Privacy;

@@ -49,6 +49,14 @@ enum {
   LOGGED_SIZE = 20,
   RSSI_THRESHOLD = -73
 };
+
+enum {
+  STATE_INIT = 0,
+  STATE_READY_TO_DEPLOY = 1,
+  STATE_MAGIC_RECEIVED = 2,
+  STATE_READY_FOR_APP = 3,
+  STATE_WORKING = 4
+}; 
 // NOTE: constants should be defined as item in enum above (to save space) #define MAX_NEIGHBOR_COUNT 	20 /**< Maximum number of neighbors - used to allocate static arrays */
 
 #define FLAG_STATE_KDP_DISCOVERKEYS 0x0001	/**< neighbor keys discovery in progress */

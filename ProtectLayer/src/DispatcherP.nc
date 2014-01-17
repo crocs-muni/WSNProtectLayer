@@ -4,6 +4,12 @@ module DispatcherP{
 		interface Receive as Lower_ChangePL_Receive;
 		interface Receive as Lower_IDS_Receive;	
 		interface Packet;
+		interface Init as CryptoCInit;	
+		interface Init as PrivacyCInit;	
+		interface Init as SharedDataCInit;	
+		interface Init as ForwarderCInit;
+		interface Init as PrivacyLevelCInit;
+		
 	}
 	provides {
 		interface Receive as PL_Receive;
@@ -17,10 +23,52 @@ implementation{
 	
 	message_t memoryMsgForIDS;
 	message_t * p_msgForIDS;
+	
+	uint8_t m_state = STATE_INIT;
+	
+	
 
 	command error_t Init.init()
 	{
-		p_msgForIDS = &memoryMsgForIDS;	
+		switch (m_state) {
+			case STATE_INIT:
+			{
+				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!USE software init and booted interface to signal to dispatcher
+				//self init
+				p_msgForIDS = &memoryMsgForIDS;	
+				
+				//init shared data
+				call SharedDataCInit.init();
+				//crypto init
+				call CryptoCInit.init();
+				//privacy init
+				call PrivacyCInit.init();  //mem init
+				//Forwarder init
+				call ForwarderCInit.init(); //mem init
+				//PrivacyLevel init
+				call PrivacyLevelCInit.init(); //nothing in it now
+				//additional inits?
+				//TODO
+				
+				//start radio
+				//TODO
+				
+				break;
+				}
+			case STATE_READY_TO_DEPLOY:
+			{
+				break;
+				}
+			
+		}
+		
+		
+		
+		
+		
+		
+		
+		
 		
 		return SUCCESS;
 	}

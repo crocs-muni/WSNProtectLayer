@@ -12,6 +12,11 @@ implementation{
 	components DispatcherP;
 	components ActiveMessageC;   
 	components MainC;
+	components CryptoC;
+	components PrivacyC;
+	components SharedDataC;
+	components ForwarderC;
+	components PrivacyLevelC;
 	
 	components new AMReceiverC(AM_PROTECTLAYERRADIO) as PL_ReceiverC;
 	components new AMReceiverC(AM_CHANGEPL) as ChangePL_ReceiverC;
@@ -30,4 +35,11 @@ implementation{
 	ChangePL_Receive = DispatcherP.ChangePL_Receive;
 	
 	
+	
+	
+	DispatcherP.CryptoCInit -> CryptoC.Init;
+	DispatcherP.PrivacyCInit -> PrivacyC.Init;
+	DispatcherP.SharedDataCInit -> SharedDataC.Init;
+	DispatcherP.ForwarderCInit -> ForwarderC.Init;
+	DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
 }

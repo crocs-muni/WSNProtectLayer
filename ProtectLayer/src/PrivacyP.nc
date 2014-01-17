@@ -85,7 +85,7 @@ implementation {
 		
 		
 		dbg("NodeState", "Privacy component initialization...\n");
-		call IntrusionDetectInit.init();
+		
 		return SUCCESS;
 	}
 	
