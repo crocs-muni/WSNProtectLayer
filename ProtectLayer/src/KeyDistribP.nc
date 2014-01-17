@@ -173,7 +173,7 @@ implementation{
 	//changed header to unify interface with getKeyToBS, thus changed functionality 
 	command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey, uint8_t* counter){
             SavedData_t* pSavedData = NULL;
-            //PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%d' .\n", nodeID);
+            PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%d' .\n", nodeID);
 
             pSavedData = call SharedData.getNodeState(nodeID);
             if (pSavedData != NULL) {
@@ -189,9 +189,16 @@ implementation{
 	}
 
 	command error_t KeyDistrib.getKeyToBSB(PL_key_t* pBSKey, uint8_t* counter) {
-		// TODO: implementovat 
-		
-		return SUCCESS;
+		KDCPrivData_t* KDCPrivData = NULL;
+		PrintDbg("KeyDistribP", "getKeyToBSB called.\n");
+		KDCPrivData = call SharedData.getKDCPrivData();
+		if(kdcPrivData == NULL){
+			PrintDbg("KeyDistribP", "getKeyToBSB key not received");
+			return EKEYNOTFOUND;
+		} else {		
+			pBSKey = &(kdcPrivData->keyToBS);
+			return SUCCESS;
+		}
 	}	
 	
 	
