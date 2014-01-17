@@ -194,7 +194,7 @@ typedef nx_struct _key {
   nx_uint8_t    keyType;
   nx_uint8_t    keyValue[KEY_LENGTH];
   nx_uint16_t	dbgKeyID;
-  nx_uint8_t 	counter;
+  nx_uint32_t 	counter;
 } PL_key_t;
 
 typedef uint16_t node_id_t;
