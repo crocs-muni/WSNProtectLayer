@@ -45,7 +45,11 @@ enum {
   MAX_NEIGHBOR_COUNT = 30,
   RECEIVE_BUFFER_LEN = 5,
   LOGGED_SIZE = 20,
-  RSSI_THRESHOLD = -73
+  RSSI_THRESHOLD = -73,
+  IDS_MAX_MONITORED_NEIGHBORS = 5,
+  IDS_BUFFER_SIZE = 5,
+  IDS_DROPPING_RATE = 50,
+  IDS_MIN_PACKET_RECEIVED = 5
 };
 // NOTE: constants should be defined as item in enum above (to save space) #define MAX_NEIGHBOR_COUNT 	20 /**< Maximum number of neighbors - used to allocate static arrays */
 
@@ -327,6 +331,16 @@ typedef uint8_t NODE_REPUTATION;
 	IDS_ON = 1, //
 	IDS_OFF = 2  //
 } IDS_STATUS;
+
+/**
+ * Structure of an item in an IDS buffer
+ */
+ typedef struct IDSBufferedPacket {
+ 	nx_uint16_t sender;
+ 	nx_uint16_t receiver;
+ 	nx_uint64_t hashPacket;
+ } idsBufferedPacket_t;
+//typedef uint64_t idsBufferedPacket_t;
 
 void PrintDbg(const char* messageClass, const char* formatString, ...) {
     va_list args;
