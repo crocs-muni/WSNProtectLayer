@@ -14,13 +14,14 @@ configuration KeyDistribC {
 implementation {
 	components MainC;   
 	components KeyDistribP;  
+	components CryptoC;
+        components SharedDataC;
         
 	MainC.SoftwareInit -> KeyDistribP.Init;	//auto-initialization
 
 	Init = KeyDistribP.Init;
 	KeyDistrib = KeyDistribP.KeyDistrib;
 	
-	KeyDistrib.Crypto -> CryptoC.Crypto;
-        KeyDistrib.SharedData -> SharedDataC.SharedData;
-
+	KeyDistribP.Crypto -> CryptoC.Crypto;
+	KeyDistribP.SharedData -> SharedDataC.SharedData;
 }

@@ -5,7 +5,7 @@
  * 	@date      2012-2013
  */
 #include "ProtectLayerGlobals.h"
-#include "aes.h" //AES constants
+#include "AES.h" //AES constants
 //#include "printf.h"
 
 module CryptoRawP {
@@ -53,7 +53,7 @@ implementation {
 		
 		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(buffer = '%d', 1 = '%d', 2 = '%d'.\n", buffer[0],buffer[1],buffer[2]);
 		
-		#ifdef AES
+		//#ifdef AES
 		
 		
 		
@@ -61,17 +61,17 @@ implementation {
 		//set rest of counter to zeros to fit AES block
 		memset(plainCounter, 0, 16);	
 		
-		call AES.keyExpansion( exp, key->keyValue);
+		call AES.keyExpansion( exp, (uint8_t*) key->keyValue);
 		
 		//process buffer by blocks 
-		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
+		for(i = 0; i < (*pLen / BLOCK_SIZE); i++){
 		
 			plainCounter[0] =  key->counter;
 			plainCounter[1] =  (key->counter) >> 8;
 			plainCounter[2] =  (key->counter) >> 16;
 			plainCounter[3] =  (key->counter) >> 24;
 			call AES.encrypt( plainCounter, exp, encCounter);
-			for (j := 0; i < BLOCK_SIZE; j++){
+			for (j = 0; i < BLOCK_SIZE; j++){
 				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
 			}
 			(key->counter)++;
@@ -81,7 +81,8 @@ implementation {
 			}
 		}
 		
-		#else /* No AES, FAKE encryption*/
+		//#else /* No AES, FAKE encryption*/
+		/*
 		//uint8_t         i = 0;
 	   // PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
 		
@@ -102,8 +103,8 @@ implementation {
 
 		// Increase length of encrypted data by header
 		*pLen = *pLen + FAKEHEADERLEN;
-		
-		#endif /* AES */
+		*/
+		//#endif /* AES */
 		
 		
 		return SUCCESS;
@@ -119,24 +120,24 @@ implementation {
 		uint8_t encCounter[16];
 		
 		PrintDbg("CryptoRawP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
-		#ifdef AES
+		//#ifdef AES
 		
 		
 		
 		//set rest of counter to zeros to fit AES block
 		memset(plainCounter, 0, 16);	
 		
-		call AES.keyExpansion( exp, key->keyValue);
+		call AES.keyExpansion( exp, (uint8_t*)(key->keyValue));
 		
 		//process buffer by blocks 
-		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
+		for(i = 0; i < (*pLen / BLOCK_SIZE); i++){
 		
 			plainCounter[0] =  key->counter;
 			plainCounter[1] =  (key->counter) >> 8;
 			plainCounter[2] =  (key->counter) >> 16;
 			plainCounter[3] =  (key->counter) >> 24;
 			call AES.decrypt( plainCounter, exp, encCounter);
-			for (j := 0; i < BLOCK_SIZE; j++){
+			for (j = 0; i < BLOCK_SIZE; j++){
 				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
 			}
 			(key->counter)++;
@@ -146,11 +147,11 @@ implementation {
 			}
 		}
 		
-		#else /* No AES, FAKE encryption*/
+		//#else /* No AES, FAKE encryption*/
 		//uint8_t i = 0;
 
 		
-
+		/*
 		buffer += offset;
 
 		// TODO: na define prepinani mezi AES vs. FAKE
@@ -180,15 +181,15 @@ implementation {
 
 		//m_len = Decrypt(m_key1, m_buffer + m_offset, m_len);
 		
-		#endif /* AES */
+		#endif */ /* AES */
 		
-		return status;clear
+		return status;
 		
 	}
 	
 	
 	
-	command error_t CryptoRaw.deriveKey(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
+	command error_t CryptoRaw.deriveKeyB(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
         PrintDbg("CryptoRawP", "KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID);
 		
 		//TODO: predelat na blocking verzi
@@ -196,14 +197,15 @@ implementation {
 		// TODO: Mod derivace s vyuzitim AESem
 		// derivedKey = E_masterKey(derivationData)
 		
-		#ifdef AES
+		//#ifdef AES
 		
-		call AES.keyExpansion( exp, masterKey->keyValue);
-		call AES.encrypt( derivationData + offset, exp, derivedKey->keyValue);		
+		call AES.keyExpansion( exp, (uint8_t*)(masterKey->keyValue));
+		call AES.encrypt( derivationData + offset, exp, (uint8_t*)(derivedKey->keyValue));		
 		
 		return SUCCESS;
 		
-		#else /* No AES, use previous split-phase version */
+		//#else /* No AES, use previous split-phase version */
+		/*
 		if (m_state & FLAG_STATE_CRYPTO_DERIV) {
 			return EALREADY;	
 		}
@@ -223,24 +225,25 @@ implementation {
 		memcpy(m_key2->keyValue, m_buffer + m_offset, KEY_LENGTH);
 		// we are done
 		m_key2->dbgKeyID = m_dbgKeyID++;	// assign debug key id
-		#endif /* AES */
+		#endif 
+		*/ /* AES */
 		PrintDbg("CryptoRawP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
 			m_state &= ~FLAG_STATE_CRYPTO_DERIV;
 		
 	}
 	
-	command error_t generateKeyB(PL_key_t* newKey) {
+	command error_t CryptoRaw.generateKeyB(PL_key_t* newKey) {
 	
 		//TODO pokud potřeba
 		return SUCCESS;
 	}
 	
-	command error_t hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key){
+	command error_t CryptoRaw.hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key){
 		error_t status = SUCCESS;
 		uint8_t previous[16];
 		uint8_t i;
 		PrintDbg("CryptoRawP", " hashDataBlockB called.\n");
-		call AES.keyExpansion( exp, key->keyValue);
+		call AES.keyExpansion( exp, (uint8_t*) key->keyValue);
 		memcpy( previous, buffer + offset, BLOCK_SIZE);
 		call AES.encrypt( buffer + offset, exp, buffer + offset);
 		for(i = 0; i < BLOCK_SIZE; i++){
@@ -279,9 +282,10 @@ implementation {
 	//
 	//	CryptoRaw interface
 	//
+	/*
 	task void task_encryptBuffer() {
                 error_t status = call CryptoRaw.encryptBufferB(m_key1, m_buffer, m_offset, &m_len);
-
+*/
 /*
                 uint8_t         i = 0;
                 PrintDbg("CryptoRawP", "KeyDistrib.task_encryptBuffer(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue[0], m_key1->keyValue[1]);
@@ -302,7 +306,7 @@ implementation {
                 m_len += FAKEHEADERLEN;
 
 		//m_len = Encrypt(m_key1, m_buffer + m_offset, m_len);
-*/
+
 
 		// we are done
                 signal CryptoRaw.encryptBufferDone(status, m_buffer, m_len);
@@ -327,6 +331,7 @@ implementation {
 
 	task void task_decryptBuffer() {
                error_t status = call CryptoRaw.decryptBufferB(m_key1, m_buffer, m_offset, &m_len);
+               */
 /*
                 uint8_t i = 0;
 
@@ -357,7 +362,7 @@ implementation {
                 }
 
 		//m_len = Decrypt(m_key1, m_buffer + m_offset, m_len);
-*/
+
 		// we are done
                 signal CryptoRaw.decryptBufferDone(status, m_buffer, m_len);
 		// Cleanup
@@ -444,5 +449,5 @@ implementation {
                 PrintDbg("CryptoRawP", "\t newKey = '%d')\n", newKey->dbgKeyID);
                 return SUCCESS;
         }
-
+*/
 }

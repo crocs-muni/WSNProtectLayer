@@ -14,15 +14,21 @@ configuration CryptoC {
 }
 implementation {
 	components MainC;   
-	components CryptoP;   
+	components CryptoP; 
+	components CryptoRawC;
+	components KeyDistribC;
+	components AESC;
+	components SharedDataC;
 	
 	MainC.SoftwareInit -> CryptoP.Init;	//auto-initialization
 	
 	Init = CryptoP.Init;
 	Crypto = CryptoP.Crypto;
 	
-	Crypto.CryptoRaw -> CryptoRawC.CryptoRaw;
-	Crypto.KeyDistrib -> KeyDistribC.KeyDistrib;
-	Crypto.AES -> AESC.AES;
-	Crypto.SharedData -> SharedDataC.SharedData;
+	
+	CryptoP.SharedData -> SharedDataC.SharedData;
+	CryptoP.CryptoRaw -> CryptoRawC.CryptoRaw;
+	CryptoP.KeyDistrib -> KeyDistribC.KeyDistrib;
+	CryptoP.AES -> AESC.AES;
+	
 }
