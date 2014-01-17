@@ -24,6 +24,7 @@ implementation{
 	components MainC;
 	components new TimerMilliC() as TimerIDS; //testing
 	components new BlockStorageC(VOLUME_LOG) as LogStorage;
+	components IDSBufferC;
 	
 	IntrusionDetectP.TimerIDS-> TimerIDS; //testing
 	
@@ -40,4 +41,6 @@ implementation{
 	IntrusionDetectP.SharedData -> SharedDataC.SharedData;
 	
 	IntrusionDetectP.BlockWrite -> LogStorage.BlockWrite;
+	
+	IntrusionDetectP.IDSBuffer -> IDSBufferC.IDSBuffer;
 }

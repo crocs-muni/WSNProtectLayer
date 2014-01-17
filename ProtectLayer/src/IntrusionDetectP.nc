@@ -15,6 +15,7 @@ module IntrusionDetectP {
 		interface SharedData;
 		interface Timer<TMilli> as TimerIDS;
 		interface BlockWrite;
+		interface IDSBuffer;
 	}
 	provides {
 		interface Init;
@@ -157,8 +158,25 @@ implementation {
 
 	// Messages passed to the IDS from privacy component
 	event message_t * ReceiveMsgCopy.receive(message_t *msg, void *payload, uint8_t len){
-                PrintDbg("IDS", "ReceiveMsgCopy.receive\n");
-                //is storage busy?
+
+//        PrintDbg("IDS", "ReceiveMsgCopy.receive\n");
+		uint8_t msgType;
+                
+        SPHeader_t* spHeader;        
+        spHeader = (SPHeader_t*) payload;
+        
+        msgType = spHeader->msgType;
+        
+        // AES (or another cryptographic function) of the payload should be computed in order
+        // to identify content of the messages
+        // Buffer for each of the node will contain:
+        // Sender id, Receiver id, Content, RSSI?
+        
+        
+        return msg;
+
+		/* This was used for logging to EEPROM - will not be used any more
+		//is storage busy?
 		if (m_storageBusy)
 		{
 			// storage busy, packet cannot be logged
@@ -181,9 +199,8 @@ implementation {
 				return msg;
 			}
 		}
-
+		*/
 		
-
 	}
 
 	event void BlockWrite.eraseDone(error_t error){
@@ -201,5 +218,13 @@ implementation {
 	}
 
 	event void BlockWrite.syncDone(error_t error){
+	}
+
+	event void IDSBuffer.oldestPacketRemoved(uint16_t sender, uint16_t receiver){
+		// TODO Auto-generated method stub
+	}
+
+	event void IDSBuffer.packetForwarded(uint16_t sender, uint16_t receiver){
+		// TODO Auto-generated method stub
 	}
 }

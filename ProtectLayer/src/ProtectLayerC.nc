@@ -23,6 +23,7 @@ configuration ProtectLayerC{
 }
 implementation{
 	components PrivacyC;
+	components IDSForwarderC;
 
 
 	Init = PrivacyC.Init;	

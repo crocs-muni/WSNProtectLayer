@@ -42,13 +42,27 @@ enum {
   AM_FLASH_GET_MSG = 135,
   AM_FLASH_SET_MSG = 136,
   AM_INTRUSION_MSG = 137,
+  AM_CHANGEPL = 138,
+  AM_IDS_ALERT = 139,
   POLICEMAN_TIMER_MESSAGE_MILLI = 5000,
   KEY_LENGTH = 16,
   MAX_NEIGHBOR_COUNT = 30,
   RECEIVE_BUFFER_LEN = 5,
   LOGGED_SIZE = 20,
-  RSSI_THRESHOLD = -73
+  RSSI_THRESHOLD = -73,
+  IDS_MAX_MONITORED_NEIGHBORS = 5,
+  IDS_BUFFER_SIZE = 5,
+  IDS_DROPPING_RATE = 50,
+  IDS_MIN_PACKET_RECEIVED = 5
 };
+
+enum {
+  STATE_INIT = 0,
+  STATE_READY_TO_DEPLOY = 1,
+  STATE_MAGIC_RECEIVED = 2,
+  STATE_READY_FOR_APP = 3,
+  STATE_WORKING = 4
+}; 
 // NOTE: constants should be defined as item in enum above (to save space) #define MAX_NEIGHBOR_COUNT 	20 /**< Maximum number of neighbors - used to allocate static arrays */
 
 #define FLAG_STATE_KDP_DISCOVERKEYS 0x0001	/**< neighbor keys discovery in progress */
@@ -336,6 +350,16 @@ typedef uint8_t NODE_REPUTATION;
 	IDS_ON = 1, //
 	IDS_OFF = 2  //
 } IDS_STATUS;
+
+/**
+ * Structure of an item in an IDS buffer
+ */
+ typedef struct IDSBufferedPacket {
+ 	nx_uint16_t sender;
+ 	nx_uint16_t receiver;
+ 	nx_uint64_t hashPacket;
+ } idsBufferedPacket_t;
+//typedef uint64_t idsBufferedPacket_t;
 
 void PrintDbg(const char* messageClass, const char* formatString, ...) {
     va_list args;
