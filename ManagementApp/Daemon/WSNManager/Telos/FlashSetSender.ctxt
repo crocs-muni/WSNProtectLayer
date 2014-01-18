@@ -1,0 +1,8 @@
+#BlueJ class context
+comment0.params=parent\ node
+comment0.target=FlashSetSender(NodeDriver,\ java.lang.String)
+comment1.params=to\ m
+comment1.target=void\ messageReceived(int,\ net.tinyos.message.Message)
+comment2.params=
+comment2.target=void\ sendMessage()
+numComments=3

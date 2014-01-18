@@ -4,10 +4,11 @@ import App.*;
 import Config.*;
 
 /**
- * Write a description of class Main here.
+ * Main class
+ * TODO: add parameters (arguments) for read/write switch
  * 
- * @author (your name) 
- * @version (a version number or a date)
+ * @author Bc. Marcel Gazdik
+ * @version 16.1.2014
  */
 public class Main
 {    

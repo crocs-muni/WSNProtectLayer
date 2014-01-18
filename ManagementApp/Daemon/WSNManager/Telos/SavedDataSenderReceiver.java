@@ -7,7 +7,9 @@ import java.lang.reflect.*;
 import net.tinyos.message.*;
 
 /**
+ * @OBSOLETE
  * Setup message sender and reveiver implementation
+ * //MUST BE REPLACED BY SavedDataPartMsg
  * 
  * @author Bc. Marcel Gazdik
  * @version 2013-10-28
@@ -63,9 +65,8 @@ public class SavedDataSenderReceiver extends BaseSenderReceiver {
         if(m instanceof SavedDataMsg){
             SavedDataMsg sdm = (SavedDataMsg) m;
             
-            RowHash row = new RowHash();
-            row.set("application_id", this.application);
-            row.set("node_id", this.node);
+            System.out.println(sdm.get_savedDataIdx());
+
             
             //for each possible configuration item do:
             //row.set("item_name", ...)
@@ -73,24 +74,30 @@ public class SavedDataSenderReceiver extends BaseSenderReceiver {
             //this.models.config.save(row);
             //done;
             
+            RowHash row = new RowHash();
+            row.set("application_id", this.application);
+            
+            //row.set("node_id", this.node);
+            row.set("node_id", "-1");
+            
             try {       
-                row.set("item_name","savedDataIdx");
+                /*row.set("item_name","savedDataIdx");
                 row.set("value", sdm.get_savedDataIdx());
-                this.models.config.saveOrUpdate(row);
+                this.models.config.saveOrUpdate(row);*/
                 
-                row.set("item_name","savedData_nodeId");
+                /*row.set("item_name","savedData_nodeId");
                 row.set("value", sdm.get_savedData_nodeId());
-                this.models.config.saveOrUpdate(row);
+                this.models.config.saveOrUpdate(row);*/
                 
-                row.set("item_name","savedData_kdcData_shared_key_keyType");
+                /*row.set("item_name","savedData_kdcData_shared_key_keyType");
                 row.set("value", sdm.get_savedData_kdcData_shared_key_keyType());
-                this.models.config.saveOrUpdate(row);
+                this.models.config.saveOrUpdate(row);*/
                 
                 row.set("item_name","savedData_kdcData_shared_key_keyValue");
                 row.set("value", shortArrayToString(sdm.get_savedData_kdcData_shared_key_keyValue()));
                 this.models.config.saveOrUpdate(row);
                 
-                row.set("item_name","savedData_kdcData_shared_key_dbgKeyID");
+                /*row.set("item_name","savedData_kdcData_shared_key_dbgKeyID");
                 row.set("value", sdm.get_savedData_kdcData_shared_key_dbgKeyID());
                 this.models.config.saveOrUpdate(row);
                 
@@ -100,16 +107,18 @@ public class SavedDataSenderReceiver extends BaseSenderReceiver {
                 
                 row.set("item_name","savedData_idsData_nb_messages");
                 row.set("value", sdm.get_savedData_idsData_nb_messages());
-                this.models.config.saveOrUpdate(row);
+                this.models.config.saveOrUpdate(row);*/
             }
             catch (Exception e){
-                System.out.println(e.getMessage());
+                System.err.println(e.getMessage());
             }
         }
     }
     
     public void sendMessage() throws java.io.IOException {
         try {
+            int counterSD = 0;
+            
             TableStatementInterface configs = this.models.config.getApplicationRelatedNodeConfiguration(
                 this.node, 
                 this.application
@@ -119,19 +128,10 @@ public class SavedDataSenderReceiver extends BaseSenderReceiver {
             for(RowStatementInterface row: configs){
                 SavedDataMsg m = new SavedDataMsg();
                 
-                
+                //System.in.read();
                 
                 //fill data
-                /*if(row.get("item_name").equals("counter")){
-                    m.set_counter(this.parent.getCounter());
-                }*/
-                if(row.get("item_name").equals("savedDataIdx")){
-                    m.set_savedDataIdx(Short.parseShort(row.get("value")));
-                }
-                else if(row.get("item_name").equals("savedData_nodeId")){
-                    m.set_savedData_nodeId(Short.parseShort(row.get("value")));
-                }
-                else if(row.get("item_name").equals("savedData_kdcData_shared_key_keyType")){
+                /*if(row.get("item_name").equals("savedData_kdcData_shared_key_keyType")){
                     m.set_savedData_kdcData_shared_key_keyType(Short.parseShort(row.get("value")));
                 }
                 else if(row.get("item_name").equals("savedData_kdcData_shared_key_keyValue")){
@@ -145,10 +145,10 @@ public class SavedDataSenderReceiver extends BaseSenderReceiver {
                 }
                 else if(row.get("item_name").equals("savedData_idsData_nb_messages")){
                     m.set_savedData_idsData_nb_messages(Short.parseShort(row.get("value")));
-                }
+                }*/
                 
                 
-                this.sendMessage(m);
+                
             }
         }
         catch (Exception e){

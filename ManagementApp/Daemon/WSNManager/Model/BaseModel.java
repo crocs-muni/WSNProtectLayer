@@ -54,7 +54,7 @@ public abstract class BaseModel extends App.Service {
      * @throws DbWriteException
      */
     public void saveOrUpdate(final Object data) throws DbWriteException {
-        if(data instanceof ArrayHash || data instanceof RowHash){  
+        if(data instanceof ArrayHash || data instanceof RowHash){ 
             StringBuilder newValues = new StringBuilder();
             
             for(String key: (ArrayHash) data){

@@ -5,6 +5,8 @@ BUILD_EXTRA_DEPS += LogMsg.java
 BUILD_EXTRA_DEPS += FlashGetMsg.java
 BUILD_EXTRA_DEPS += FlashSetMsg.java
 BUILD_EXTRA_DEPS += SavedDataMsg.java
+BUILD_EXTRA_DEPS += SavedDataPartMsg.java
+BUILD_EXTRA_DEPS += ConfGetMsg.java
 
 CLEAN_EXTRA = *.class *Msg.java
 
@@ -21,13 +23,19 @@ LogMsg.java: folders
 	mig java -target=null -java-classname=LogMsg ProtectLayerGlobals.h log_msg -o build/msg/$@
 
 FlashSetMsg.java: folders
-	mig java -target=null -java-classname=LogMsg ProtectLayerGlobals.h flash_set_msg -o build/msg/$@
+	mig java -target=null -java-classname=FlashSetMsg ProtectLayerGlobals.h flash_set_msg -o build/msg/$@
 
 FlashGetMsg.java: folders
-	mig java -target=null -java-classname=LogMsg ProtectLayerGlobals.h flash_get_msg -o build/msg/$@	
+	mig java -target=null -java-classname=FlashGetMsg ProtectLayerGlobals.h flash_get_msg -o build/msg/$@	
 	
 SavedDataMsg.java: folders
-	mig java -target=null -java-classname=LogMsg ProtectLayerGlobals.h con_sd_msg -o build/msg/$@
+	mig java -target=null -java-classname=SavedDataMsg ProtectLayerGlobals.h con_sd_msg -o build/msg/$@
+
+SavedDataPartMsg.java: folders
+	mig java -target=null -java-classname=SavedDataPartMsg ProtectLayerGlobals.h con_sd_part_msg -o build/msg/$@
+
+ConfGetMsg.java: folders
+	mig java -target=null -java-classname=ConfGetMsg ProtectLayerGlobals.h con_get_msg -o build/msg/$@
 
 
 include $(MAKERULES)

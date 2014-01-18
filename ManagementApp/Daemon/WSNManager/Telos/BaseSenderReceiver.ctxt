@@ -1,0 +1,8 @@
+#BlueJ class context
+comment0.params=parent\ node
+comment0.target=BaseSenderReceiver(NodeDriver,\ java.lang.String)
+comment1.params=
+comment1.target=void\ sendMessage()
+comment2.params=m
+comment2.target=void\ sendMessage(net.tinyos.message.Message)
+numComments=3

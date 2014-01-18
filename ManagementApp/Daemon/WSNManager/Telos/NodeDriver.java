@@ -9,7 +9,7 @@ import net.tinyos.util.*;
 import java.util.*;
 
 /**
- * Write a description of class NodeDriver here.
+ * TelosB driver
  * 
  * @author Bc. Marcel Gazdik
  * @version (a version number or a date)
@@ -30,24 +30,35 @@ public class NodeDriver extends BaseController {
         System.out.println("Loading applications");
         try {
             for(RowStatementInterface r: this.models.applications.getEnabledApplicationsNodes()){
-                //1) connect device
-                this.connect(r.get("id"), r.get("device"));
-                System.out.println("connected");
+                if(Integer.parseInt(r.get("id")) < 0){
+                    //ids bellow zero are for testing purposes (ie. temporary storage)
+                    continue;
+                }
+                System.out.println(r);
                 
-                //2) register sender/receivers
-                this.registerMessage(r.get("id"), new LogReceiver(this, r.get("id")), new LogMsg());
-                this.registerMessage(r.get("id"), new SavedDataSenderReceiver(this, r.get("id")), new SavedDataMsg());
+                // INIT ///////////////////////////////////////////////////////////
                 
-                //3) register translators
+                //1) register translators
                 this.nodesToApp.put(r.get("id"), r.get("application_id"));
                 
+                //0) connect device
+                this.connect(r.get("id"), r.get("device"));
+                
+                // USER MESSAGES //////////////////////////////////////////////////
+                
+                //3) register sender/receivers
+                this.registerMessage(r.get("id"), new LogReceiver(this, r.get("id")), new LogMsg());
+                //this.registerMessage(r.get("id"), new SavedDataSenderReceiver(this, r.get("id")), new SavedDataMsg());
+                this.registerMessage(r.get("id"), new SavedDataPartSenderReceiver(this, r.get("id")), new SavedDataPartMsg());
+                
                 //4) upload configuration to node
-                (new SavedDataSenderReceiver(this, r.get("id"))).sendMessage();
+                //(new SavedDataSenderReceiver(this, r.get("id"))).sendMessage();
+                (new SavedDataPartSenderReceiver(this, r.get("id"))).sendMessage();
+                //this message type seems to be unused...
                 (new FlashSetSender(this, r.get("id"))).sendMessage();
                 
-                
-                
-                System.out.println(r);
+                //4) download config for test
+                (new ConfGetSender(this, r.get("id"))).sendMessage();
             }
         }
         catch (Exception e){

@@ -42,6 +42,7 @@ enum {
   AM_FLASH_GET_MSG = 135,
   AM_FLASH_SET_MSG = 136,
   AM_INTRUSION_MSG = 137,
+  AM_CON_SD_PART_MSG = 138,
   POLICEMAN_TIMER_MESSAGE_MILLI = 5000,
   KEY_LENGTH = 16,
   MAX_NEIGHBOR_COUNT = 30,
@@ -113,6 +114,14 @@ typedef enum _MSG_TYPE {
 	MSG_COUNT = 8   /**< number of message types */
 } MSG_TYPE;
 
+typedef enum _SAVED_DATA_KEYS {
+        SD_KEY_TYPE = 200,      //nx_uint8_t
+        SD_KEY_VALUE,           //KEY_LENGTH * nx_uint8_t
+        SD_DBG_KEY_ID,          //nx_uint16_t
+        SD_COUNTER,             //nx_uint8_t
+        SD_REPUTATION,          //nx_uint8_t
+        SD_NB_MESSAGES          //nx_uint8_t
+} SAVED_DATA_KEYS;
 
 /**
 	The enumeration of possible privacy levels
@@ -244,7 +253,7 @@ typedef nx_struct RoutePrivData {
 
 typedef nx_struct KDCPrivData {
     PL_key_t	keyToBS;
-    PL_key_t	preKeys[KEY_LENGTH];
+    PL_key_t	preKeys[20];
 } KDCPrivData_t;
 /**
  * Structure combining all the data that need to be stored on the node by the protection layer
@@ -281,6 +290,15 @@ typedef nx_struct con_sd_msg {
 	nx_uint8_t savedDataIdx; /**< index of the savedData structure in the array */
 	SavedData_t savedData; /**< the actual savedData structure with all the data */
 } con_sd_msg_t;
+
+/**
+ * structure for passing saveddata structure by parts
+ */
+typedef nx_struct con_sd_part_msg {
+        nx_uint8_t len;                 //data length
+        nx_uint8_t key;                 //key identificator
+        nx_uint8_t data[20];            //item data
+} con_sd_part_msg_t;
 
 /**
  * Message structure for the privacy protection layer component settings
