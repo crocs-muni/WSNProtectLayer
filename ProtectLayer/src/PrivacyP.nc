@@ -28,6 +28,7 @@ module PrivacyP {
   
 	provides {
 		interface Init;
+		interface Init as PLInit;
 		interface Privacy;
 		
 		// parameterized interfaces for different message types
@@ -68,11 +69,6 @@ implementation {
 		
 		uint8_t i=0;
 		
-		m_privData = call SharedData.getPPCPrivData();
-		//TODO init also SharedDataC ?
-		// what if data are read from EEPROM?
-		m_privData->priv_level = PLEVEL_0;
-		
 		//init receive buffer
 		for(i = 0; i < RECEIVE_BUFFER_LEN; i++)
 		{
@@ -83,9 +79,16 @@ implementation {
 		//init IDS copy msg
 		m_msgForIDS.msg = &m_msgMemoryForIDS;
 		
-		
 		dbg("NodeState", "Privacy component initialization...\n");
 		
+		return SUCCESS;
+	}
+	
+	command error_t PLInit.init() {
+		
+		m_privData = call SharedData.getPPCPrivData();
+		// TODO PL setting probably here?
+		m_privData->priv_level = PLEVEL_0;
 		return SUCCESS;
 	}
 	

@@ -15,7 +15,7 @@
 #include "ProtectLayerGlobals.h"
 configuration PrivacyC {
 	provides {
-		interface Init;
+		interface Init as PLInit;
 		interface Privacy;
 		
 		// parameterized interfaces for all different types of messages
@@ -43,8 +43,11 @@ implementation {
     components DispatcherC;
        
         //components PrintfC, SerialStartC;  // support for printf over serial console. Can be removed
-	
-	Init = PrivacyP.Init;
+
+
+	MainC.SoftwareInit -> PrivacyP.Init; //auto init phase 1
+		
+	PLInit = PrivacyP.PLInit;
 	Privacy = PrivacyP.Privacy;
 	
 	PrivacyP.PrivacyLevel -> PrivacyLevelC.PrivacyLevel;
@@ -61,7 +64,7 @@ implementation {
 	PrivacyP.AMControl -> ActiveMessageC;
 	
 	PrivacyP.IntrusionDetect -> IntrusionDetectC.IntrusionDetect;
-	PrivacyP.IntrusionDetectInit -> IntrusionDetectC.Init;
+	//PrivacyP.IntrusionDetectInit -> IntrusionDetectC.Init;
 	
 	PrivacyP.Route -> RouteC.Route;
 	

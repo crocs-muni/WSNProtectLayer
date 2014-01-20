@@ -17,7 +17,7 @@ implementation {
 	components CryptoC;
         components SharedDataC;
         
-	MainC.SoftwareInit -> KeyDistribP.Init;	//auto-initialization
+	MainC.SoftwareInit -> KeyDistribP.Init;	//auto-initialization phase 1
 
 	Init = KeyDistribP.Init;
 	KeyDistrib = KeyDistribP.KeyDistrib;

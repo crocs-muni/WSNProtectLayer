@@ -13,7 +13,7 @@ module SharedDataP {
 		#ifndef TOSSIM
 		interface ResourceArbiter;
 		#endif
-		interface Init;
+		interface Init as PLInit;
 	}
 	#ifndef TOSSIM
 	uses {
@@ -33,7 +33,7 @@ implementation {
 	/** 
 	 * Initialize the combinedData structure to initial zeros
 	 */
-	command error_t Init.init() {
+	command error_t PLInit.init() {
             int i = 0;
             int j = 0;
             uint8_t fixedNeighbors[MAX_NEIGHBOR_COUNT] = {4,5,6,7,10,14,15,17,19,22,25,28,29,30,31,32,33,35,36,37,40,41,42,43,44,46,47,48,50};

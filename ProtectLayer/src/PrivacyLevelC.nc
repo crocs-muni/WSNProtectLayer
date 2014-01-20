@@ -10,7 +10,6 @@
 #include "ProtectLayerGlobals.h"
 configuration PrivacyLevelC{
 	provides {
-		interface Init;
 		interface PrivacyLevel;		
 		}
 }
@@ -20,13 +19,15 @@ implementation{
 	components PrivacyLevelP;
     components DispatcherC;
     components new TimerMilliC() as TimerPL; //testing
+    components MainC;
+	
+	
+	MainC.SoftwareInit -> PrivacyLevelP.Init; // auto init phase 1
 	
 	PrivacyLevelP.TimerP-> TimerPL; //testing
 	
 	PrivacyLevelP.Privacy->PrivacyC.Privacy;
 	PrivacyLevel = PrivacyLevelP.PrivacyLevel;
-	Init = PrivacyLevelP.Init;
-	
 		
 	PrivacyLevelP.AMSend -> PrivacyC.MessageSend[MSG_PLEVEL];
 	PrivacyLevelP.Receive -> DispatcherC.ChangePL_Receive;

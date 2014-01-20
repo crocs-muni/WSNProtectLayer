@@ -11,7 +11,7 @@ module RouteP{
 		interface Random;
 	}
 	provides {
-		interface Init;
+		interface Init as PLInit;
 		interface Route;
 		}
 }
@@ -20,7 +20,7 @@ implementation{
 	//
 	//	Init interface
 	//
-	command error_t Init.init() {
+	command error_t PLInit.init() {
 		// TODO: do other initialization
 		
                 //uint8_t i=0;

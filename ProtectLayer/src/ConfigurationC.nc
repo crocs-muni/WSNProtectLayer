@@ -8,7 +8,7 @@
 #include "ProtectLayerGlobals.h"
 configuration ConfigurationC{
 	provides {
-		interface Init;
+		// interface Init;
 		interface Configuration;
 	}
 }
@@ -31,7 +31,9 @@ implementation{
 	components new QueueC(message_t, MAX_NEIGHBOR_COUNT + 3);
 	components MainC;
 		
-	Init = ConfigurationP.Init;
+	// Init = ConfigurationP.Init;
+	
+	MainC.SoftwareInit -> ConfigurationP.Init; // auto init phase 1
 	
 	ConfigurationP.ConfSDSend -> ConfSDSend;
 	ConfigurationP.PacketSD -> ConfSDSend;
@@ -59,8 +61,6 @@ implementation{
 	ConfigurationP.Leds -> LedsC;
 	
 	ConfigurationP.Queue -> QueueC;
-	
-	MainC.SoftwareInit -> ConfigurationP.Init;
 	
 	Configuration = ConfigurationP.Configuration;
 }

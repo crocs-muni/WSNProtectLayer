@@ -18,7 +18,7 @@ configuration ProtectLayerC{
 		interface Packet;
 		//interface PacketAcknowledgements
 		interface SplitControl as AMControl;
-		interface Init;
+		//interface Init;
 	}
 }
 implementation{
@@ -26,7 +26,7 @@ implementation{
 	components IDSForwarderC;
 
 
-	Init = PrivacyC.Init;	
+	
 	AMSend = PrivacyC.MessageSend[MSG_APP];
 	Receive = PrivacyC.MessageReceive[MSG_APP];
 	AMControl = PrivacyC.MessageAMControl;

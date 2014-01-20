@@ -9,7 +9,7 @@
 
 configuration RouteC {
 	provides {
-		interface Init;
+		interface Init as PLInit;
 		interface Route;
 	}
 }
@@ -22,8 +22,8 @@ implementation {
 	RouteP.Random -> RandomC.Random;
 	RouteP.SharedData -> SharedDataC.SharedData;
 	
-	MainC.SoftwareInit -> RouteP.Init;	//auto-initialization
+	//MainC.SoftwareInit -> RouteP.Init;	//auto-initialization
 	
-	Init = RouteP.Init;
+	PLInit = RouteP.PLInit;
 	Route = RouteP.Route;
 }

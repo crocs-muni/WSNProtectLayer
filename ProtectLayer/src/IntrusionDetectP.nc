@@ -19,6 +19,7 @@ module IntrusionDetectP {
 	}
 	provides {
 		interface Init;
+		interface Init as PLInit;
 		interface IntrusionDetect;
 	}
 }
@@ -47,11 +48,17 @@ implementation {
 		// TODO: do other initialization
 		// TODO: how will we collect the data from SharedData
                 dbg("IDSState", "IDS initialization called.\n");
-		combinedData = call SharedData.getAllData();
+		
 		//call TimerIDS.startPeriodic(1024);
 		
 		m_logMsg = &m_memLogMsg;
 		
+		return SUCCESS;
+	}
+	
+	command error_t PLInit.init()
+	{
+		combinedData = call SharedData.getAllData();
 		return SUCCESS;
 	}
 	
