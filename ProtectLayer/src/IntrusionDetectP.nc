@@ -12,10 +12,12 @@ module IntrusionDetectP {
 		interface AMSend;
 		interface Receive;
 		interface Receive as ReceiveMsgCopy;
+		interface Receive as ReceiveIDSMsgCopy;
 		interface SharedData;
 		interface Timer<TMilli> as TimerIDS;
 		interface BlockWrite;
 		interface IDSBuffer;
+		interface Send as IDSAlertSend;
 	}
 	provides {
 		interface Init;
@@ -234,5 +236,15 @@ implementation {
 
 	event void IDSBuffer.packetForwarded(uint16_t sender, uint16_t receiver){
 		pSavedData[sender].idsData.nb_forwarded++;
+	}
+
+	event message_t * ReceiveIDSMsgCopy.receive(message_t *msg, void *payload, uint8_t len){
+		// TODO Auto-generated method stub
+		return msg;
+	}
+
+
+	event void IDSAlertSend.sendDone(message_t *msg, error_t error){
+		// TODO Auto-generated method stub
 	}
 }

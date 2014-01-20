@@ -17,7 +17,7 @@ module DispatcherP{
 		interface Receive as IDS_Receive;
 		interface Receive as ChangePL_Receive;
 		interface Init;
-		//interface Receive as Sniff_Receive;
+		interface Receive as Sniff_Receive;
 	}
 }
 implementation{
@@ -82,7 +82,7 @@ implementation{
 		memcpy(p_msgForIDS,msg,sizeof(message_t));
 		
 		// signal to IDS and update memory field for next msg
-		//p_msgForIDS = signal Sniff_receive.receive(p_msgForIDS, call Packet.getPayload(p_msgForIDS, len), len);
+		p_msgForIDS = signal Sniff_Receive.receive(p_msgForIDS, call Packet.getPayload(p_msgForIDS, len), len);
 		
 	}
 
@@ -101,7 +101,14 @@ implementation{
 		//Pass copy of message to IDS
 		passToIDS(msg, payload, len);
 		
-		return signal IDS_Receive.receive(msg, payload, len);
+		//is for us? TODO if (Route.isForUs(Packet.getSource(msg)))
+		if (TRUE)
+		{
+			return signal IDS_Receive.receive(msg, payload, len);
+		} else
+		{
+			return msg;
+		}
 	}
 
 

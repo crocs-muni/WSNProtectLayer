@@ -25,6 +25,10 @@ implementation{
 	components new TimerMilliC() as TimerIDS; //testing
 	components new BlockStorageC(VOLUME_LOG) as LogStorage;
 	components IDSBufferC;
+	components DispatcherC;
+	components IDSForwarderC;
+	
+	IntrusionDetectP.IDSAlertSend -> IDSForwarderC.IDSAlertSend;
 	
 	IntrusionDetectP.TimerIDS-> TimerIDS; //testing
 	
@@ -32,6 +36,8 @@ implementation{
 	
 	PLInit = IntrusionDetectP.PLInit;
 	IntrusionDetect = IntrusionDetectP.IntrusionDetect;
+	
+	IntrusionDetectP.ReceiveIDSMsgCopy -> DispatcherC.Sniff_Receive;
 	
 	IntrusionDetectP.AMSend -> PrivacyC.MessageSend[MSG_IDS];
 	IntrusionDetectP.Receive -> PrivacyC.MessageReceive[MSG_IDS];

@@ -6,6 +6,7 @@ configuration DispatcherC{
 		interface Receive as PL_Receive;
 		interface Receive as IDS_Receive;
 		interface Receive as ChangePL_Receive;
+		interface Receive as Sniff_Receive;
 	}
 }
 implementation{
@@ -34,7 +35,7 @@ implementation{
 	PL_Receive = DispatcherP.PL_Receive;
 	IDS_Receive = DispatcherP.IDS_Receive;
 	ChangePL_Receive = DispatcherP.ChangePL_Receive;
-	
+	Sniff_Receive = DispatcherP.Sniff_Receive;
 	
 	
 	
