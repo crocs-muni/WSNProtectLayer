@@ -19,14 +19,14 @@ module CryptoRawP {
 	}
 }
 implementation {
-	uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
+	//uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
 	PL_key_t* 	m_key1;		/**< handle to the key used as first (or only) one in cryptographic operations. Value is set before task is posted. */
 	PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
-	uint8_t* 	m_buffer;	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
-	uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
+	//uint8_t* 	m_buffer;	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
+	//uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
 	uint8_t         exp[240]; //expanded key
 	
 	//
@@ -35,8 +35,8 @@ implementation {
 	command error_t Init.init() {
                 PrintDbg("CryptoRawP", "Init.init() called.\n");
 		// TODO: do other initialization
-		m_state = 0;
-		m_dbgKeyID = 0;
+		//m_state = 0;
+		//m_dbgKeyID = 0;
 		return SUCCESS;
 	}
 	
@@ -228,7 +228,7 @@ implementation {
 		#endif 
 		*/ /* AES */
 		PrintDbg("CryptoRawP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
-			m_state &= ~FLAG_STATE_CRYPTO_DERIV;
+			//m_state &= ~FLAG_STATE_CRYPTO_DERIV;
 		
 	}
 	

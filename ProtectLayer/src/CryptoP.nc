@@ -23,14 +23,14 @@ module CryptoP {
 	}
 }
 implementation {
-	uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
+	//uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
 	PL_key_t* 	m_key1;		/**< handle to the key used as first (or only) one in cryptographic operations. Value is set before task is posted. */
 	PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
-	uint8_t* 	m_buffer;	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
-	uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
+	uint8_t* 	m_buffer[BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
+	//uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
 	uint8_t         exp[240]; //expanded key
 	//
 	//	Init interface
@@ -38,8 +38,8 @@ implementation {
 	command error_t Init.init() {
                 PrintDbg("CryptoP", " Init.init() called.\n");
 		// TODO: do other initialization
-		m_state = 0;
-		m_dbgKeyID = 0;
+		//m_state = 0;
+		//m_dbgKeyID = 0;
 		return SUCCESS;
 	}
 	
@@ -272,6 +272,7 @@ implementation {
 		return status;
 	}
 	
+	// change these to to one public hash function, with predefined hey and non specified input length
 	command error_t Crypto.hashDataForNodeB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t nodeID, uint8_t iterations){
 		error_t status = SUCCESS;
 		uint8_t i;
