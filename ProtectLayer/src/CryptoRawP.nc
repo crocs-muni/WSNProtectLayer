@@ -71,8 +71,8 @@ implementation {
 			plainCounter[2] =  (key->counter) >> 16;
 			plainCounter[3] =  (key->counter) >> 24;
 			call AES.encrypt( plainCounter, exp, encCounter);
-			for (j = 0; i < BLOCK_SIZE; j++){
-				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
+			for (j = 0; j < BLOCK_SIZE; j++){
+				buffer[offset + j*BLOCK_SIZE] = buffer[offset + j*BLOCK_SIZE] ^ encCounter[j];
 			}
 			(key->counter)++;
 			if((key->counter) == 0){
@@ -137,8 +137,8 @@ implementation {
 			plainCounter[2] =  (key->counter) >> 16;
 			plainCounter[3] =  (key->counter) >> 24;
 			call AES.decrypt( plainCounter, exp, encCounter);
-			for (j = 0; i < BLOCK_SIZE; j++){
-				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
+			for (j = 0; j < BLOCK_SIZE; j++){
+				buffer[offset + j*BLOCK_SIZE] = buffer[offset + j*BLOCK_SIZE] ^ encCounter[j];
 			}
 			(key->counter)++;
 			if((key->counter) == 0){
@@ -238,16 +238,16 @@ implementation {
 		return SUCCESS;
 	}
 	
-	command error_t CryptoRaw.hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key){
-		error_t status = SUCCESS;
-		uint8_t previous[16];
+	command error_t CryptoRaw.hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key, uint8_t* hash){
+		error_t status = SUCCESS;		
 		uint8_t i;
+		
 		PrintDbg("CryptoRawP", " hashDataBlockB called.\n");
-		call AES.keyExpansion( exp, (uint8_t*) key->keyValue);
-		memcpy( previous, buffer + offset, BLOCK_SIZE);
-		call AES.encrypt( buffer + offset, exp, buffer + offset);
+		
+		call AES.keyExpansion( exp, (uint8_t*) key->keyValue);		
+		call AES.encrypt( hash, exp, buffer + offset);
 		for(i = 0; i < BLOCK_SIZE; i++){
-			buffer[i + offset] = buffer[i + offset] ^ previous[i];
+			hash[i] = buffer[i + offset] ^ hash[i];
 		}		
 		return status;
 	}
