@@ -90,7 +90,8 @@ implementation{
 	event message_t * Lower_ChangePL_Receive.receive(message_t *msg, void *payload, uint8_t len){
 		
 		//Pass copy of message to IDS
-		passToIDS(msg, payload, len);
+		// IDS is not processing messages for changing privacy level
+		//passToIDS(msg, payload, len);
 		
 		return signal ChangePL_Receive.receive(msg, payload, len);
 	}
