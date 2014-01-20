@@ -12,7 +12,7 @@
 configuration IntrusionDetectC{
 	provides {
 		interface IntrusionDetect;
-		interface Init;
+		interface Init as PLInit;
 	}
 }
 //TODO: IDS component will be decomposed at least into statistics manager, reputation system,
@@ -28,9 +28,9 @@ implementation{
 	
 	IntrusionDetectP.TimerIDS-> TimerIDS; //testing
 	
-	MainC.SoftwareInit -> IntrusionDetectP.Init;	//auto-initialization
+	MainC.SoftwareInit -> IntrusionDetectP.Init;	//auto-initialization phase 1
 	
-	Init = IntrusionDetectP.Init;
+	PLInit = IntrusionDetectP.PLInit;
 	IntrusionDetect = IntrusionDetectP.IntrusionDetect;
 	
 	IntrusionDetectP.AMSend -> PrivacyC.MessageSend[MSG_IDS];

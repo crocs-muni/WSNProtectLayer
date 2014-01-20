@@ -60,8 +60,9 @@ implementation {
 	 * Start the radio and serial ports when booting 
 	 */
 	command error_t Init.init() {
-		if(call SerialControl.start() != SUCCESS) 
-			return FAIL;
+		// if necessary do anything here, discuss with Jiri or PetrS
+		//if(call SerialControl.start() != SUCCESS) 
+		//	return FAIL;
 		return SUCCESS;
 	}
 

@@ -4,11 +4,12 @@ module DispatcherP{
 		interface Receive as Lower_ChangePL_Receive;
 		interface Receive as Lower_IDS_Receive;	
 		interface Packet;
-		interface Init as CryptoCInit;	
+		//interface Init as CryptoCInit;	
 		interface Init as PrivacyCInit;	
 		interface Init as SharedDataCInit;	
-		interface Init as ForwarderCInit;
-		interface Init as PrivacyLevelCInit;
+		interface Init as IntrusionDetectCInit;
+		//interface Init as ForwarderCInit;
+		//terface Init as PrivacyLevelCInit;
 		
 	}
 	provides {
@@ -39,14 +40,16 @@ implementation{
 				
 				//init shared data
 				call SharedDataCInit.init();
-				//crypto init
-				call CryptoCInit.init();
+				//crypto init = auto init
+				
 				//privacy init
 				call PrivacyCInit.init();  //mem init
-				//Forwarder init
-				call ForwarderCInit.init(); //mem init
-				//PrivacyLevel init
-				call PrivacyLevelCInit.init(); //nothing in it now
+				//Forwarder init = auto init
+				
+				//IDS init
+				call IntrusionDetectCInit.init();
+				//PrivacyLevel init = auto init
+				
 				//additional inits?
 				//TODO
 				

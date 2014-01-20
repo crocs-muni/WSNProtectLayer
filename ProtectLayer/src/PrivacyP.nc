@@ -28,6 +28,7 @@ module PrivacyP {
   
 	provides {
 		interface Init;
+		interface Init as PLInit;
 		interface Privacy;
 		
 		// parameterized interfaces for different message types
@@ -68,11 +69,6 @@ implementation {
 		
 		uint8_t i=0;
 		
-		m_privData = call SharedData.getPPCPrivData();
-		//TODO init also SharedDataC ?
-		// what if data are read from EEPROM?
-		m_privData->priv_level = PLEVEL_0;
-		
 		//init receive buffer
 		for(i = 0; i < RECEIVE_BUFFER_LEN; i++)
 		{
@@ -83,9 +79,16 @@ implementation {
 		//init IDS copy msg
 		m_msgForIDS.msg = &m_msgMemoryForIDS;
 		
-		
 		dbg("NodeState", "Privacy component initialization...\n");
 		
+		return SUCCESS;
+	}
+	
+	command error_t PLInit.init() {
+		
+		m_privData = call SharedData.getPPCPrivData();
+		// TODO PL setting probably here?
+		m_privData->priv_level = PLEVEL_0;
 		return SUCCESS;
 	}
 	
@@ -133,8 +136,9 @@ implementation {
 		uint8_t len=0;
 		void* payload;
 		SPHeader_t* ourHeader;
-		PL_key_t * key;
+		//PL_key_t * key; encrypt has nodeID parameter, key is not required
 		uint8_t decLen=0;
+		error_t status = SUCCESS;
 		
 		// Get msg to be processed , TODO we could check if isEmpty, but it never should be emtpy
 		msg = m_receiveBuffer[m_recNextToProcess].msg;
@@ -153,8 +157,8 @@ implementation {
 
 					//decrypt
 					decLen= m_receiveBuffer[m_recNextToProcess].len - sizeof(SPHeader_t);
-					key = call KeyDistrib.getKeyToNodeB(ourHeader->sender);
-					call Crypto.decryptBufferB(key, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
+					//status = call KeyDistrib.getKeyToNodeB(ourHeader->sender, key);
+					status = call Crypto.unprotectBufferFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
 					m_receiveBuffer[m_recNextToProcess].len = decLen + sizeof(SPHeader_t);
 
                                         PrintDbg("Privacy", "task_receiveMessage 3, ourHeader->receiver == TOS_NODE_ID\n");
@@ -286,7 +290,7 @@ implementation {
 		error_t rval=SUCCESS;
 		SendRequest_t sReq; 
 		uint8_t count=0;
-		PL_key_t* key;
+		//PL_key_t* key; encrypt has parameter nodeID, key it not required
 		uint8_t encLen;
 		
 		// check if radio is busy or not
@@ -354,8 +358,8 @@ implementation {
 		
 		//encryption
 		encLen=sReq.len - sizeof(SPHeader_t);
-		key = call KeyDistrib.getKeyToNodeB(spHeader->receiver);
-		call Crypto.encryptBufferB(key, (uint8_t *)spHeader, sizeof(SPHeader_t), &encLen);
+		//key = call KeyDistrib.getKeyToNodeB(spHeader->receiver);
+		rval = call Crypto.protectBufferForNodeB(spHeader->receiver, (uint8_t *)spHeader, sizeof(SPHeader_t), &encLen);
 		sReq.len = encLen + sizeof(SPHeader_t);
 
 
@@ -550,7 +554,7 @@ implementation {
 		// do nothing
 	}
 	
-
+/*
 	//
 	// KeyDistrib
 	//
@@ -565,7 +569,8 @@ implementation {
 	event void KeyDistrib.getKeyToNodeDone(error_t result, PL_key_t *pNodeKey){
 		// TODO Auto-generated method stub
 	}
-
+	*/
+/*
 	//
 	// Crypto
 	//
@@ -584,7 +589,7 @@ implementation {
 	event void Crypto.encryptBufferDone(error_t status, uint8_t *buffer, uint8_t resultLen){
 		// TODO Auto-generated method stub
 	}
-
+*/
 	//
 	// interface Logger
 	//

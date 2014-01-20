@@ -23,7 +23,9 @@ typedef enum _error_values {
     EDIFFERENTKEY = 100,            /**< different key was used to protect message */
     EINVALIDDECRYPTION = 101,       /**< invalid format of message to be decrypted */
     ENOTALLKEYSDISCOVERED = 102,    /**< not all keys were discovered */
-    EKEYNOTFOUND = 103              /**< requested key was not found */
+    EKEYNOTFOUND = 103,             /**< requested key was not found */
+    EDATANOTFOUND = 104,    	    /**< requested data structure was not found */
+    EWRONGMAC = 105		    /**< received mac does not match calculated one */		
 } _error_values;
 
 /**
@@ -196,12 +198,17 @@ KDCPrivData_t.txt
 enum {
 	KEY_TOBS = 1,
 	KEY_TONODE = 2,
+	KEY_TOBSCRYPT = 3,
+	KEY_TONODECRYPT = 4,
+	KEY_TOBSMAC = 5,
+	KEY_TONODEMAC = 6,
 } KEY_TYPE;
 
 typedef nx_struct _key {
   nx_uint8_t    keyType;
   nx_uint8_t    keyValue[KEY_LENGTH];
   nx_uint16_t	dbgKeyID;
+  nx_uint32_t 	counter;
 } PL_key_t;
 
 typedef uint16_t node_id_t;
@@ -210,6 +217,7 @@ typedef uint16_t node_id_t;
 // nx_struct only cause of the sending it via serial port
 typedef nx_struct KDCData {
     PL_key_t shared_key;
+    nx_uint8_t counter; 
 } KDCData_t;
 
 /**
@@ -256,7 +264,8 @@ typedef nx_struct RoutePrivData {
 } RoutePrivData_t;
 
 typedef nx_struct KDCPrivData {
-    PL_key_t    keyToBS;
+    PL_key_t	keyToBS;
+    PL_key_t	preKeys[20];
 } KDCPrivData_t;
 /**
  * Structure combining all the data that need to be stored on the node by the protection layer
