@@ -34,7 +34,8 @@ implementation {
 	bool m_storageBusy = FALSE;
 
 	bool m_radioBusy = FALSE;
-	combinedData_t * combinedData;
+//	combinedData_t * combinedData;
+	SavedData_t*    pSavedData = NULL;
 	NODE_REPUTATION reputation;
 	SavedData_t * savedData;
 	IDS_STATUS ids_status = IDS_RESET;
@@ -48,7 +49,6 @@ implementation {
 		// TODO: do other initialization
 		// TODO: how will we collect the data from SharedData
                 dbg("IDSState", "IDS initialization called.\n");
-		
 		//call TimerIDS.startPeriodic(1024);
 		
 		m_logMsg = &m_memLogMsg;
@@ -56,18 +56,19 @@ implementation {
 		return SUCCESS;
 	}
 	
+//	command NODE_REPUTATION IntrusionDetect.getNodeReputation(uint8_t nodeid) {
+//		//savedData = call SharedData.getNodeState(nodeid);
+//		//reputation = (*savedData).idsData.neighbor_reputation;
+//		reputation =  (*call SharedData.getNodeState(nodeid)).idsData.neighbor_reputation;
+//                dbg("IDSState", "Reputation of node %d is: %d.\n", nodeid, reputation);
+//		return reputation;
+//	}
+
 	command error_t PLInit.init()
 	{
-		combinedData = call SharedData.getAllData();
+		//combinedData = call SharedData.getAllData();
+		pSavedData = call SharedData.getSavedData();
 		return SUCCESS;
-	}
-	
-	command NODE_REPUTATION IntrusionDetect.getNodeReputation(uint8_t nodeid) {
-		//savedData = call SharedData.getNodeState(nodeid);
-		//reputation = (*savedData).idsData.neighbor_reputation;
-		reputation =  (*call SharedData.getNodeState(nodeid)).idsData.neighbor_reputation;
-                dbg("IDSState", "Reputation of node %d is: %d.\n", nodeid, reputation);
-		return reputation;
 	}
 	
 	command void IntrusionDetect.switchIDSoff(){
@@ -232,6 +233,6 @@ implementation {
 	}
 
 	event void IDSBuffer.packetForwarded(uint16_t sender, uint16_t receiver){
-		// TODO Auto-generated method stub
+		pSavedData[sender].idsData.nb_forwarded++;
 	}
 }

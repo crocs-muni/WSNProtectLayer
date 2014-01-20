@@ -225,8 +225,10 @@ typedef nx_struct KDCData {
 */
 typedef nx_struct IDSData {
 /*@{*/
-	nx_uint8_t neighbor_reputation;	/**< reputation of a neighbor */
-	nx_uint8_t nb_messages;	/**< number of received messages */
+	//nx_uint8_t neighbor_reputation;	/**< reputation of a neighbor */
+	nx_uint16_t nb_received;	/**< number of received messages */
+	nx_uint16_t nb_forwarded;
+	
 /*@}*/
 } IDSData_t;
 
