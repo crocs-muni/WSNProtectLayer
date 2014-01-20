@@ -15,7 +15,7 @@ interface IntrusionDetect {
 	 * 
 	 * @returns NODE_REPUTATION reputation of a node.
 	 */
-	command NODE_REPUTATION getNodeReputation(uint8_t nodeId);
+//	command NODE_REPUTATION getNodeReputation(uint8_t nodeId);
 	
 	/**
 	 * Command that switch the IDS off
