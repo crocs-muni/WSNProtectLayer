@@ -25,7 +25,8 @@ typedef enum _error_values {
     ENOTALLKEYSDISCOVERED = 102,    /**< not all keys were discovered */
     EKEYNOTFOUND = 103,             /**< requested key was not found */
     EDATANOTFOUND = 104,    	    /**< requested data structure was not found */
-    EWRONGMAC = 105		    /**< received mac does not match calculated one */		
+    EWRONGMAC = 105,		    /**< received mac does not match calculated one */	    
+    EWRONGHASH = 106
 } _error_values;
 
 /**

@@ -56,12 +56,18 @@ interface CryptoRaw {
 		makes one iteration. Length of data is aes block size
 		@param[in out] buffer with data, replaced with calculated hash
 		@param[in] offset			
-		@param[in] key key for encryption			
+		@param[in] key key for encryption
+		@param[out] hash calculated value
 		@return error_t status
 	*/
-	command error_t hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key);
+	command error_t hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key, uint8_t* hash);
 		
 		
+	/**
+		Command: self test of Cryptoraw component
+		@return error_t SUCCESS or error message
+	*/
+	command error_t selfTest();
 		
 /*** DEPRICATED ***/
 

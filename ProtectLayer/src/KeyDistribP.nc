@@ -20,12 +20,12 @@ module KeyDistribP{
 	/*@}*/
 }
 implementation{
-        uint8_t m_currentNodeIndex; /**< index of current node processed pointing to m_neighborsID - used in recurrent tasks to identify index of node next to be processed */
+        //uint8_t m_currentNodeIndex; /**< index of current node processed pointing to m_neighborsID - used in recurrent tasks to identify index of node next to be processed */
         //uint8_t m_lastNodeIndex;    /**< index of last value set in m_neighborsID */
         //uint8_t m_neighborsID[MAX_NEIGHBOR_COUNT]; /**< array of neighbors IDs - use for lookup into shared data structures */
-	uint16_t m_state;			/**< current state of the component - used to decice on next step inside task */
-	PL_key_t m_keyToBS;			/**< handle to key shared with base station */ 
-	uint8_t  m_getKeyToNodeID;  /**< ID of node fro which getKeyToNode command was issued */
+	//uint16_t m_state;			/**< current state of the component - used to decice on next step inside task */
+	//PL_key_t m_keyToBS;			/**< handle to key shared with base station */ 
+	//uint8_t  m_getKeyToNodeID;  /**< ID of node fro which getKeyToNode command was issued */
         //PL_key_t m_keysToNodes[MAX_NEIGHBOR_COUNT]; /**< handles to keys shared with separate neighbors */
 	
 	//blocking version of key derivation
@@ -40,17 +40,17 @@ implementation{
 			@return error_t status. SUCCESS only
 	*/
 	command error_t Init.init() {
-			uint8_t i = 0;
+			//uint8_t i = 0;
 			PrintDbg("KeyDistribP", "KeyDistribP.Init.init() entered");
 
 			// TODO: do other initialization
-			m_state = 0;
+			//m_state = 0;
 
 			//call KeyDistrib.discoverKeys();
 
 			// m_keyToBS initialization
-			m_keyToBS.keyType = KEY_TOBS;
-			for (i = 0; i < KEY_LENGTH; i++) m_keyToBS.keyValue[i] = 0;
+			//m_keyToBS.keyType = KEY_TOBS;
+			//for (i = 0; i < KEY_LENGTH; i++) m_keyToBS.keyValue[i] = 0;
 			return SUCCESS;
 	}		
 	
@@ -71,15 +71,15 @@ implementation{
 		error_t status = SUCCESS;
 		
 		PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys called.\n");
-		#ifdef BLOCKING
+		//#ifdef BLOCKING
 		if((status = call Crypto.initCryptoIIB()) != SUCCESS){
 			PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys failed.\n");
 			return status;
 		}
-		// + generate key to BS or check if available or something else ...
+		return status;
 		
-		#else /* use non blocking variant */
-               
+		//#else /* use non blocking variant */
+               /*
 		if (m_state & FLAG_STATE_KDP_DISCOVERKEYS) {
 			return EALREADY;	
 		}
@@ -90,7 +90,9 @@ implementation{
 			post task_discoverKeys();
 			return SUCCESS;
 		}
-		#endif /* Blocking */
+		*/
+		//#endif /* Blocking */
+		
 	}
 	
 	

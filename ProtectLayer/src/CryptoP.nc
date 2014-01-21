@@ -23,14 +23,14 @@ module CryptoP {
 	}
 }
 implementation {
-	uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
+	//uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
 	PL_key_t* 	m_key1;		/**< handle to the key used as first (or only) one in cryptographic operations. Value is set before task is posted. */
 	PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
-	uint8_t* 	m_buffer;	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
-	uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
+	uint8_t* 	m_buffer[BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
+	//uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
 	uint8_t         exp[240]; //expanded key
 	//
 	//	Init interface
@@ -38,8 +38,8 @@ implementation {
 	command error_t Init.init() {
                 PrintDbg("CryptoP", " Init.init() called.\n");
 		// TODO: do other initialization
-		m_state = 0;
-		m_dbgKeyID = 0;
+		//m_state = 0;
+		//m_dbgKeyID = 0;
 		return SUCCESS;
 	}
 	
@@ -258,7 +258,7 @@ implementation {
 			memcpy(m_buffer + sizeof(copyId), &copyId, sizeof(copyId)); 
 			
 			//derive key from data and predistributed key
-			status = call CryptoRaw.deriveKeyB(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
+			status = call CryptoRaw.deriveKeyB(m_key1, *m_buffer, 0, BLOCK_SIZE, m_key2);
 			if(status != SUCCESS){
 				PrintDbg("CryptoP", " key derivation for nodeID %d completed with status %d.\n", SavedData->nodeId, status);
 			}
@@ -272,41 +272,58 @@ implementation {
 		return status;
 	}
 	
-	command error_t Crypto.hashDataForNodeB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t nodeID, uint8_t iterations){
+	command error_t Crypto.hashDataB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t* hash){
 		error_t status = SUCCESS;
 		uint8_t i;
-
-		PrintDbg("CryptoP", " hashDataForNodeB called.\n");
-		if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1)) == SUCCESS){
-			for(i = 0; i < iterations; i++){
-				if((status = call CryptoRaw.hashDataBlockB(buffer, offset, m_key1)) != SUCCESS){
-					PrintDbg("CryptoP", " hashDataForNodeB failed.\n");
-					return status;
-				}
+		uint8_t j;
+		uint8_t tempHash[BLOCK_SIZE];
+		
+		PrintDbg("CryptoP", " hashDataB called.\n");
+		memset(m_key1->keyValue, 0, KEY_SIZE); //init default key value
+		for(i = 0; i < *pLen/BLOCK_SIZE; i++){
+			if((status = call CryptoRaw.hashDataBlockB(buffer, offset + i * BLOCK_SIZE, m_key1, tempHash)) != SUCCESS){
+				PrintDbg("CryptoP", " hashDataB calculation failed.\n");
+				return status;
+			}
+			for(j = 0; j < BLOCK_SIZE; j++){
+				m_key1->keyValue[j] = tempHash[j] ^ buffer[offset + i * BLOCK_SIZE];
+			}
+		}
+		//pad and calculate last block
+		if((*pLen % BLOCK_SIZE) == 0){
+			for(j = 0; j < BLOCK_SIZE; j++){
+				hash[j] = tempHash[j];
 			}
 		} else {
-			PrintDbg("CryptoP", " hashDataForNodeB key not retrieved.\n");
-			return status;
+			for(j = *pLen - (*pLen % BLOCK_SIZE); j < BLOCK_SIZE; j++){
+				buffer[j + offset] = 0;
+			}
+			if((status = call CryptoRaw.hashDataBlockB(buffer, offset + *pLen - (*pLen % BLOCK_SIZE), m_key1, hash)) != SUCCESS){
+				PrintDbg("CryptoP", " hashDataB calculation failed.\n");
+				return status;
+			}
 		}
 		return status;
 	}
 	
-	command error_t Crypto.hashDataForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t iterations){
+	command error_t Crypto.verifyHashDataB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t* hash){
 		error_t status = SUCCESS;
-		uint8_t i;
-		PrintDbg("CryptoP", " hashDataForBSB called.\n");
-		if((status = call KeyDistrib.getKeyToBSB(m_key1)) == SUCCESS){
-			for(i = 0; i < iterations; i++){
-				if((status = call CryptoRaw.hashDataBlockB(buffer, offset, m_key1)) != SUCCESS){
-					PrintDbg("CryptoP", " hashDataForBSB failed.\n");
-					return status;
-				}
-			}
-		} else {
-			PrintDbg("CryptoP", " hashDataForBSB key not retrieved.\n");
-			return status;
+		uint8_t tempHash[BLOCK_SIZE];
+		PrintDbg("CryptoP", " verifyHashDataB called.\n");
+		if((status = call Crypto.hashDataB(buffer, offset, pLen, tempHash)) != SUCCESS){
+			PrintDbg("CryptoP", " verifyHashDataB failed to calculate hash.\n");
+		}
+		if(memcmp(tempHash, hash, BLOCK_SIZE) != 0){
+			PrintDbg("CryptoP", " verifyHashDataB hash not verified.\n");
+			return EWRONGHASH;
 		}
 		return status;
+	}
+	
+	command error_t Crypto.verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint64_t hash){
+	
+		return SUCCESS;
 	}
 	
 }
+

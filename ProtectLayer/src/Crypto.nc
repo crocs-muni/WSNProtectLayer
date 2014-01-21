@@ -122,25 +122,33 @@ interface Crypto {
 	
 	/**	
 			Command: function to calculate AES based hash of data in buffer.
-			makes number of rounds specified in iterations.
-			Length of data is aes block size
-			@param[in out] buffer with data, replaced with calculated hash
+			Resulting hash has AES BLOCK_LENGTH
+			@param[in] buffer with data
 			@param[in] offset
-			@param[in] nodeID
-			@param[in] iterations number of rounds
+			@param[in] pLen
+			@param[out] hash calculated hash of data
 			@return error_t status
 	*/
-	command error_t hashDataForNodeB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t nodeID, uint8_t iterations);
+	command error_t hashDataB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t* hash);
 	
 	/**	
-			Command: function to calculate AES based hash of data in buffer.
-			makes number of rounds specified in iterations.
-			Length of data is aes block size
-			@param[in out] buffer with data, replaced with calculated hash
+			Command: function to verify hash of data
+			@param[in] buffer with data
 			@param[in] offset			
-			@param[in] iterations number of rounds
-			@return error_t status
+			@param[in] pLen
+			@param[in] hash to verify
+			@return error_t result
 	*/
-	command error_t hashDataForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t iterations);	
+	command error_t verifyHashDataB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t* hash);
+	
+	/**	
+			Command: function to verify first half of hash
+			@param[in] buffer with data
+			@param[in] offset			
+			@param[in] pLen
+			@param[in] hash to verify
+			@return error_t result
+	*/
+	command error_t verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint64_t hash);
 	
 }

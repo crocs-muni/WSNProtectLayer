@@ -9,8 +9,7 @@ configuration CryptoRawC {
 	provides {
 		interface Init;
 		interface CryptoRaw;
-	}
-	
+	}	
 }
 implementation {
 	components MainC;   
