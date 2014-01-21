@@ -129,7 +129,7 @@ interface Crypto {
 			@param[out] hash calculated hash of data
 			@return error_t status
 	*/
-	command error_t hashDataB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t* hash);
+	command error_t hashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash);
 	
 	/**	
 			Command: function to verify hash of data
@@ -139,7 +139,7 @@ interface Crypto {
 			@param[in] hash to verify
 			@return error_t result
 	*/
-	command error_t verifyHashDataB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t* hash);
+	command error_t verifyHashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash);
 	
 	/**	
 			Command: function to verify first half of hash
@@ -149,6 +149,6 @@ interface Crypto {
 			@param[in] hash to verify
 			@return error_t result
 	*/
-	command error_t verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint64_t hash);
+	command error_t verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t hash);
 	
 }

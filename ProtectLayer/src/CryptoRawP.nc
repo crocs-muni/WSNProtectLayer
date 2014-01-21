@@ -48,7 +48,7 @@ implementation {
 	//
 	//	CryptoRaw interface
 	//	
-	command error_t CryptoRaw.encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
+	command error_t CryptoRaw.encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen) {
 		uint8_t i;
 		uint8_t j;
 		uint8_t plainCounter[16];			
@@ -69,7 +69,7 @@ implementation {
 		call AES.keyExpansion( exp, (uint8_t*) key->keyValue);
 		
 		//process buffer by blocks 
-		for(i = 0; i < (*pLen / BLOCK_SIZE); i++){
+		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
 		
 			plainCounter[0] =  key->counter;
 			plainCounter[1] =  (key->counter) >> 8;
@@ -116,7 +116,7 @@ implementation {
 	}
 	
 	
-	command error_t CryptoRaw.decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
+	command error_t CryptoRaw.decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen) {
 		
 		error_t status = SUCCESS;
 		uint8_t i;
@@ -135,7 +135,7 @@ implementation {
 		call AES.keyExpansion( exp, (uint8_t*)(key->keyValue));
 		
 		//process buffer by blocks 
-		for(i = 0; i < (*pLen / BLOCK_SIZE); i++){
+		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
 		
 			plainCounter[0] =  key->counter;
 			plainCounter[1] =  (key->counter) >> 8;
@@ -291,7 +291,7 @@ implementation {
 			}
 		}
 		PrintDbg("CryptoRawP", " self test derive key.\n");			
-		if((status = CryptoRaw.deriveKeyB(m_key1, data, 0, BLOCK_SIZE, m_key2))!= SUCCESS){
+		if((status = call CryptoRaw.deriveKeyB(m_key1, data, 0, BLOCK_SIZE, m_key2))!= SUCCESS){
 			PrintDbg("CryptoRawP", " self test derive key failed.\n");
 			return status;
 		}
@@ -305,7 +305,7 @@ implementation {
 				return EDIFFERENTKEY;
 			}
 		}
-		
+		return status;
 	}
 	
 	
