@@ -33,10 +33,15 @@ implementation {
 	//	Init interface
 	//
 	command error_t Init.init() {
+		error_t status = SUCCESS;
                 PrintDbg("CryptoRawP", "Init.init() called.\n");
 		// TODO: do other initialization
 		//m_state = 0;
 		//m_dbgKeyID = 0;
+		
+		status = call CryptoRaw.selfTest();
+		PrintDbg("CryptoRawP", " self test finished with result %d.\n", status);
+		
 		return SUCCESS;
 	}
 	
@@ -252,11 +257,56 @@ implementation {
 		return status;
 	}
 	
-	
-	
-	
-	
-	
+	command error_t CryptoRaw.selfTest(){
+		uint8_t data[BLOCK_SIZE] = {0};
+		uint8_t i;
+		uint8_t status = SUCCESS;
+		PrintDbg("CryptoRawP", " self test started.\n");
+		memset(m_key1->keyValue, 0, KEY_SIZE);
+		m_key1->counter = 0;
+		PrintDbg("CryptoRawP", " self test encrypt.\n");
+		if((status = call CryptoRaw.encryptBufferB( m_key1, data, 0, BLOCK_SIZE)) != SUCCESS){
+			PrintDbg("CryptoRawP", " self test encrypt return failed.\n");
+			return status;
+		}
+		if(m_key1->counter != 1){
+			PrintDbg("CryptoRawP", " self test encrypt counter not incremented.\n");
+			return  EINVALIDDECRYPTION;
+		} else {
+			m_key1->counter = 0;
+		}
+		PrintDbg("CryptoRawP", " self test decrypt.\n");
+		if((status = call CryptoRaw.decryptBufferB( m_key1, data, 0, BLOCK_SIZE)) != SUCCESS){
+			PrintDbg("CryptoRawP", " self test decrypt return failed.\n");
+			return status;
+		}
+		if(m_key1->counter != 1){
+			PrintDbg("CryptoRawP", " self test decrypt counter not incremented.\n");
+			 return EINVALIDDECRYPTION;
+		}
+		for(i = 0; i < BLOCK_SIZE; i++){
+			if(data[i] != 0){
+				PrintDbg("CryptoRawP", " self test decrypt not same result after decryption.\n");
+				return  EINVALIDDECRYPTION;
+			}
+		}
+		PrintDbg("CryptoRawP", " self test derive key.\n");			
+		if((status = CryptoRaw.deriveKeyB(m_key1, data, 0, BLOCK_SIZE, m_key2))!= SUCCESS){
+			PrintDbg("CryptoRawP", " self test derive key failed.\n");
+			return status;
+		}
+		if(memcmp(m_key1, m_key2, sizeof(m_key1))){
+			PrintDbg("CryptoRawP", " self test derive key, derived key is same as master.\n");
+			return  EDIFFERENTKEY;
+		}
+		for(i = 0; i < KEY_SIZE; i++){
+			if(m_key1->keyValue[i] == 0){
+				PrintDbg("CryptoRawP", " self test derive key, derived key is all zeros.\n");
+				return EDIFFERENTKEY;
+			}
+		}
+		
+	}
 	
 	
 /*

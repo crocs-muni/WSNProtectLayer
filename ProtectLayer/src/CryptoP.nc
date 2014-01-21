@@ -320,5 +320,10 @@ implementation {
 		return status;
 	}
 	
+	command error_t Crypto.verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint64_t hash){
+	
+		return SUCCESS;
+	}
+	
 }
 

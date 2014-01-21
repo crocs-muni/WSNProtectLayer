@@ -63,6 +63,11 @@ interface CryptoRaw {
 	command error_t hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key, uint8_t* hash);
 		
 		
+	/**
+		Command: self test of Cryptoraw component
+		@return error_t SUCCESS or error message
+	*/
+	command error_t selfTest();
 		
 /*** DEPRICATED ***/
 
