@@ -18,7 +18,7 @@ interface CryptoRaw {
 			@param[in out] pLen length of buffer to be encrypted, will contain resulting length
 			@return error_t status
 	*/
-	command error_t encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen);
 
 	/**
 			Command: Blocking version. Used by other components to start decryption of supplied buffer by supplied key.
@@ -28,7 +28,7 @@ interface CryptoRaw {
 			@param[in] len length of buffer to be decrypted
 			@return error_t status
 	*/
-	command error_t decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen);
 		
 		
 	/**

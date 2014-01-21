@@ -144,7 +144,7 @@ implementation {
 			PrintDbg("CryptoP", " protectBufferForNodeB key not retrieved.\n");
 			return status;
 		}
-		if((status = call CryptoRaw.encryptBufferB( m_key1, buffer, offset, pLen))!= SUCCESS){
+		if((status = call CryptoRaw.encryptBufferB( m_key1, buffer, offset, *pLen))!= SUCCESS){
 			PrintDbg("CryptoP", " protectBufferForNodeB key not retrieved.\n");
 			return status;
 		}
@@ -167,7 +167,7 @@ implementation {
 			PrintDbg("CryptoP", " unprotectBufferFromNodeB key not retrieved.\n");
 			return status;
 		}
-		if((status = call CryptoRaw.decryptBufferB( m_key1, buffer, offset, pLen))!= SUCCESS){	
+		if((status = call CryptoRaw.decryptBufferB( m_key1, buffer, offset, *pLen))!= SUCCESS){	
 			PrintDbg("CryptoP", " unprotectBufferFromNodeB decryption failed.\n");
 			return status;
 		}
@@ -185,7 +185,7 @@ implementation {
 			PrintDbg("CryptoP", " protectBufferForBSB key not retrieved.\n");
 			return status;		
 		}
-		if((status = call CryptoRaw.encryptBufferB( m_key1, buffer, offset, pLen)) != SUCCESS){
+		if((status = call CryptoRaw.encryptBufferB( m_key1, buffer, offset, *pLen)) != SUCCESS){
 			PrintDbg("CryptoP", " protectBufferForBSB encrypt failed.\n");
 			return status;		
 		}
@@ -210,7 +210,7 @@ implementation {
 			PrintDbg("CryptoP", " unprotectBufferFromBSB BS key not retrieved.\n");
 			return status;
 		}
-		if((status = call CryptoRaw.decryptBufferB( m_key1, buffer, offset, pLen)) != SUCCESS){
+		if((status = call CryptoRaw.decryptBufferB( m_key1, buffer, offset, *pLen)) != SUCCESS){
 			PrintDbg("CryptoP", " unprotectBufferFromBSB decrypt buffer failed.\n");
 			return status;
 		}		
@@ -272,7 +272,7 @@ implementation {
 		return status;
 	}
 	
-	command error_t Crypto.hashDataB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t* hash){
+	command error_t Crypto.hashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash){
 		error_t status = SUCCESS;
 		uint8_t i;
 		uint8_t j;
@@ -280,7 +280,7 @@ implementation {
 		
 		PrintDbg("CryptoP", " hashDataB called.\n");
 		memset(m_key1->keyValue, 0, KEY_SIZE); //init default key value
-		for(i = 0; i < *pLen/BLOCK_SIZE; i++){
+		for(i = 0; i < pLen/BLOCK_SIZE; i++){
 			if((status = call CryptoRaw.hashDataBlockB(buffer, offset + i * BLOCK_SIZE, m_key1, tempHash)) != SUCCESS){
 				PrintDbg("CryptoP", " hashDataB calculation failed.\n");
 				return status;
@@ -290,15 +290,15 @@ implementation {
 			}
 		}
 		//pad and calculate last block
-		if((*pLen % BLOCK_SIZE) == 0){
+		if((pLen % BLOCK_SIZE) == 0){
 			for(j = 0; j < BLOCK_SIZE; j++){
 				hash[j] = tempHash[j];
 			}
 		} else {
-			for(j = *pLen - (*pLen % BLOCK_SIZE); j < BLOCK_SIZE; j++){
+			for(j = pLen - (pLen % BLOCK_SIZE); j < BLOCK_SIZE; j++){
 				buffer[j + offset] = 0;
 			}
-			if((status = call CryptoRaw.hashDataBlockB(buffer, offset + *pLen - (*pLen % BLOCK_SIZE), m_key1, hash)) != SUCCESS){
+			if((status = call CryptoRaw.hashDataBlockB(buffer, offset + pLen - (pLen % BLOCK_SIZE), m_key1, hash)) != SUCCESS){
 				PrintDbg("CryptoP", " hashDataB calculation failed.\n");
 				return status;
 			}
@@ -306,7 +306,7 @@ implementation {
 		return status;
 	}
 	
-	command error_t Crypto.verifyHashDataB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t* hash){
+	command error_t Crypto.verifyHashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash){
 		error_t status = SUCCESS;
 		uint8_t tempHash[BLOCK_SIZE];
 		PrintDbg("CryptoP", " verifyHashDataB called.\n");
@@ -320,7 +320,7 @@ implementation {
 		return status;
 	}
 	
-	command error_t Crypto.verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint64_t hash){
+	command error_t Crypto.verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t hash){
 	
 		return SUCCESS;
 	}
