@@ -306,8 +306,19 @@ implementation {
 		return status;
 	}
 	
-	command error_t Crypto.hashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t hash){
-	
+	command error_t Crypto.hashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t* hash){
+		uint8_t tempHash[BLOCK_SIZE];
+		uint8_t status;
+		uint8_t i;
+		PrintDbg("CryptoP", "hashDataHalfB called.\n");
+		if((status = call Crypto.hashDataB(buffer, offset, pLen, tempHash)) != SUCCESS){
+			PrintDbg("CryptoP", "hashDataHalfB calculation failed.\n");
+			return status;
+		}
+		for (i = 0; i < BLOCK_SIZE/2; i++){
+			tempHash[i] = tempHash[i]^tempHash[i + BLOCK_SIZE/2];
+		}
+		memcpy(hash, tempHash, sizeof(hash));
 		return SUCCESS;
 	}
 	
@@ -326,8 +337,17 @@ implementation {
 	}
 	
 	command error_t Crypto.verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t hash){
-	
-		return SUCCESS;
+		error_t status = SUCCESS;
+		uint64_t tempHash;
+		PrintDbg("CryptoP", " verifyHashDataB called.\n");
+		if((status = call Crypto.hashDataHalfB(buffer, offset, pLen, &tempHash)) != SUCCESS){
+			PrintDbg("CryptoP", " verifyHashDataB failed to calculate hash.\n");
+		}
+		if(tempHash != hash){
+			PrintDbg("CryptoP", " verifyHashDataB hash not verified.\n");
+			return EWRONGHASH;
+		}
+		return status;		
 	}
 	
 }
