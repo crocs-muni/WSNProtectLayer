@@ -54,9 +54,10 @@ implementation {
 		uint8_t plainCounter[16];			
 		uint8_t encCounter[16];
 		
-		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(offset = '%d' buffer = '%d', 1 = '%d', 6 = '%d'.\n", buffer[0],buffer[1],buffer[6]);
+		// BUGBUG: wrong arguments 
+		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(offset = '0x%x' buffer = '0x%x', 1 = '0x%x', 6 = '0x%x'.\n", offset, buffer[0],buffer[1],buffer[6]);
 		
-		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(buffer = '%d', 1 = '%d', 2 = '%d'.\n", buffer[0],buffer[1],buffer[2]);
+		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(buffer = '0x%x', 1 = '0x%x', 2 = '0x%x'.\n", buffer[0],buffer[1],buffer[2]);
 		
 		//#ifdef AES
 		

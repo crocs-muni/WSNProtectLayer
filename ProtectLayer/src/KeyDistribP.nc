@@ -198,7 +198,7 @@ implementation{
                         pSavedData[i].kdcData.shared_key.keyValue[1] = (pSavedData[i].nodeId < TOS_NODE_ID) ? TOS_NODE_ID : pSavedData[i].nodeId;
                     }
                     else {
-                        PrintDbg("KeyDistribP", "KeyDistrib.task_discoverKeys failed to generate new key for node  .\n", pSavedData[i].nodeId);
+                        PrintDbg("KeyDistribP", "KeyDistrib.task_discoverKeys failed to generate new key for node '%d' .\n", pSavedData[i].nodeId);
                         status = ENOTALLKEYSDISCOVERED;
                     }
                 }
