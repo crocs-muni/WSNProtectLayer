@@ -306,6 +306,11 @@ implementation {
 		return status;
 	}
 	
+	command error_t Crypto.hashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t hash){
+	
+		return SUCCESS;
+	}
+	
 	command error_t Crypto.verifyHashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash){
 		error_t status = SUCCESS;
 		uint8_t tempHash[BLOCK_SIZE];

@@ -130,6 +130,17 @@ interface Crypto {
 			@return error_t status
 	*/
 	command error_t hashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash);
+		
+	/**	
+			Command: function to calculate AES based hash of data in buffer.
+			Resulting hash has AES BLOCK_LENGTH
+			@param[in] buffer with data
+			@param[in] offset
+			@param[in] pLen
+			@param[out] hash calculated hash of data
+			@return error_t status
+	*/
+	command error_t hashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t hash);
 	
 	/**	
 			Command: function to verify hash of data
