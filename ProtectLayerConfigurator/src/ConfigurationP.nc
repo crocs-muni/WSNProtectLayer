@@ -119,6 +119,15 @@ implementation {
                 uint16_t tmp = 0;
 
                 switch (csd->key){
+			case SD_NODE_ID:
+                                tmp |= csd->data[0];
+                                tmp = tmp << 8;
+                                tmp |= csd->data[1];
+  
+                                (call SharedData.getAllData())->savedData->nodeId = tmp;
+
+				break;
+
                         case SD_KEY_TYPE: //nx_uint8_t
                                 (call SharedData.getAllData())->savedData->kdcData.shared_key.keyType = csd->data[0];
                                 break;
@@ -324,6 +333,18 @@ implementation {
 
                 switch ((uint8_t)partSD){
                         case 0:
+			case SD_NODE_ID:
+                                tmp = (call SharedData.getAllData())->savedData->nodeId;
+
+				csm->len = 1;
+				csm->key = SD_NODE_ID;
+                                
+				csm->data[1] = 0 | tmp;
+                                csm->data[0] = 0 | (tmp >> 8);
+
+                                partSD = SD_KEY_TYPE;
+				break;
+
                         case SD_KEY_TYPE:  //nx_uint8_t
                                 csm->len = 1;
                                 csm->key = SD_KEY_TYPE;
@@ -371,6 +392,7 @@ implementation {
                                 csm->len = 1;
                                 csm->key = SD_NB_MESSAGES;
                                 csm->data[0] = (call SharedData.getAllData())->savedData->idsData.nb_messages;
+
                         default:
                                 partSD = 0;
                                 break;

@@ -15,6 +15,7 @@ import net.tinyos.message.*;
  */
 public class SavedDataPartSenderReceiver extends BaseSenderReceiver {
     private String application;
+    private String neighborId;
     
     /**
      * convert short array to string
@@ -78,12 +79,18 @@ public class SavedDataPartSenderReceiver extends BaseSenderReceiver {
             row.set("application_id", this.application);
             
             row.set("node_id", this.node);
+            row.set("neighbor_id", this.neighborId);
             //row.set("node_id", "-1");
             
             //TODO: Export constants from Globals..
             
             try {       
                 switch(sdm.get_key()){
+                    case 206: //nx_uint16_t
+                        this.neighborId = shortArrayToString(sdm.get_data(), sdm.get_len());
+                        row.set("neighbor_id", this.neighborId);
+                        break;
+                        
                     case 200: //nx_uint8_t
                         row.set("item_name","savedData_kdcData_shared_key_keyType");
                         row.set("value", sdm.get_data()[0]);
