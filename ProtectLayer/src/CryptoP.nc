@@ -350,5 +350,19 @@ implementation {
 		return status;		
 	}
 	
+	command bool Crypto.verifySignature( uint8_t* buffer, uint8_t offset, uint8_t pLen, PRIVACY_LEVEL level, uint8_t counter){
+		uint8_t i;
+		uint8_t signature[BLOCK_SIZE];
+                PrintDbg("CryptoP", " verifySignature called.\n");                
+                for(i = 0; i < counter; i++){			
+			Crypto.hashDataB( buffer, offset, pLen, buffer + offset);			
+                }
+                //call shared data to fill signature
+                if(memcmp(buffer + offset, signature, BLOCK_SIZE)){
+			return false;
+                } else {
+			return true;
+                }
+	}
 }
 

@@ -162,4 +162,16 @@ interface Crypto {
 	*/
 	command error_t verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t hash);
 	
+	/**	
+			Command: Command to calculate hash chain of buffer and verifies result of calculation 
+			according to privacy level specified.
+			@param[in] buffer with data
+			@param[in] offset			
+			@param[in] pLen
+			@param[in] level privacy level
+			@param[in] counter number of iterations
+			@return bool result true if result matches with value
+	*/
+	command bool verifySignature( uint8_t* buffer, uint8_t offset, uint8_t pLen, PRIVACY_LEVEL level, uint8_t counter);
+	
 }
