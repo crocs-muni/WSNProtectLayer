@@ -120,7 +120,7 @@ typedef enum _SAVED_DATA_KEYS {
         SD_DBG_KEY_ID,          //nx_uint16_t
         SD_COUNTER,             //nx_uint8_t
         SD_REPUTATION,          //nx_uint8_t
-        SD_NB_MESSAGES          //nx_uint8_t
+        SD_NB_MESSAGES,          //nx_uint8_t
         SD_NODE_ID		//nx_uint16_t
 } SAVED_DATA_KEYS;
 
