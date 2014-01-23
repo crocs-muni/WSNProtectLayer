@@ -24,18 +24,13 @@ implementation{
         //uint8_t m_lastNodeIndex;    /**< index of last value set in m_neighborsID */
         //uint8_t m_neighborsID[MAX_NEIGHBOR_COUNT]; /**< array of neighbors IDs - use for lookup into shared data structures */
 	//uint16_t m_state;			/**< current state of the component - used to decice on next step inside task */
-	#ifdef DEBUG
-	PL_key_t m_testKey;			/**< handle to key */
-	#endif
 	//uint8_t  m_getKeyToNodeID;  /**< ID of node fro which getKeyToNode command was issued */
         //PL_key_t m_keysToNodes[MAX_NEIGHBOR_COUNT]; /**< handles to keys shared with separate neighbors */
 	
 	//blocking version of key derivation
 	#define BLOCKING 
 	
-	#ifdef DEBUG
 	PL_key_t* m_testKey;			/**< handle to key for selfTest */
-	#endif
 	
 	//
 	//	Init interface
@@ -143,7 +138,7 @@ implementation{
 		PrintDbg("KeyDistribP", " Self test initiated.\n");
 		m_testKey = NULL;
 		PrintDbg("KeyDistribP", " Self test getKeyToBS.\n");
-		if((status = call KeyDistrib.getKeyToBS(m_testKey)) != SUCCESS){
+		if((status = call KeyDistrib.getKeyToBSB(m_testKey)) != SUCCESS){
 			PrintDbg("KeyDistribP", " Self test getKeyToBS failed.\n");
 			return status;
 		}

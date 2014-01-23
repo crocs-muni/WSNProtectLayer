@@ -14,7 +14,7 @@ module DispatcherP{
 		interface Init as KeyDistribCInit;
 		//interface Init as ForwarderCInit;
 		//interface Init as PrivacyLevelCInit;
-		uses interface Boot;		
+		interface Boot;		
 		
 	}
 	provides {

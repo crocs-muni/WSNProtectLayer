@@ -37,6 +37,9 @@
  * @date   Feb 1, 2006
  */
 #include <Timer.h>
+
+#define NEW_PRINTF_SEMANTICS
+
 #include "BlinkToRadio.h"
 #include "printf.h"
 configuration BlinkToRadioAppC {
