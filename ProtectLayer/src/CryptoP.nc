@@ -264,7 +264,7 @@ implementation {
 			}
 			m_key2->counter = 0;
 			//save key to KDCData shared key		
-			memcpy( &((SavedData->kdcData).shared_key), m_key2, sizeof(m_key2));
+			memcpy( &((SavedData->kdcData).shared_key), m_key2, sizeof(PL_key_t));
 			
 			SavedData++;
 		}

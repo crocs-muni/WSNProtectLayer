@@ -1,3 +1,6 @@
+#include "ProtectLayerGlobals.h"
+#include "printf.h"
+
 module DispatcherP{
 	uses {
 		interface Receive as Lower_PL_Receive;
@@ -8,8 +11,10 @@ module DispatcherP{
 		interface Init as PrivacyCInit;	
 		interface Init as SharedDataCInit;	
 		interface Init as IntrusionDetectCInit;
+		interface Init as KeyDistribCInit;
 		//interface Init as ForwarderCInit;
-		//terface Init as PrivacyLevelCInit;
+		//interface Init as PrivacyLevelCInit;
+		uses interface Boot;		
 		
 	}
 	provides {
@@ -29,15 +34,18 @@ implementation{
 	
 	
 
-	command error_t Init.init()
-	{
+	command error_t Init.init() {
+				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!USE software init and booted interface to signal to dispatcher
+		//self init
+		p_msgForIDS = &memoryMsgForIDS;		
+		return SUCCESS;
+	}
+
+	void serveState() {
+		PrintDbg("DispatcherP", "serveState(%d) started", m_state);
 		switch (m_state) {
 			case STATE_INIT:
 			{
-				//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!USE software init and booted interface to signal to dispatcher
-				//self init
-				p_msgForIDS = &memoryMsgForIDS;	
-				
 				//init shared data
 				call SharedDataCInit.init();
 				//crypto init = auto init
@@ -56,25 +64,60 @@ implementation{
 				//start radio
 				//TODO
 				
-				break;
+				m_state = STATE_READY_TO_DEPLOY;
+				
+				//BUGBUG no break!!! break;
 				}
 			case STATE_READY_TO_DEPLOY:
 			{
-				break;
+				// TODO: run magic packet forwarder
+				// Wait for MAGIC PAKET
+				
+				// TODO: bugbug: no wait at the moment, proceed to next state directly
+				m_state = STATE_MAGIC_RECEIVED;
+				
+				//BUGBUG no break!!! break;
 				}
-			
+			case STATE_MAGIC_RECEIVED:
+			{
+				// init key distribution component
+				call KeyDistribCInit.init();
+				
+				// TODO: call save state
+
+				m_state = STATE_READY_FOR_APP;
+				
+				//BUGBUG no break!!! break;
+				}
+			case STATE_READY_FOR_APP:
+			{
+				// TODO: init app
+				// call App.init
+
+				m_state = STATE_WORKING;
+				
+				//BUGBUG no break!!! break;
+				}			
+				
+			case STATE_READY_FOR_APP:
+			{
+				// TODO: init app
+				// call App.init
+
+				m_state = STATE_WORKING;
+				
+				break;
+				}		
 		}
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		return SUCCESS;
+		PrintDbg("DispatcherP", "serveState(%d) finished", m_state);
 	}
+	
+	event void Boot.booted() {
+		PrintDbg("DispatcherP", "DispatcherP.Boot.booted() starting");
+		serveState();
+		PrintDbg("DispatcherP", "DispatcherP.Boot.booted() finished");
+	}
+
 	
 	void passToIDS(message_t* msg, void* payload, uint8_t len)
 	{

@@ -27,7 +27,7 @@ interface SharedData {
 	 * @param nodeId the id of requested neighboring node
 	 * @return a pointer to the savedData of identified neighbor or NULL if such a neighbor is not stored
 	 */
-	command SavedData_t* getNodeState(uint8_t nodeId);
+	command SavedData_t* getNodeState(uint16_t nodeId);
 	
 	/**
 	 * A shortcut to the privacy module's private data.

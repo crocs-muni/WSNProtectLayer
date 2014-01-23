@@ -19,6 +19,7 @@ implementation{
 	components ForwarderC;
 	components PrivacyLevelC;
 	components IntrusionDetectC;
+	components KeyDistribC;
 	
 	components new AMReceiverC(AM_PROTECTLAYERRADIO) as PL_ReceiverC;
 	components new AMReceiverC(AM_CHANGEPL) as ChangePL_ReceiverC;
@@ -43,6 +44,7 @@ implementation{
 	DispatcherP.PrivacyCInit -> PrivacyC.PLInit;
 	DispatcherP.SharedDataCInit -> SharedDataC.PLInit;
 	DispatcherP.IntrusionDetectCInit -> IntrusionDetectC.PLInit;
+	DispatcherP.KeyDistribCInit -> KeyDistribC.PLInit;
 	//DispatcherP.ForwarderCInit -> ForwarderC.Init;
 	//DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
 }

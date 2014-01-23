@@ -14,7 +14,7 @@ module KeyDistribP{
                 interface SharedData;
 	}
 	provides {
-		interface Init; /**< Init interface is provided to initialize component on startup */
+		interface Init as PLInit;
 		interface KeyDistrib; /**< KeyDistrib interface is provided */
 	}
 	/*@}*/
@@ -45,20 +45,23 @@ implementation{
 			@todo if internal state was already established (only reset occured), initializtion should load values from shared memory
 			@return error_t status. SUCCESS only
 	*/
-	command error_t Init.init() {
+	command error_t PLInit.init() {
 			//uint8_t i = 0;
-			//PrintDbg("KeyDistribP", "KeyDistribP.Init.init() entered");
+			PrintDbg("KeyDistribP", "KeyDistribP.PLInit.init() entered");
 
 			// TODO: do other initialization
 			//m_state = 0;
 
-			//call KeyDistrib.discoverKeys();
+			call KeyDistrib.discoverKeys();
 
 			// m_keyToBS initialization
 			//m_keyToBS.keyType = KEY_TOBS;
 			//for (i = 0; i < KEY_LENGTH; i++) m_keyToBS.keyValue[i] = 0;
+			PrintDbg("KeyDistribP", "KeyDistribP.PLInit.init() finished");
+
 			return SUCCESS;
 	}		
+	
 	
 	//
 	//	KeyDistrib interface
@@ -82,6 +85,7 @@ implementation{
 			PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys failed.\n");
 			return status;
 		}
+		PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys finished.\n");
 		return status;
 		
 		//#else /* use non blocking variant */
