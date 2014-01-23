@@ -36,7 +36,7 @@ implementation {
 	//	Init interface
 	//
 	command error_t Init.init() {
-                PrintDbg("CryptoP", " Init.init() called.\n");
+                //PrintDbg("CryptoP", " Init.init() called.\n");
 		// TODO: do other initialization
 		//m_state = 0;
 		//m_dbgKeyID = 0;

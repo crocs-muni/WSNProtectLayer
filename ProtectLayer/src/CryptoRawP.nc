@@ -33,14 +33,14 @@ implementation {
 	//	Init interface
 	//
 	command error_t Init.init() {
-		error_t status = SUCCESS;
-                PrintDbg("CryptoRawP", "Init.init() called.\n");
+		//error_t status = SUCCESS;
+                //PrintDbg("CryptoRawP", "Init.init() called.\n");
 		// TODO: do other initialization
 		//m_state = 0;
 		//m_dbgKeyID = 0;
 		
-		status = call CryptoRaw.selfTest();
-		PrintDbg("CryptoRawP", " self test finished with result %d.\n", status);
+		//status = call CryptoRaw.selfTest();
+		//PrintDbg("CryptoRawP", " self test finished with result %d.\n", status);
 		
 		return SUCCESS;
 	}

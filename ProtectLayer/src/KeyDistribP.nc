@@ -41,7 +41,7 @@ implementation{
 	*/
 	command error_t Init.init() {
 			//uint8_t i = 0;
-			PrintDbg("KeyDistribP", "KeyDistribP.Init.init() entered");
+			//PrintDbg("KeyDistribP", "KeyDistribP.Init.init() entered");
 
 			// TODO: do other initialization
 			//m_state = 0;
