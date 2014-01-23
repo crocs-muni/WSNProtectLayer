@@ -143,33 +143,33 @@ typedef enum _PRIVACY_LEVEL {
 /**
 	A structure representing a message that changes privacy level
 */
-typedef nx_struct PLevelMsg {
-	nx_uint8_t newPLevel; /**< new privacy level to be set */
+typedef struct PLevelMsg {
+	uint8_t newPLevel; /**< new privacy level to be set */
 } PLevelMsg_t;
 
 
-typedef nx_struct AppMsg {
-  nx_uint8_t appID;
-  nx_uint8_t myType;
-  nx_uint8_t info;
+typedef struct AppMsg {
+  uint8_t appID;
+  uint8_t myType;
+  uint8_t info;
 } AppMsg_t;
 
 /**
 	A structure representing message exchanged between IDSs
 */
-typedef nx_struct IDSMsg {
+typedef struct IDSMsg {
 /*@{*/
 	// currently all broadcasted (reason for sender and receiver)
 	// AM headers may be used instead, it's privacy question...
-	nx_uint16_t sender;	/**< sender (TOS_NODE_ID) */
-	nx_uint16_t receiver;	/**< receiver of this message */
-	nx_uint16_t nodeID;	/**< ID of a node we send the reputation about */
-	nx_uint8_t reputation;	/**< reputation */
+	uint16_t sender;	/**< sender (TOS_NODE_ID) */
+	uint16_t receiver;	/**< receiver of this message */
+	uint16_t nodeID;	/**< ID of a node we send the reputation about */
+	uint8_t reputation;	/**< reputation */
 /*@}*/	
 } IDSMsg_t;
 
-typedef nx_struct IntrusionMsg {
-	nx_uint8_t counter;
+typedef struct IntrusionMsg {
+	uint8_t counter;
 } IntrusionMsg_t;
 
 typedef enum _APP_MSG_TYPE {
@@ -206,30 +206,30 @@ enum {
 	KEY_TONODEMAC = 6,
 } KEY_TYPE;
 
-typedef nx_struct _key {
-  nx_uint8_t    keyType;
-  nx_uint8_t    keyValue[KEY_LENGTH];
-  nx_uint16_t	dbgKeyID;
-  nx_uint32_t 	counter;
+typedef struct _key {
+  uint8_t    keyType;
+  uint8_t    keyValue[KEY_LENGTH];
+  uint16_t	dbgKeyID;
+  uint32_t 	counter;
 } PL_key_t;
 
 typedef uint16_t node_id_t;
 
 // Saved data that are backed up in EEPROM
-// nx_struct only cause of the sending it via serial port
-typedef nx_struct KDCData {
+// struct only cause of the sending it via serial port
+typedef struct KDCData {
     PL_key_t shared_key;
-    nx_uint8_t counter; 
+    uint8_t counter; 
 } KDCData_t;
 
 /**
 	An IDS record about a neighbor
 */
-typedef nx_struct IDSData {
+typedef struct IDSData {
 /*@{*/
-	//nx_uint8_t neighbor_reputation;	/**< reputation of a neighbor */
-	nx_uint16_t nb_received;	/**< number of received messages */
-	nx_uint16_t nb_forwarded;
+	//uint8_t neighbor_reputation;	/**< reputation of a neighbor */
+	uint16_t nb_received;	/**< number of received messages */
+	uint16_t nb_forwarded;
 	
 /*@}*/
 } IDSData_t;
@@ -237,8 +237,8 @@ typedef nx_struct IDSData {
 /**
  * Data structure storing information about a neighbour saved by the protection layer component
  */
-typedef nx_struct SavedData {
-	nx_uint16_t nodeId; /**< id of the neighbouring node */
+typedef struct SavedData {
+	uint16_t nodeId; /**< id of the neighbouring node */
 	KDCData_t kdcData; /**< information specific to the KDC component about the neighbour */
 	IDSData_t idsData; /**< information specific to the IDS component about the neighbour */
 } SavedData_t;
@@ -246,26 +246,26 @@ typedef nx_struct SavedData {
 /**
  * Private data structure for the PPC component about this node
  */
-typedef nx_struct PPCPrivData {
-	nx_uint16_t priv_level; /**< current privacy level on this node */
+typedef struct PPCPrivData {
+	uint16_t priv_level; /**< current privacy level on this node */
 } PPCPrivData_t;
 
 /**
 	Private data of the IDS
 */
-typedef nx_struct IDSPrivData {
+typedef struct IDSPrivData {
 /*@{*/
 	//PRIVACY_LEVEL priv_level;
 /*@}*/
 } IDSPrivData_t;
 
-typedef nx_struct RoutePrivData {
-	nx_uint16_t parentNodeId;
-	nx_uint8_t savedDataIdx;	//TODO: is required?
-	nx_uint8_t isValid;
+typedef struct RoutePrivData {
+	uint16_t parentNodeId;
+	uint8_t savedDataIdx;	//TODO: is required?
+	uint8_t isValid;
 } RoutePrivData_t;
 
-typedef nx_struct KDCPrivData {
+typedef struct KDCPrivData {
     PL_key_t	keyToBS;
     PL_key_t	preKeys[MAX_NEIGHBOR_COUNT];
 } KDCPrivData_t;
@@ -283,62 +283,62 @@ typedef struct CombinedData {
  * Message structure for logging messages
  */
 
-typedef nx_struct log_msg {
-	nx_uint16_t counter; /**< counter of the log message */
-	nx_uint8_t blockLength; /**< length of blocks required to be read from the flash memory at a time */
-	nx_uint8_t data[LOGGED_SIZE];
+typedef struct log_msg {
+	uint16_t counter; /**< counter of the log message */
+	uint8_t blockLength; /**< length of blocks required to be read from the flash memory at a time */
+	uint8_t data[LOGGED_SIZE];
 } log_msg_t;
 
 /**
  * Message structure for the configuration get request message
  */
-typedef nx_struct con_get_msg {
-	nx_uint16_t counter; /**< counter of the configuration get message */
+typedef struct con_get_msg {
+	uint16_t counter; /**< counter of the configuration get message */
 } con_get_msg_t;
 
 /**
  * Message structure for the configuration component setting or announcing saved data structure
  */
-typedef nx_struct con_sd_msg {
-	nx_uint16_t counter; /**< counter of the configuration setting message */
-	nx_uint8_t savedDataIdx; /**< index of the savedData structure in the array */
+typedef struct con_sd_msg {
+	uint16_t counter; /**< counter of the configuration setting message */
+	uint8_t savedDataIdx; /**< index of the savedData structure in the array */
 	SavedData_t savedData; /**< the actual savedData structure with all the data */
 } con_sd_msg_t;
 
 /**
  * Message structure for the privacy protection layer component settings
  */
-typedef nx_struct con_ppcpd_msg {
-	nx_uint16_t counter; /**< counter of the privacy protection layer component settings message */ 
+typedef struct con_ppcpd_msg {
+	uint16_t counter; /**< counter of the privacy protection layer component settings message */ 
 	PPCPrivData_t ppcPrivData; /**< the actual privacy protection layer data */
 } con_ppcpd_msg_t;
 
-typedef nx_struct con_rpd_msg {
-	nx_uint16_t counter; /**< counter of the privacy protection layer component settings message */ 
+typedef struct con_rpd_msg {
+	uint16_t counter; /**< counter of the privacy protection layer component settings message */ 
 	RoutePrivData_t rPrivData; /**< the actual privacy protection layer data */
 } con_rpd_msg_t;
 
-typedef nx_struct con_kdcpd_msg {
-	nx_uint16_t counter; /**< counter of the privacy protection layer component settings message */ 
+typedef struct con_kdcpd_msg {
+	uint16_t counter; /**< counter of the privacy protection layer component settings message */ 
 	KDCPrivData_t kdcPrivData; /**< the actual privacy protection layer data */
 } con_kdcpd_msg_t;
 
 /**
  * Message structure for the flash testing
  */
-typedef nx_struct flash_get_msg {
-	nx_uint16_t counter; /**< counter of the privacy protection layer component settings message */
+typedef struct flash_get_msg {
+	uint16_t counter; /**< counter of the privacy protection layer component settings message */
 } flash_get_msg_t;
 
 /**
  * Message structure for the flash testing
  */
-typedef nx_struct flash_set_msg {
-	nx_uint16_t counter; /**< counter of the privacy protection layer component settings message */
+typedef struct flash_set_msg {
+	uint16_t counter; /**< counter of the privacy protection layer component settings message */
 } flash_set_msg_t;
 
-typedef nx_struct intrusion_msg {
-	nx_int8_t rssi;
+typedef struct intrusion_msg {
+	int8_t rssi;
 } intrusion_msg_t;
 
 /**
@@ -359,9 +359,9 @@ typedef uint8_t NODE_REPUTATION;
  * Structure of an item in an IDS buffer
  */
  typedef struct IDSBufferedPacket {
- 	nx_uint16_t sender;
- 	nx_uint16_t receiver;
- 	nx_uint64_t hashedPacket;
+ 	uint16_t sender;
+ 	uint16_t receiver;
+ 	uint64_t hashedPacket;
  } idsBufferedPacket_t;
 //typedef uint64_t idsBufferedPacket_t;
 

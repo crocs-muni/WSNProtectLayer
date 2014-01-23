@@ -166,7 +166,7 @@ implementation {
 		memoryBusy = FALSE;
 		if (error == SUCCESS) {
 			int i;
-			nx_uint8_t * data = (nx_uint8_t * ) buf;
+			uint8_t * data = (uint8_t * ) buf;
 			for (i = 0; i < len; i++) {
 				if (data[i] == 0xff) {
 					readDone = TRUE;						

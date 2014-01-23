@@ -539,7 +539,7 @@ implementation {
 	}
 	command void* MessagePacket.getPayload(message_t* msg, uint8_t len) {
 		// Get payload
-		void* tmp = call Packet.getPayload(msg, (nx_uint8_t) (len + sizeof(SPHeader_t)));
+		void* tmp = call Packet.getPayload(msg, (uint8_t) (len + sizeof(SPHeader_t)));
 		// Return payload offset after our header
 		return tmp + sizeof(SPHeader_t);
 	}

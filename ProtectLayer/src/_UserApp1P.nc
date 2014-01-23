@@ -27,7 +27,7 @@ implementation {
 	message_t 	pkt;
 	bool busy = FALSE;
   
-	error_t prepareAndSendAppMessage(nx_uint8_t appID, nx_uint8_t msgType, nx_uint8_t info) {
+	error_t prepareAndSendAppMessage(uint8_t appID, uint8_t msgType, uint8_t info) {
 		error_t stat = SUCCESS;
 		// If not busy, then create new packet for BS informing about detected movement
 		if (!busy) {
