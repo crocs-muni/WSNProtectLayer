@@ -108,7 +108,7 @@ implementation {
 			memset(&(combinedData.savedData[i].idsData), 0, sizeof(combinedData.savedData[i].idsData));
 		}
 
-		PrintDbg("SahredDataP", "PLInit.init() finished.\n");	
+		PrintDbg("SharedDataP", "PLInit.init() finished.\n");	
 		
         return SUCCESS;
 	}

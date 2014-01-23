@@ -42,7 +42,7 @@ implementation{
 	*/
 	command error_t PLInit.init() {
 			//uint8_t i = 0;
-			PrintDbg("KeyDistribP", "KeyDistribP.PLInit.init() entered");
+			PrintDbg("KeyDistribP", "KeyDistribP.PLInit.init() entered\n");
 
 			// TODO: do other initialization
 			//m_state = 0;
@@ -52,7 +52,7 @@ implementation{
 			// m_keyToBS initialization
 			//m_keyToBS.keyType = KEY_TOBS;
 			//for (i = 0; i < KEY_LENGTH; i++) m_keyToBS.keyValue[i] = 0;
-			PrintDbg("KeyDistribP", "KeyDistribP.PLInit.init() finished");
+			PrintDbg("KeyDistribP", "KeyDistribP.PLInit.init() finished\n");
 
 			return SUCCESS;
 	}		
@@ -125,7 +125,7 @@ implementation{
 		PrintDbg("KeyDistribP", "getKeyToBSB called.\n");
 		KDCPrivData = call SharedData.getKDCPrivData();
 		if(KDCPrivData == NULL){
-			PrintDbg("KeyDistribP", "getKeyToBSB key not received");
+			PrintDbg("KeyDistribP", "getKeyToBSB key not received\n");
 			return EKEYNOTFOUND;
 		} else {		
 			pBSKey = &(KDCPrivData->keyToBS);

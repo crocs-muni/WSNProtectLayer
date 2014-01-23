@@ -56,8 +56,9 @@ implementation {
   }
 
   event void Boot.booted() {
-    call AMControl.start();
     PrintDbg("NodeState", "Node has booted.\n");
+	call AMControl.start();
+    
     //dbg("NodeState", "Node has booted.\n");
 
   }

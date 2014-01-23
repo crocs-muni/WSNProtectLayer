@@ -497,6 +497,8 @@ implementation {
 		if (err == SUCCESS) {
 			// todo: remove when magic will be imolemeted
 			call Dispatcher.serveState();
+			
+			PrintDbg("PrivacyP", "Going to signal message AMControl.startDone()\n");
 
 			// signal to upper layers
 			signal MessageAMControl.startDone(err);
@@ -517,7 +519,7 @@ implementation {
 	command error_t MessageAMControl.start() {
                 //printf("PrivacyP.MessageAMControl.start() entered\n");
 		// TODO: if our AMControl is not running yet, start it 
-		dbg("NodeState", "MessageAMControl starting approach.\n");
+		PrintDbg("NodeState", "MessageAMControl starting approach.\n");
 		
 		// todo: our init before running radio
 		call Dispatcher.serveState();
