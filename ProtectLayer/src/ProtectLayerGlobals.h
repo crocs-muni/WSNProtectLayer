@@ -261,13 +261,13 @@ typedef nx_struct IDSPrivData {
 
 typedef nx_struct RoutePrivData {
 	nx_uint16_t parentNodeId;
-	nx_uint8_t savedDataIdx;
+	nx_uint8_t savedDataIdx;	//TODO: is required?
 	nx_uint8_t isValid;
 } RoutePrivData_t;
 
 typedef nx_struct KDCPrivData {
     PL_key_t	keyToBS;
-    PL_key_t	preKeys[20];
+    PL_key_t	preKeys[MAX_NEIGHBOR_COUNT];
 } KDCPrivData_t;
 /**
  * Structure combining all the data that need to be stored on the node by the protection layer

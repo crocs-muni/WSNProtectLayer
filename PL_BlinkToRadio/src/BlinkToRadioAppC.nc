@@ -38,7 +38,7 @@
  */
 #include <Timer.h>
 #include "BlinkToRadio.h"
-
+#include "printf.h"
 configuration BlinkToRadioAppC {
 }
 implementation {
@@ -46,7 +46,7 @@ implementation {
   components LedsC;
   components BlinkToRadioC as App;
   components new TimerMilliC() as Timer0;
-  
+
 /*  
   ---> Original Components
   components ActiveMessageC;
@@ -57,6 +57,8 @@ implementation {
 */
   components ProtectLayerC;
   components PrintfC;
+    
+  components SerialStartC;
 
   App.Boot -> MainC;
   App.Leds -> LedsC;

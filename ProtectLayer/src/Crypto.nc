@@ -174,4 +174,10 @@ interface Crypto {
 	*/
 	command bool verifySignature( uint8_t* buffer, uint8_t offset, uint8_t pLen, PRIVACY_LEVEL level, uint8_t counter);
 	
+	/**
+			Command: command to execute self test of Crypto component
+			@return error_t status
+	*/
+	command error_t selfTest();
+	
 }

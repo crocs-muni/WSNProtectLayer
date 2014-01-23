@@ -38,6 +38,8 @@
  */
 #include <Timer.h>
 #include "BlinkToRadio.h"
+#include "printf.h"
+
 #include "../../ProtectLayer/src/ProtectLayerGlobals.h"
 
 module BlinkToRadioC {
@@ -73,8 +75,12 @@ implementation {
   }
 
   event void Boot.booted() {
+    call Leds.led0On();
+    printf("BlinkToRadio booted\n");
+    printfflush();
     call AMControl.start();
     dbg("NodeState", "Node has booted.\n");
+    
   }
 
   event void AMControl.startDone(error_t err) {
@@ -92,7 +98,7 @@ implementation {
   }
 
   event void Timer0.fired() {
-  	dbg("NodeState", "Timer fired.\n");
+    dbg("NodeState", "Timer fired.\n");  
     counter++;
     if (!busy) {
       BlinkToRadioMsg* btrpkt = 

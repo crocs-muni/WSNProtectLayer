@@ -14,7 +14,7 @@ module KeyDistribP{
                 interface SharedData;
 	}
 	provides {
-		interface Init; /**< Init interface is provided to initialize component on startup */
+		interface Init as PLInit;
 		interface KeyDistrib; /**< KeyDistrib interface is provided */
 	}
 	/*@}*/
@@ -24,13 +24,19 @@ implementation{
         //uint8_t m_lastNodeIndex;    /**< index of last value set in m_neighborsID */
         //uint8_t m_neighborsID[MAX_NEIGHBOR_COUNT]; /**< array of neighbors IDs - use for lookup into shared data structures */
 	//uint16_t m_state;			/**< current state of the component - used to decice on next step inside task */
-	//PL_key_t m_keyToBS;			/**< handle to key shared with base station */ 
+	#ifdef DEBUG
+	PL_key_t m_testKey;			/**< handle to key */
+	#endif
 	//uint8_t  m_getKeyToNodeID;  /**< ID of node fro which getKeyToNode command was issued */
         //PL_key_t m_keysToNodes[MAX_NEIGHBOR_COUNT]; /**< handles to keys shared with separate neighbors */
 	
 	//blocking version of key derivation
 	#define BLOCKING 
-		
+	
+	#ifdef DEBUG
+	PL_key_t* m_testKey;			/**< handle to key for selfTest */
+	#endif
+	
 	//
 	//	Init interface
 	//
@@ -39,20 +45,23 @@ implementation{
 			@todo if internal state was already established (only reset occured), initializtion should load values from shared memory
 			@return error_t status. SUCCESS only
 	*/
-	command error_t Init.init() {
+	command error_t PLInit.init() {
 			//uint8_t i = 0;
-			PrintDbg("KeyDistribP", "KeyDistribP.Init.init() entered");
+			PrintDbg("KeyDistribP", "KeyDistribP.PLInit.init() entered");
 
 			// TODO: do other initialization
 			//m_state = 0;
 
-			//call KeyDistrib.discoverKeys();
+			call KeyDistrib.discoverKeys();
 
 			// m_keyToBS initialization
 			//m_keyToBS.keyType = KEY_TOBS;
 			//for (i = 0; i < KEY_LENGTH; i++) m_keyToBS.keyValue[i] = 0;
+			PrintDbg("KeyDistribP", "KeyDistribP.PLInit.init() finished");
+
 			return SUCCESS;
 	}		
+	
 	
 	//
 	//	KeyDistrib interface
@@ -76,10 +85,11 @@ implementation{
 			PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys failed.\n");
 			return status;
 		}
+		PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys finished.\n");
 		return status;
 		
 		//#else /* use non blocking variant */
-               /*
+                /*
 		if (m_state & FLAG_STATE_KDP_DISCOVERKEYS) {
 			return EALREADY;	
 		}
@@ -128,11 +138,24 @@ implementation{
 		}
 	}	
 	
-	
-	
-	
-	
-	
+	command error_t KeyDistrib.selfTest(){
+		uint8_t status = SUCCESS;
+		PrintDbg("KeyDistribP", " Self test initiated.\n");
+		m_testKey = NULL;
+		PrintDbg("KeyDistribP", " Self test getKeyToBS.\n");
+		if((status = call KeyDistrib.getKeyToBS(m_testKey)) != SUCCESS){
+			PrintDbg("KeyDistribP", " Self test getKeyToBS failed.\n");
+			return status;
+		}
+		PrintDbg("KeyDistribP", " Self test getKeyToNodeB with ID 0.\n");
+		if((status = call KeyDistrib.getKeyToNodeB( 0, m_testKey)) != SUCCESS){
+			PrintDbg("KeyDistribP", " Self test getKeyToNodeB failed.\n");
+			return status;
+		}
+		PrintDbg("KeyDistribP", "Self test finished.\n");
+		return status;
+	}
+		
 	
 	
 	

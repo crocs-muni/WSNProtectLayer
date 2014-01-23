@@ -36,7 +36,7 @@ implementation {
 	//	Init interface
 	//
 	command error_t Init.init() {
-                PrintDbg("CryptoP", " Init.init() called.\n");
+                //PrintDbg("CryptoP", " Init.init() called.\n");
 		// TODO: do other initialization
 		//m_state = 0;
 		//m_dbgKeyID = 0;
@@ -264,7 +264,7 @@ implementation {
 			}
 			m_key2->counter = 0;
 			//save key to KDCData shared key		
-			memcpy( &((SavedData->kdcData).shared_key), m_key2, sizeof(m_key2));
+			memcpy( &((SavedData->kdcData).shared_key), m_key2, sizeof(PL_key_t));
 			
 			SavedData++;
 		}
@@ -364,5 +364,61 @@ implementation {
 			return TRUE;
                 }
 	}
+	
+	command error_t selfTest(){
+		uint8_t status = SUCCESS;
+		uint8_t hash[BLOCK_SIZE];
+		uint64_t halfHash = 0;
+		uint8_t macLength = BLOCK_SIZE;
+		PrintDbg("CryptoP", " Self test started.\n");
+		memset(m_buffer, 1, BLOCK_SIZE);
+		PrintDbg("CryptoP", " hashDataB test started.\n");
+		if((status = call Crypto.hashDataB(m_buffer, 0, BLOCK_SIZE, hash)) != SUCCESS){
+			PrintDbg("CryptoP", " hashDataB failed.\n");
+			return status;
+		}		
+		if((status = call Crypto.verifyHashDataB(m_buffer, 0, BLOCK_SIZE, hash)) != SUCCESS){
+			PrintDbg("CryptoP", " verifyHashDataB failed.\n");
+			return status;			
+		}
+		PrintDbg("CryptoP", " hashDataHalfB started.\n");
+		if((status = call Crypto.hashDataHalfB(m_buffer, 0, BLOCK_SIZE, &halfHash)) != SUCCESS){
+			PrintDbg("CryptoP", " hashDataHalfB failed.\n");
+			return status;		 
+		}		
+		if((status = call Crypto.verifyHashDataHalfB(m_buffer, 0, BLOCK_SIZE, halfHash)) != SUCCESS){
+			PrintDbg("CryptoP", " verifyHashDataB failed.\n");
+			return status;
+		}
+		PrintDbg("CryptoP", " macBufferForBSB started.\n");
+		if((status = call Crypto.macBufferForBSB(m_buffer, 0, &macLength)) != SUCCESS){
+			  PrintDbg("CryptoP", " macBufferForBSB failed.\n");
+			  return status;
+		}
+		if(macLength != 2 * BLOCK_SIZE){
+			PrintDbg("CryptoP", " macBufferForBSB failed to append hash.\n");
+			return EWRONGHASH;
+		}
+		if((status = call Crypto.verifyMacFromBSB(m_buffer, 0, &macLength)) != SUCCESS){
+			  PrintDbg("CryptoP", " verifyMacFromBSB failed.\n");
+			  return status;
+		}
+		PrintDbg("CryptoP", " macBufferForNodeB started.\n");
+		macLength = BLOCK_SIZE;
+		if((status = call Crypto.macBufferForNodeB( 0, m_buffer, 0, &macLength)) != SUCCESS){
+			  PrintDbg("CryptoP", " macBufferForNodeB failed.\n");
+			  return status;
+		}
+		if(macLength != 2 * BLOCK_SIZE){
+			PrintDbg("CryptoP", " macBufferForNodeB failed to append hash.\n");
+			return EWRONGHASH;
+		}
+		if((status = call Crypto.verifyMacFromNodeB( 0, m_buffer, 0, &macLength)) != SUCCESS){
+			  PrintDbg("CryptoP", " verifyMacFromNodeB failed.\n");
+			  return status;
+		}
+		return status;
+		
+	}	
 }
 
