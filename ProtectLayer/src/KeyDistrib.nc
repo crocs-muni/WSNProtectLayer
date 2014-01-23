@@ -28,7 +28,11 @@ interface KeyDistrib {
 	*/
 	command error_t getKeyToBSB(PL_key_t* pBSKey);	
 	
-	
+	/**
+		Command: selftest provides possibility to test functionality of KeyDistrib component
+		@return: error_t status
+	*/
+	command error_t selfTest();
 	
 	
 	

@@ -33,31 +33,84 @@ implementation {
 	/** 
 	 * Initialize the combinedData structure to initial zeros
 	 */
+ 
 	command error_t PLInit.init() {
-            int i = 0;
-            int j = 0;
-            uint8_t fixedNeighbors[MAX_NEIGHBOR_COUNT] = {4,5,6,7,10,14,15,17,19,22,25,28,29,30,31,32,33,35,36,37,40,41,42,43,44,46,47,48,50};
+		int i = 0;
+		int j = 0;
+		uint8_t fixedNeighbors[MAX_NEIGHBOR_COUNT] = {4,5,6,7,10,14,15,17,19,22,25,28,29,30,31,32,33,35,36,37,40,41,42,43,44,46,47,48,50};
+			
+		// 
+		//	Create virtual pre-distributed keys
+		//
+		// Keys to all other nodes
+		for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
+			combinedData.kdcPrivData.preKeys[i].keyType = KEY_TONODE;
+			for (j = 0; j < KEY_LENGTH; j++) combinedData.kdcPrivData.preKeys[i].keyValue[j] = TOS_NODE_ID ^ fixedNeighbors[i] ^ j; // construct unique key value, but deterministic
+			combinedData.kdcPrivData.preKeys[i].dbgKeyID = 0;
+			combinedData.kdcPrivData.preKeys[i].counter = 0;
+		}
+		// Create key to BS
+		combinedData.kdcPrivData.keyToBS.keyType = KEY_TOBS;
+		memset(combinedData.kdcPrivData.keyToBS.keyValue, 0, KEY_LENGTH);
+		combinedData.kdcPrivData.keyToBS.dbgKeyID = 0;				
+		combinedData.kdcPrivData.preKeys[i].counter = 0;
+			
+		//
+		//  Init routing table to BS for current node
+		//	TODO: fixed routing table at the moment, will be replaced by CTP	
+		//		
+		combinedData.routePrivData.isValid = 1;
+		switch (TOS_NODE_ID) {
+			case 4: { combinedData.routePrivData.parentNodeId = 41; break; }
+			case 5: { combinedData.routePrivData.parentNodeId = 40; break; }
+			case 6: { combinedData.routePrivData.parentNodeId = 19; break; }
+			case 7: { combinedData.routePrivData.parentNodeId = 17; break; }
+			case 10: { combinedData.routePrivData.parentNodeId = 25; break; }
+			case 14: { combinedData.routePrivData.parentNodeId = 37; break; }
+			case 15: { combinedData.routePrivData.parentNodeId = 17; break; }
+			case 17: { combinedData.routePrivData.parentNodeId = 37; break; }
+			case 19: { combinedData.routePrivData.parentNodeId = 4; break; }
+			case 22: { combinedData.routePrivData.parentNodeId = 41; break; }
+			case 25: { combinedData.routePrivData.parentNodeId = 44; break; }
+			case 28: { combinedData.routePrivData.parentNodeId = 4; break; }
+			case 29: { combinedData.routePrivData.parentNodeId = 50; break; }
+			case 30: { combinedData.routePrivData.parentNodeId = 35; break; }
+			case 31: { combinedData.routePrivData.parentNodeId = 41; break; }
+			case 32: { combinedData.routePrivData.parentNodeId = 50; break; }
+			case 33: { combinedData.routePrivData.parentNodeId = 41; break; }
+			case 35: { combinedData.routePrivData.parentNodeId = 22; break; }
+			case 36: { combinedData.routePrivData.parentNodeId = 42; break; }
+			case 37: { combinedData.routePrivData.parentNodeId = 41; break; }
+			case 40: { combinedData.routePrivData.parentNodeId = 41; break; }
+			case 41: { combinedData.routePrivData.parentNodeId = 41; break; }
+			case 42: { combinedData.routePrivData.parentNodeId = 22; break; }
+			case 43: { combinedData.routePrivData.parentNodeId = 14; break; }
+			case 44: { combinedData.routePrivData.parentNodeId = 41; break; }
+			case 46: { combinedData.routePrivData.parentNodeId = 33; break; }
+			case 47: { combinedData.routePrivData.parentNodeId = 46; break; }
+			case 48: { combinedData.routePrivData.parentNodeId = 33; break; }
+			case 50: { combinedData.routePrivData.parentNodeId = 31; break; }
+			default: combinedData.routePrivData.isValid = 0;
+		} 
 
-            for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
-                combinedData.savedData[i].nodeId = fixedNeighbors[i];
-                combinedData.savedData[i].kdcData.shared_key.keyType = KEY_TONODE;
+		//
+		// Privacy component
+		//
+		combinedData.ppcPrivData.priv_level = 0;
+		
+		//
+		// Fill list of neighbors		
+		// TODO: now fixed, will be obtained from CTP
+		for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
+			combinedData.savedData[i].nodeId = fixedNeighbors[i];
+			// Clear all remaining information
+			memset(&(combinedData.savedData[i].kdcData), 0, sizeof(combinedData.savedData[i].kdcData));
+			memset(&(combinedData.savedData[i].idsData), 0, sizeof(combinedData.savedData[i].idsData));
+		}
 
-                for (j = 0; j < KEY_LENGTH; j++) combinedData.savedData[i].kdcData.shared_key.keyValue[j] = 0;
-                combinedData.savedData[i].kdcData.shared_key.keyValue[0] = (combinedData.savedData[i].nodeId < TOS_NODE_ID) ? combinedData.savedData[i].nodeId : TOS_NODE_ID;
-                combinedData.savedData[i].kdcData.shared_key.keyValue[1] = (combinedData.savedData[i].nodeId < TOS_NODE_ID) ? TOS_NODE_ID : combinedData.savedData[i].nodeId;
-                combinedData.savedData[i].kdcData.shared_key.dbgKeyID = 0;
-
-                combinedData.savedData[i].idsData.nb_received = 0;
-                combinedData.savedData[i].idsData.nb_forwarded = 0;
-            }
-            combinedData.ppcPrivData.priv_level = 0;
-            // Create key to BS
-            combinedData.kdcPrivData.keyToBS.keyType = KEY_TOBS;
-            combinedData.kdcPrivData.keyToBS.keyValue[0] = TOS_NODE_ID;
-            combinedData.kdcPrivData.keyToBS.keyValue[1] = 0xff;
-            combinedData.kdcPrivData.keyToBS.dbgKeyID = 0;
-
-            return SUCCESS;
+		PrintDbg("SahredDataP", "PLInit.init() finished.\n");	
+		
+        return SUCCESS;
 	}
 
 	/**
@@ -84,7 +137,7 @@ implementation {
 	 * @param nodeId the id of requested neighboring node
 	 * @return a pointer to the savedData of identified neighbor or NULL if such a neighbor is not stored
 	 */
-	command SavedData_t * SharedData.getNodeState(uint8_t nodeId){
+	command SavedData_t * SharedData.getNodeState(uint16_t nodeId){
 		int i;
 		for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
 			if (combinedData.savedData[i].nodeId == nodeId)
