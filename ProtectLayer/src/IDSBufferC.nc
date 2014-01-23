@@ -5,6 +5,9 @@ configuration IDSBufferC{
 }
 implementation{
 	components IDSBufferP;
+	components SharedDataC;
 	
 	IDSBuffer = IDSBufferP.IDSBuffer;
+	
+	IDSBufferP.SharedData -> SharedDataC;
 }

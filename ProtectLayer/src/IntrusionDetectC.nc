@@ -22,15 +22,16 @@ implementation{
 	components PrivacyC;
 	components SharedDataC;
 	components MainC;
-	components new TimerMilliC() as TimerIDS; //testing
-	components new BlockStorageC(VOLUME_LOG) as LogStorage;
+//	components new TimerMilliC() as TimerIDS; //testing
+//	components new BlockStorageC(VOLUME_LOG) as LogStorage;
 	components IDSBufferC;
 	components DispatcherC;
 	components IDSForwarderC;
-	
-	IntrusionDetectP.IDSAlertSend -> IDSForwarderC.IDSAlertSend;
-	
-	IntrusionDetectP.TimerIDS-> TimerIDS; //testing
+	components CryptoC;
+	components new AMReceiverC(AM_IDS_ALERT);
+//	components new AMSenderC(AM_IDS_ALERT);
+		
+//	IntrusionDetectP.TimerIDS-> TimerIDS; //testing
 	
 	MainC.SoftwareInit -> IntrusionDetectP.Init;	//auto-initialization phase 1
 	
@@ -38,15 +39,21 @@ implementation{
 	IntrusionDetect = IntrusionDetectP.IntrusionDetect;
 	
 	IntrusionDetectP.ReceiveIDSMsgCopy -> DispatcherC.Sniff_Receive;
-	
-	IntrusionDetectP.AMSend -> PrivacyC.MessageSend[MSG_IDS];
-	IntrusionDetectP.Receive -> PrivacyC.MessageReceive[MSG_IDS];
+	IntrusionDetectP.IDSAlertSend -> IDSForwarderC.IDSAlertSend;
 	
 	IntrusionDetectP.ReceiveMsgCopy -> PrivacyC.MessageReceive[MSG_IDSCOPY];
+
+//	IntrusionDetectP.AMSend -> PrivacyC.MessageSend[MSG_IDS];
+//	IntrusionDetectP.Receive -> PrivacyC.MessageReceive[MSG_IDS];
 	
 	IntrusionDetectP.SharedData -> SharedDataC.SharedData;
 	
-	IntrusionDetectP.BlockWrite -> LogStorage.BlockWrite;
+//	IntrusionDetectP.BlockWrite -> LogStorage.BlockWrite;
 	
 	IntrusionDetectP.IDSBuffer -> IDSBufferC.IDSBuffer;
+	
+	IntrusionDetectP.Crypto -> CryptoC.Crypto;
+	
+	IntrusionDetectP.AMPacket -> AMReceiverC;
+//	IntrusionDetectP.Packet -> AMSenderC;
 }

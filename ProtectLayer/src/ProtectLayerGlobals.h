@@ -53,8 +53,8 @@ enum {
   RSSI_THRESHOLD = -73,
   IDS_MAX_MONITORED_NEIGHBORS = 5,
   IDS_BUFFER_SIZE = 5,
-  IDS_DROPPING_RATE = 50,
-  IDS_MIN_PACKET_RECEIVED = 5,
+  IDS_DROPPING_THRESHOLD = 50,
+  IDS_MIN_PACKET_RECEIVED = 50,
   IDS_FORWARDER_SEND_BUFFER_LEN = 4
 };
 
@@ -105,12 +105,12 @@ typedef struct _RecMsg {
 /**
 	A structure representing security header
 */
-typedef nx_struct SPHeader {
+typedef struct SPHeader {
 /*@{*/
-  nx_uint8_t msgType;	/**< type of message */
-  nx_uint8_t privacyLevel;	/**< privacy level applied */
-  nx_uint16_t sender;	/**< sender ID */
-  nx_uint16_t receiver; /**< receiver ID */
+  uint8_t msgType;	/**< type of message */
+  uint8_t privacyLevel;	/**< privacy level applied */
+  uint16_t sender;	/**< sender ID */
+  uint16_t receiver; /**< receiver ID */
 /*@}*/
 } SPHeader_t;
 
@@ -361,7 +361,7 @@ typedef uint8_t NODE_REPUTATION;
  typedef struct IDSBufferedPacket {
  	nx_uint16_t sender;
  	nx_uint16_t receiver;
- 	nx_uint64_t hashPacket;
+ 	nx_uint64_t hashedPacket;
  } idsBufferedPacket_t;
 //typedef uint64_t idsBufferedPacket_t;
 

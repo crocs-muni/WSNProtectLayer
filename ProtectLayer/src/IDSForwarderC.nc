@@ -11,6 +11,7 @@ implementation {
 	components new AMSenderC(AM_IDS_ALERT);
 	components new PoolC(message_t, IDS_FORWARDER_SEND_BUFFER_LEN);
 	components new QueueC(message_t*, IDS_FORWARDER_SEND_BUFFER_LEN); 
+	components SharedDataC;
 	 
 	MainC.SoftwareInit -> IDSForwarderP.Init; // auto init phase 1
 	
