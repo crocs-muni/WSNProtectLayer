@@ -24,6 +24,7 @@ module PrivacyP {
 		interface KeyDistrib;
 		interface Crypto;
 		interface Logger;
+		interface Dispatcher;
 	}
   
 	provides {
@@ -57,7 +58,7 @@ implementation {
 	// msgs for  IDS copy
 	message_t m_msgMemoryForIDS;
 	RecMsg_t m_msgForIDS;
-	
+		
 	
 	
 
@@ -490,10 +491,16 @@ implementation {
 	//
 	// AMControl interface
 	//  
+
+		
 	event void AMControl.startDone(error_t err) {
 		if (err == SUCCESS) {
+			// todo: remove when magic will be imolemeted
+			call Dispatcher.serveState();
+
 			// signal to upper layers
 			signal MessageAMControl.startDone(err);
+			
 		}
 		else {
 			// try to restart again
@@ -511,6 +518,10 @@ implementation {
                 //printf("PrivacyP.MessageAMControl.start() entered\n");
 		// TODO: if our AMControl is not running yet, start it 
 		dbg("NodeState", "MessageAMControl starting approach.\n");
+		
+		// todo: our init before running radio
+		call Dispatcher.serveState();
+		
 		call AMControl.start();
 		
 		return SUCCESS;	

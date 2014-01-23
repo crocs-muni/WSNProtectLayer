@@ -14,7 +14,8 @@ module DispatcherP{
 		interface Init as KeyDistribCInit;
 		//interface Init as ForwarderCInit;
 		//interface Init as PrivacyLevelCInit;
-		interface Boot;		
+		interface Boot;	
+		
 		
 	}
 	provides {
@@ -23,6 +24,7 @@ module DispatcherP{
 		interface Receive as ChangePL_Receive;
 		interface Init;
 		interface Receive as Sniff_Receive;
+		interface Dispatcher;
 	}
 }
 implementation{
@@ -41,80 +43,10 @@ implementation{
 		return SUCCESS;
 	}
 
-	void serveState() {
-		PrintDbg("DispatcherP", "serveState(%d) started", m_state);
-		switch (m_state) {
-			case STATE_INIT:
-			{
-				//init shared data
-				call SharedDataCInit.init();
-				//crypto init = auto init
-				
-				//privacy init
-				call PrivacyCInit.init();  //mem init
-				//Forwarder init = auto init
-				
-				//IDS init
-				call IntrusionDetectCInit.init();
-				//PrivacyLevel init = auto init
-				
-				//additional inits?
-				//TODO
-				
-				//start radio
-				//TODO
-				
-				m_state = STATE_READY_TO_DEPLOY;
-				
-				//BUGBUG no break!!! break;
-				}
-			case STATE_READY_TO_DEPLOY:
-			{
-				// TODO: run magic packet forwarder
-				// Wait for MAGIC PAKET
-				
-				// TODO: bugbug: no wait at the moment, proceed to next state directly
-				m_state = STATE_MAGIC_RECEIVED;
-				
-				//BUGBUG no break!!! break;
-				}
-			case STATE_MAGIC_RECEIVED:
-			{
-				// init key distribution component
-				call KeyDistribCInit.init();
-				
-				// TODO: call save state
 
-				m_state = STATE_READY_FOR_APP;
-				
-				//BUGBUG no break!!! break;
-				}
-			case STATE_READY_FOR_APP:
-			{
-				// TODO: init app
-				// call App.init
-
-				m_state = STATE_WORKING;
-				
-				//BUGBUG no break!!! break;
-				}			
-				
-			case STATE_READY_FOR_APP:
-			{
-				// TODO: init app
-				// call App.init
-
-				m_state = STATE_WORKING;
-				
-				break;
-				}		
-		}
-		PrintDbg("DispatcherP", "serveState(%d) finished", m_state);
-	}
 	
 	event void Boot.booted() {
-		PrintDbg("DispatcherP", "DispatcherP.Boot.booted() starting");
-		serveState();
+		//serveState();
 		PrintDbg("DispatcherP", "DispatcherP.Boot.booted() finished");
 	}
 
@@ -158,5 +90,76 @@ implementation{
 	event message_t * Lower_PL_Receive.receive(message_t *msg, void *payload, uint8_t len){
 		
 		return signal PL_Receive.receive(msg, payload, len);
+	}
+	
+	command void Dispatcher.serveState() {
+		PrintDbg("DispatcherP", "serveState(%d) started", m_state);
+		switch (m_state) {
+			case STATE_INIT:
+			{
+				//init shared data
+				call SharedDataCInit.init();
+				//crypto init = auto init
+				
+				//privacy init
+				call PrivacyCInit.init();  //mem init
+				//Forwarder init = auto init
+				
+				//IDS init
+				call IntrusionDetectCInit.init();
+				//PrivacyLevel init = auto init
+				
+				//additional inits?
+				//TODO
+				
+				//start radio
+				//TODO
+				
+				m_state = STATE_READY_TO_DEPLOY;
+				
+				break;
+				}
+			case STATE_READY_TO_DEPLOY:
+			{
+				// TODO: run magic packet forwarder
+				// Wait for MAGIC PAKET
+				
+				// TODO: bugbug: no wait at the moment, proceed to next state directly
+				m_state = STATE_MAGIC_RECEIVED;
+				
+				//BUGBUG no break!!! break;
+				}
+			case STATE_MAGIC_RECEIVED:
+			{
+				// init key distribution component
+				call KeyDistribCInit.init();
+				
+				// TODO: call save state
+
+				m_state = STATE_READY_FOR_APP;
+				
+				//BUGBUG no break!!! break;
+				}
+			case STATE_READY_FOR_APP:
+			{
+				// TODO: init app
+				// call App.init
+
+				m_state = STATE_WORKING;
+				
+				//BUGBUG no break!!! break;
+				}			
+				
+			case STATE_WORKING:
+			{
+				// TODO: init app
+				// call App.init
+
+				m_state = STATE_WORKING;
+				
+				break;
+				}		
+		}
+		PrintDbg("DispatcherP", "serveState(%d) finished", m_state);
 	}
 }

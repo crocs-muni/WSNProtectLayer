@@ -72,4 +72,6 @@ implementation {
 	PrivacyP.KeyDistrib -> KeyDistribC.KeyDistrib;
         PrivacyP.Crypto -> CryptoC.Crypto;
         PrivacyP.Logger -> LoggerC;
+        
+    PrivacyP.Dispatcher -> DispatcherC;
 }

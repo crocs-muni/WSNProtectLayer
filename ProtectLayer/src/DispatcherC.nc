@@ -7,6 +7,7 @@ configuration DispatcherC{
 		interface Receive as IDS_Receive;
 		interface Receive as ChangePL_Receive;
 		interface Receive as Sniff_Receive;
+		interface Dispatcher;
 	}
 }
 implementation{
@@ -47,4 +48,6 @@ implementation{
 	DispatcherP.KeyDistribCInit -> KeyDistribC.Init;
 	//DispatcherP.ForwarderCInit -> ForwarderC.Init;
 	//DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
+	
+	Dispatcher = DispatcherP.Dispatcher;
 }
