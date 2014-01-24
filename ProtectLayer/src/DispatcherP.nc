@@ -48,6 +48,7 @@ implementation{
 	event void Boot.booted() {
 		//serveState();
 		PrintDbg("DispatcherP", "DispatcherP.Boot.booted() finished\n");
+		
 	}
 
 	

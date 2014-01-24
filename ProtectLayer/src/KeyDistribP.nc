@@ -104,8 +104,9 @@ implementation{
 	
 	//changed header to unify interface with getKeyToBS, thus changed functionality 
 	command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey){
-	    uint16_t temp = nodeID;
+	    //uint16_t temp = nodeID;
             SavedData_t* pSavedData = NULL;
+            printf("This is node with ID %u \n", TOS_NODE_ID);
             PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%u'\n", nodeID);
             printf("Here is a uint8: %u\n", nodeID);
 	    if(nodeID < 50 && nodeID > 0){
