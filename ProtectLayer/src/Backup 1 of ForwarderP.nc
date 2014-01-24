@@ -29,8 +29,7 @@ implementation{
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
 		//is busy?
 		
-                printf("ForwarderP: Forwarder Receive.receive called.\n");
-
+                PrintDbg("ForwarderP", "Forwarder Receive.receive called.\n");
 		
 		if (m_busy)
 		{

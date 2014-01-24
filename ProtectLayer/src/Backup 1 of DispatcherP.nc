@@ -47,8 +47,7 @@ implementation{
 	
 	event void Boot.booted() {
 		//serveState();
-		printf("DispatcherP: DispatcherP.Boot.booted() finished\n");
-
+		PrintDbg("DispatcherP", "DispatcherP.Boot.booted() finished\n");
 		
 	}
 
@@ -95,8 +94,7 @@ implementation{
 	}
 	
 	command void Dispatcher.serveState() {
-		printf("DispatcherP: serveState(%x) started\n", m_state);
-
+		PrintDbg("DispatcherP", "serveState(%x) started\n", m_state);
 		switch (m_state) {
 			case STATE_INIT:
 			{
@@ -163,7 +161,6 @@ implementation{
 				break;
 				}		
 		}
-		printf("DispatcherP: serveState(%x) finished\n", m_state);
-
+		PrintDbg("DispatcherP", "serveState(%x) finished\n", m_state);
 	}
 }

@@ -42,8 +42,7 @@ implementation{
 	*/
 	command error_t PLInit.init() {
 			//uint8_t i = 0;
-			printf("KeyDistribP: KeyDistribP.PLInit.init() entered\n");
-
+			PrintDbg("KeyDistribP", "KeyDistribP.PLInit.init() entered\n");
 
 			// TODO: do other initialization
 			//m_state = 0;
@@ -53,8 +52,7 @@ implementation{
 			// m_keyToBS initialization
 			//m_keyToBS.keyType = KEY_TOBS;
 			//for (i = 0; i < KEY_LENGTH; i++) m_keyToBS.keyValue[i] = 0;
-			printf("KeyDistribP: KeyDistribP.PLInit.init() finished\n");
-
+			PrintDbg("KeyDistribP", "KeyDistribP.PLInit.init() finished\n");
 
 			return SUCCESS;
 	}		
@@ -76,16 +74,13 @@ implementation{
 	command error_t KeyDistrib.discoverKeys() {
 		error_t status = SUCCESS;
 		
-		printf("KeyDistribP: KeyDistrib.discoverKeys called.\n");
-
+		PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys called.\n");
 		//#ifdef BLOCKING
 		if((status = call Crypto.initCryptoIIB()) != SUCCESS){
-			printf("KeyDistribP: KeyDistrib.discoverKeys failed.\n");
-
+			PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys failed.\n");
 			return status;
 		}
-		printf("KeyDistribP: KeyDistrib.discoverKeys finished.\n");
-
+		PrintDbg("KeyDistribP", "KeyDistrib.discoverKeys finished.\n");
 		return status;
 		
 		//#else /* use non blocking variant */
@@ -112,39 +107,32 @@ implementation{
 	    //uint16_t temp = nodeID;
             SavedData_t* pSavedData = NULL;
             printf("This is node with ID %u \n", TOS_NODE_ID);
-            printf("KeyDistribP: KeyDistrib.getKeyToNodeB called for node '%u'\n", nodeID);
-
+            PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%u'\n", nodeID);
             printf("Here is a uint8: %u\n", nodeID);
 	    if(nodeID < 50 && nodeID > 0){
-		printf("KeyDistribP: KeyDistrib.getKeyToNodeB node ID smaller than 50.\n");
-
+		PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB node ID smaller than 50.\n");
 	    } else {
-		printf("KeyDistribP: KeyDistrib.getKeyToNodeB node ID larger than 50.\n");
-
+		PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB node ID larger than 50.\n");
 	    }
             pSavedData = call SharedData.getNodeState(nodeID);
             if (pSavedData != NULL) {
-                //printf("KeyDistribP: Shared key retrieved.\n");
-
+                //PrintDbg("KeyDistribP", "Shared key retrieved.\n");
                 pNodeKey =  &((pSavedData->kdcData).shared_key);
                
                 return SUCCESS;
             }
             else {
-                printf("KeyDistribP: Failed to obtain SharedData.getNodeState.\n");
-
+                PrintDbg("KeyDistribP", "Failed to obtain SharedData.getNodeState.\n");
                 return EKEYNOTFOUND;
             }
 	}
 
 	command error_t KeyDistrib.getKeyToBSB(PL_key_t* pBSKey) {
 		KDCPrivData_t* KDCPrivData = NULL;
-		printf("KeyDistribP: getKeyToBSB called.\n");
-
+		PrintDbg("KeyDistribP", "getKeyToBSB called.\n");
 		KDCPrivData = call SharedData.getKDCPrivData();
 		if(KDCPrivData == NULL){
-			printf("KeyDistribP: getKeyToBSB key not received\n");
-
+			PrintDbg("KeyDistribP", "getKeyToBSB key not received\n");
 			return EKEYNOTFOUND;
 		} else {		
 			pBSKey = &(KDCPrivData->keyToBS);
@@ -154,25 +142,19 @@ implementation{
 	
 	command error_t KeyDistrib.selfTest(){
 		uint8_t status = SUCCESS;
-		printf("KeyDistribP:  Self test initiated.\n");
-
+		PrintDbg("KeyDistribP", " Self test initiated.\n");
 		m_testKey = NULL;
-		printf("KeyDistribP:  Self test getKeyToBS.\n");
-
+		PrintDbg("KeyDistribP", " Self test getKeyToBS.\n");
 		if((status = call KeyDistrib.getKeyToBSB(m_testKey)) != SUCCESS){
-			printf("KeyDistribP:  Self test getKeyToBS failed.\n");
-
+			PrintDbg("KeyDistribP", " Self test getKeyToBS failed.\n");
 			return status;
 		}
-		printf("KeyDistribP:  Self test getKeyToNodeB with ID 0.\n");
-
+		PrintDbg("KeyDistribP", " Self test getKeyToNodeB with ID 0.\n");
 		if((status = call KeyDistrib.getKeyToNodeB( 0, m_testKey)) != SUCCESS){
-			printf("KeyDistribP:  Self test getKeyToNodeB failed.\n");
-
+			PrintDbg("KeyDistribP", " Self test getKeyToNodeB failed.\n");
 			return status;
 		}
-		printf("KeyDistribP: Self test finished.\n");
-
+		PrintDbg("KeyDistribP", "Self test finished.\n");
 		return status;
 	}
 		
@@ -222,8 +204,7 @@ implementation{
             KDCPrivData_t*  kdcPrivData = NULL;
             uint8_t i;
 
-            printf("KeyDistribP: KeyDistrib.task_discoverKeys called.\n");
-
+            PrintDbg("KeyDistribP", "KeyDistrib.task_discoverKeys called.\n");
 
             // BUGBUG: simulation of key discovery: key value is formed as X|Y where X and Y are nodeIDs of two neighbours.
             // First part (X) is lower ID, Y is higher ID (so that task_discoverKeys on pair node will result in same key value)
@@ -242,8 +223,7 @@ implementation{
                         pSavedData[i].kdcData.shared_key.keyValue[1] = (pSavedData[i].nodeId < TOS_NODE_ID) ? TOS_NODE_ID : pSavedData[i].nodeId;
                     }
                     else {
-                        printf("KeyDistribP: KeyDistrib.task_discoverKeys failed to generate new key for node '%d' .\n", pSavedData[i].nodeId);
-
+                        PrintDbg("KeyDistribP", "KeyDistrib.task_discoverKeys failed to generate new key for node '%d' .\n", pSavedData[i].nodeId);
                         status = ENOTALLKEYSDISCOVERED;
                     }
                 }
@@ -257,8 +237,7 @@ implementation{
                 kdcPrivData->keyToBS.keyValue[1] = 0xff;
             }
             else {
-                printf("KeyDistribP: KeyDistrib.task_discoverKeys failed to generate new key for BS.\n");
-
+                PrintDbg("KeyDistribP", "KeyDistrib.task_discoverKeys failed to generate new key for BS.\n");
                 status = ENOTALLKEYSDISCOVERED;
             }
 
@@ -266,8 +245,7 @@ implementation{
             signal KeyDistrib.discoverKeysDone(status);
 
  THIS IS BETTER VERSION WITH SEPARATE TASK FOR EVERY NODE
-                    printf("KeyDistribP: KeyDistrib.task_discoverKeys for node '%d' called.\n", m_currentNodeIndex);
-
+                    PrintDbg("KeyDistribP", "KeyDistrib.task_discoverKeys for node '%d' called.\n", m_currentNodeIndex);
                 // TODO: initiate discovery
 		// We will have multiple nodes, make task for every separate node
 		// for_each neigh_node post task process
@@ -296,8 +274,7 @@ implementation{
 	*/
 	/*
 	task void task_getKeyToBS() {
-                printf("KeyDistribP: KeyDistrib.task_getKeyToBS called.\n");
-
+                PrintDbg("KeyDistribP", "KeyDistrib.task_getKeyToBS called.\n");
 		m_state &= ~FLAG_STATE_KDP_GETKEYTOBS;
 		signal KeyDistrib.getKeyToBSDone(SUCCESS, &m_keyToBS);
 	}
@@ -308,8 +285,7 @@ implementation{
 	*/
 	/*
 	command error_t KeyDistrib.getKeyToBS() {
-                printf("KeyDistribP: KeyDistrib.getKeyToBS called.\n");
-
+                PrintDbg("KeyDistribP", "KeyDistrib.getKeyToBS called.\n");
 		if (m_state & FLAG_STATE_KDP_GETKEYTOBS) {
 			return EALREADY;	
 		}
@@ -337,8 +313,7 @@ implementation{
 	task void task_getKeyToNode() {
         // todo: call getKeyToNodeB
             SavedData_t* pSavedData = NULL;
-            printf("KeyDistribP: KeyDistrib.task_getKeyToNode called.\n");
-
+            PrintDbg("KeyDistribP", "KeyDistrib.task_getKeyToNode called.\n");
             m_state &= ~FLAG_STATE_KDP_GETKEYTONODE;
             pSavedData = call SharedData.getNodeState(m_getKeyToNodeID);
 
@@ -346,8 +321,7 @@ implementation{
                 signal KeyDistrib.getKeyToNodeDone(SUCCESS, &(pSavedData->kdcData.shared_key));
             }
             else {
-                 printf("KeyDistribP: Failed to obtain SharedData.getNodeState.\n");
-
+                 PrintDbg("KeyDistribP", "Failed to obtain SharedData.getNodeState.\n");
                 signal KeyDistrib.getKeyToNodeDone(EKEYNOTFOUND, NULL);
             }
         }
@@ -358,8 +332,7 @@ implementation{
 	*/
 	/*
 	command error_t KeyDistrib.getKeyToNode(uint8_t nodeID) {
-                printf("KeyDistribP: KeyDistrib.getKeyToNode(%d) called.\n", nodeID);
-
+                PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNode(%d) called.\n", nodeID);
 		if (m_state & FLAG_STATE_KDP_GETKEYTONODE) {
 			return EALREADY;	
 		}

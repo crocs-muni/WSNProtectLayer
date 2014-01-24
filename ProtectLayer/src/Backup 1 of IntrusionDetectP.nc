@@ -54,8 +54,7 @@ implementation {
 	command error_t Init.init() {
 		// TODO: do other initialization
 		// TODO: how will we collect the data from SharedData
-        printf("IDSState: IDS initialization called.\n");
-
+        PrintDbg("IDSState", "IDS initialization called.\n");
 		//call TimerIDS.startPeriodic(1024);
 		
 		m_logMsg = &m_memLogMsg;
@@ -174,16 +173,14 @@ implementation {
 	// Messages passed to the IDS from privacy component
 	event message_t * ReceiveMsgCopy.receive(message_t *msg, void *payload, uint8_t len){
 
-//        printf("IDS: ReceiveMsgCopy.receive\n");
-
+//        PrintDbg("IDS", "ReceiveMsgCopy.receive\n");
 //		uint8_t msgType;
 		uint64_t hashedPacket;
                 
         SPHeader_t* spHeader;        
         spHeader = (SPHeader_t*) payload;
         
-        printf("IDSState: A copy of a message from Privacy component received.\n");
-
+        PrintDbg("IDSState", "A copy of a message from Privacy component received.\n");
         
         if (call SharedData.getNodeState(spHeader->sender) == NULL && call SharedData.getNodeState(spHeader->receiver) == NULL ) {
         	return msg;
@@ -214,8 +211,7 @@ implementation {
 		}
 		else
 		{
-                        //printf("IntrusionDetectP: Going to write\n");
-
+                        //PrintDbg("IntrusionDetectP", "Going to write\n");
                         //log packet
 			m_lastLogMsg = msg;
 			if (call BlockWrite.write(offset_write, payload, LOGGED_SIZE) == SUCCESS)
@@ -239,12 +235,9 @@ implementation {
 //
 //	event void BlockWrite.writeDone(storage_addr_t addr, void *buf, storage_len_t len, error_t error){
 //		// TODO: chech whether payload == buf
-//            //printf("IntrusionDetectP: BlockWrite.writeDone executed with %d\n", error);
-
-//            if (error == SUCCESS) printf("IntrusionDetectP: writeDone success\n");
-
-//            else printf("IntrusionDetectP: writeDone fail with %d \n", error);
-
+//            //PrintDbg("IntrusionDetectP", "BlockWrite.writeDone executed with %d\n", error);
+//            if (error == SUCCESS) PrintDbg("IntrusionDetectP", "writeDone success\n");
+//            else PrintDbg("IntrusionDetectP", "writeDone fail with %d \n", error);
 //
 //            m_logMsg = m_lastLogMsg;
 //            m_storageBusy = FALSE;
@@ -260,8 +253,7 @@ implementation {
 		
 		savedData = call SharedData.getNodeState(receiver);
 		
-		printf("IDSState: Neighbor %d dropped a packet. IDS alert will be sent.\n", receiver);
-
+		PrintDbg("IDSState", "Neighbor %d dropped a packet. IDS alert will be sent.\n", receiver);
 		
 		
 		if (savedData->idsData.nb_received > IDS_MIN_PACKET_RECEIVED) {
@@ -286,8 +278,7 @@ implementation {
 		savedData = call SharedData.getNodeState(sender);
 		savedData->idsData.nb_forwarded++;
 		
-		printf("IDSState: Neighbor %d forwarded packet.\n", sender);
-
+		PrintDbg("IDSState", "Neighbor %d forwarded packet.\n", sender);
 	}
 
 	/**
@@ -298,8 +289,7 @@ implementation {
 		uint16_t sender = call AMPacket.source(msg);
         uint16_t receiver = call AMPacket.destination(msg);
         
-        printf("IDSState: A copy of an IDSAlert from IDSForwarder received. Sender: %d, receiver: %d.\n", sender, receiver);
-
+        PrintDbg("IDSState", "A copy of an IDSAlert from IDSForwarder received. Sender: %d, receiver: %d.\n", sender, receiver);
         
         if (call SharedData.getNodeState(sender) == NULL && call SharedData.getNodeState(receiver) == NULL ) {
         	return msg;
@@ -307,8 +297,7 @@ implementation {
         
         if ( (savedData = call SharedData.getNodeState(receiver)) != NULL) {
         	(*savedData).idsData.nb_received++;
-        	printf("IDSState: Receiver %d is our neighbor, PRR incremented.\n", receiver);
-
+        	PrintDbg("IDSState", "Receiver %d is our neighbor, PRR incremented.\n", receiver);
         }
         
         call Crypto.hashDataHalfB( (uint8_t*) payload, 0, len, &hashedPacket);

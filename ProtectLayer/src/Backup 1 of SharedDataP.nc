@@ -108,8 +108,7 @@ implementation {
 			memset(&(combinedData.savedData[i].idsData), 0, sizeof(combinedData.savedData[i].idsData));
 		}
 
-		printf("SharedDataP: PLInit.init() finished.\n");
-	
+		PrintDbg("SharedDataP", "PLInit.init() finished.\n");	
 		initialized = TRUE;
         return SUCCESS;
 	}

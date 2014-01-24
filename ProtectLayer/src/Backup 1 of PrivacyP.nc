@@ -148,8 +148,7 @@ implementation {
 		// Get our header from payload
 		ourHeader = (SPHeader_t*) m_receiveBuffer[m_recNextToProcess].payload;
 		
-                printf("Privacy: task_receiveMessage 2, buffer position %d\n", (int)m_recNextToProcess);
-
+                PrintDbg("Privacy", "task_receiveMessage 2, buffer position %d\n", (int)m_recNextToProcess);
 		
 		switch (ourHeader->privacyLevel) {
 			case PLEVEL_0: {
@@ -163,15 +162,13 @@ implementation {
 					status = call Crypto.unprotectBufferFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
 					m_receiveBuffer[m_recNextToProcess].len = decLen + sizeof(SPHeader_t);
 
-                                        printf("Privacy: task_receiveMessage 3, ourHeader->receiver == TOS_NODE_ID\n");
-
+                                        PrintDbg("Privacy", "task_receiveMessage 3, ourHeader->receiver == TOS_NODE_ID\n");
 
 					// msg is for me
 					// check MSG_TYPE
                                         if (ourHeader->msgType == MSG_APP)
 					{
-                                                printf("Privacy: task_receiveMessage 4, ourHeader->msgType == MSG_APP\n");
-
+                                                PrintDbg("Privacy", "task_receiveMessage 4, ourHeader->msgType == MSG_APP\n");
 
                                             //copy msg and pass to IDS
                                                 passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
@@ -180,8 +177,7 @@ implementation {
 					}
 					else
 					{
-                                            printf("Privacy: task_receiveMessage 4, ourHeader->msgType != MSG_APP\n");
-
+                                            PrintDbg("Privacy", "task_receiveMessage 4, ourHeader->msgType != MSG_APP\n");
                                                 // other type of msg, remove protections if any,
 						//TODO
 						//copy msg and pass to IDS
@@ -194,16 +190,14 @@ implementation {
 						// Simple test of connection IDS providing reputation for TOSSIM
 						//reputation = call IntrusionDetect.getNodeReputation(1);
 				 		//dbg("NodeState", "Reputation is: %d.\n", reputation);
-                                                printf("Privacy: Privacy: PrivacyP.LowerReceive.receive, MSG type %x.\n", ourHeader->msgType);
-
+                                                PrintDbg("Privacy", "Privacy: PrivacyP.LowerReceive.receive, MSG type %x.\n", ourHeader->msgType);
 						//TODO: test if our message
 						retMsg = signal MessageReceive.receive[ourHeader->msgType](msg, payload, len);
 						}					
 				}
 				else
 				{
-                                    printf("Privacy: task_receiveMessage 3, ourHeader->receiver != TOS_NODE_ID\n");
-
+                                    PrintDbg("Privacy", "task_receiveMessage 3, ourHeader->receiver != TOS_NODE_ID\n");
                                     // It is not for me, pass copy to IDS
                                     passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
                                     retMsg = msg;
@@ -255,8 +249,7 @@ implementation {
 			return msg;
 		}
 		
-                printf("Privacy: PrivacyP 1 LowerREceive.receive, buffer position(%x).\n", (int)m_recNextToStore);
-
+                PrintDbg("Privacy", "PrivacyP 1 LowerREceive.receive, buffer position(%x).\n", (int)m_recNextToStore);
 		
 		post task_receiveMessage();
 		
@@ -362,8 +355,7 @@ implementation {
 			spHeader->sender = TOS_NODE_ID;
 		}
 
-		//printf("PrivacyP: task_messageSend, offset %d .\n", sizeof(SPHeader_t));
-
+		//PrintDbg("PrivacyP", "task_messageSend, offset %d .\n", sizeof(SPHeader_t));
 		
 		//encryption
 		encLen=sReq.len - sizeof(SPHeader_t);
@@ -413,8 +405,7 @@ implementation {
 	command error_t MessageSend.send[uint8_t id](am_addr_t addr, message_t* msg, uint8_t len) {
 		
 		
-           //     printf("Privacy: PrivacyP MessageSend.send called.\n");
-
+           //     PrintDbg("Privacy", "PrivacyP MessageSend.send called.\n");
 		
 		// check if Id is within bounds
 		if (id>=MSG_COUNT)
@@ -430,8 +421,7 @@ implementation {
 		m_buffer[id].addr = addr;
 		m_buffer[id].msg = msg;
 		m_buffer[id].len = len;
-            //    printf("Privacy: PrivacyP MessageSend.send, msg put into buffer with id %d.\n", id);
-
+            //    PrintDbg("Privacy", "PrivacyP MessageSend.send, msg put into buffer with id %d.\n", id);
 		
 		
 		// is the radio busy?
@@ -508,8 +498,7 @@ implementation {
 			// todo: remove when magic will be imolemeted
 			call Dispatcher.serveState();
 			
-			printf("PrivacyP: Going to signal message AMControl.startDone()\n");
-
+			PrintDbg("PrivacyP", "Going to signal message AMControl.startDone()\n");
 
 			// signal to upper layers
 			signal MessageAMControl.startDone(err);
@@ -530,8 +519,7 @@ implementation {
 	command error_t MessageAMControl.start() {
                 //printf("PrivacyP.MessageAMControl.start() entered\n");
 		// TODO: if our AMControl is not running yet, start it 
-		printf("NodeState: MessageAMControl starting approach.\n");
-
+		PrintDbg("NodeState", "MessageAMControl starting approach.\n");
 		
 		// todo: our init before running radio
 		call Dispatcher.serveState();
