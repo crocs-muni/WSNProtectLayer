@@ -40,7 +40,7 @@ implementation {
   uint32_t received_packets = 0;
 
   void setLeds(uint16_t val) {
-      PrintDbg("NodeState", "setLeds%s\n", val);
+      PrintDbg("NodeState", "setLeds%u\n", val);
 
       if (val & 0x01) call Leds.led0Toggle();
       if (val & 0x02) call Leds.led1Toggle();
