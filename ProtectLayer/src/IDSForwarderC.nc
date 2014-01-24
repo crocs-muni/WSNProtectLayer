@@ -1,7 +1,8 @@
 #include "ProtectLayerGlobals.h"
 configuration IDSForwarderC {
 	provides {
-		interface Send as IDSAlertSend;
+		interface AMSend as IDSAlertSend;
+		interface Packet as IDSAlertPacket;
 	}
 }
 implementation {
@@ -20,5 +21,8 @@ implementation {
     IDSForwarderP.AMSend -> AMSenderC;
     IDSForwarderP.Pool -> PoolC;
     IDSForwarderP.SendQueue -> QueueC;
-    IDSForwarderP.IDSAlertSend = IDSAlertSend;
+    IDSAlertSend = IDSForwarderP.IDSAlertSend;
+    IDSAlertPacket = IDSForwarderP.IDSAlertPacket;
+    
+    IDSForwarderP.Packet -> AMSenderC;
 }

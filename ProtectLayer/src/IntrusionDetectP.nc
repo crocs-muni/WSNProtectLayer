@@ -17,10 +17,10 @@ module IntrusionDetectP {
 //		interface Timer<TMilli> as TimerIDS;
 //		interface BlockWrite;
 		interface IDSBuffer;
-		interface Send as IDSAlertSend;
+		interface AMSend;// as IDSAlertSend;
 		interface Crypto;
 		interface AMPacket;
-//		interface Packet;
+		interface Packet;
 	}
 	provides {
 		interface Init;
@@ -54,7 +54,7 @@ implementation {
 	command error_t Init.init() {
 		// TODO: do other initialization
 		// TODO: how will we collect the data from SharedData
-                PrintDbg("IDSState", "IDS initialization called.\n");
+        PrintDbg("IDSState", "IDS initialization called.\n");
 		//call TimerIDS.startPeriodic(1024);
 		
 		m_logMsg = &m_memLogMsg;
@@ -180,12 +180,15 @@ implementation {
         SPHeader_t* spHeader;        
         spHeader = (SPHeader_t*) payload;
         
+        PrintDbg("IDSState", "A copy of a message from Privacy component received.\n");
+        
         if (call SharedData.getNodeState(spHeader->sender) == NULL && call SharedData.getNodeState(spHeader->receiver) == NULL ) {
         	return msg;
         }
         
-        // TODO: opravit!!!
-        pSavedData[spHeader->sender].idsData.nb_received++;
+        savedData = call SharedData.getNodeState(spHeader->sender);
+        savedData->idsData.nb_received++;
+        
 //        msgType = spHeader->msgType;
         
         call Crypto.hashDataHalfB( (uint8_t*) payload, 0, len, &hashedPacket);
@@ -246,27 +249,36 @@ implementation {
 
 	event void IDSBuffer.oldestPacketRemoved(uint16_t sender, uint16_t receiver){
 		
-//		savedData = call SharedData.getNodeState(receiver);
-//		
-//		if (savedData->idsData.nb_received > IDS_MIN_PACKET_RECEIVED) {
-//			if ( (savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received) < IDS_DROPPING_THRESHOLD ) {
-//			    if (!m_radioBusy) {
-//      				IDSMsg_t* idspkt = (IDSMsg_t*)(call Packet.getPayload(&pkt, sizeof(IDSMsg_t));
-//      				if (idspkt == NULL) {
-//						return;
-//      				}
-//      				idspkt->nodeid = receiver;
-//      
-//      				if (call IDSAlertSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(IDSMsg_t)) == SUCCESS) {
-//        				busy = TRUE;
-//      				}
-//    			}	
-//			}
-//		}
+		IDSMsg_t* idspkt;
+		
+		savedData = call SharedData.getNodeState(receiver);
+		
+		PrintDbg("IDSState", "Neighbor %d dropped a packet. IDS alert will be sent.\n", receiver);
+		
+		
+		if (savedData->idsData.nb_received > IDS_MIN_PACKET_RECEIVED) {
+			if ( (savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received) < IDS_DROPPING_THRESHOLD ) {
+			    if (!m_radioBusy) {
+      				idspkt = (IDSMsg_t*)(call Packet.getPayload(&pkt, sizeof(IDSMsg_t)));
+      				if (idspkt == NULL) {
+						return;
+      				}
+      				idspkt->nodeID = receiver;
+      				idspkt->dropping = savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received;
+      
+      				if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(IDSMsg_t)) == SUCCESS) {
+        				m_radioBusy = TRUE;
+      				}
+    			}	
+			}
+		}
 	}
 
 	event void IDSBuffer.packetForwarded(uint16_t sender, uint16_t receiver){
-		pSavedData[sender].idsData.nb_forwarded++;
+		savedData = call SharedData.getNodeState(sender);
+		savedData->idsData.nb_forwarded++;
+		
+		PrintDbg("IDSState", "Neighbor %d forwarded packet.\n", sender);
 	}
 
 	/**
@@ -277,11 +289,16 @@ implementation {
 		uint16_t sender = call AMPacket.source(msg);
         uint16_t receiver = call AMPacket.destination(msg);
         
+        PrintDbg("IDSState", "A copy of an IDSAlert from IDSForwarder received. Sender: %d, receiver: %d.\n", sender, receiver);
+        
         if (call SharedData.getNodeState(sender) == NULL && call SharedData.getNodeState(receiver) == NULL ) {
         	return msg;
         }
         
-        pSavedData[sender].idsData.nb_received++;
+        if ( (savedData = call SharedData.getNodeState(receiver)) != NULL) {
+        	(*savedData).idsData.nb_received++;
+        	PrintDbg("IDSState", "Receiver %d is our neighbor, PRR incremented.\n", receiver);
+        }
         
         call Crypto.hashDataHalfB( (uint8_t*) payload, 0, len, &hashedPacket);
        
@@ -295,8 +312,8 @@ implementation {
 	}
 
 
-	event void IDSAlertSend.sendDone(message_t *msg, error_t error){
-		// TODO Auto-generated method stub
+	event void AMSend.sendDone(message_t *msg, error_t error){
+		m_radioBusy = FALSE;
 	}
 	
 }

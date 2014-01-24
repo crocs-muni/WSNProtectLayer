@@ -1,14 +1,17 @@
+#include "ProtectLayerGlobals.h"
 module IDSForwarderP
 {
 	provides {
-		interface Send as IDSAlertSend;
+		interface AMSend as IDSAlertSend;
 		interface Init;
+		interface Packet as IDSAlertPacket;
 		}
 	uses {
 		interface AMSend;
 		interface Receive;
 		interface Pool<message_t> as Pool; 
 		interface Queue<message_t*> as SendQueue;
+		interface Packet;
 	}
 }
 implementation{
@@ -17,6 +20,7 @@ implementation{
 	bool m_lastMsgWasIDSAlert = 0;
 	message_t* m_lastMsg;
  	bool m_busy = FALSE;
+ 	am_addr_t m_msgIDSAlertAddr;
  	
 	//
 	// interface Init
@@ -143,12 +147,14 @@ implementation{
 		return call AMSend.maxPayloadLength();
 	}
 	
-	command error_t IDSAlertSend.send(message_t *msg, uint8_t len)
+	command error_t IDSAlertSend.send(am_addr_t addr, message_t *msg, uint8_t len)
 	{
 		if (m_msgIDSAlert == NULL) 
 			{
 		   		m_msgIDSAlert = msg;
 		   		m_msgIDSAlertLen = len;
+		   		// TODO: addr curretnly not used - packet is always broadcasted!
+		   		m_msgIDSAlertAddr = addr;
 		   		post task_forwardMessage();
 		   		return SUCCESS;
 			}
@@ -157,6 +163,30 @@ implementation{
 				return BUSY;
 			}
 	}
+	
+	//
+	//	IDSAlertPacket
+	//	
+	command void IDSAlertPacket.clear(message_t* msg) {
+		call Packet.clear(msg);
+	}
+	command uint8_t IDSAlertPacket.payloadLength(message_t* msg) {
+		//TODO return value depending on privacy level 
+		return call Packet.payloadLength(msg);
+	}
+	command void IDSAlertPacket.setPayloadLength(message_t* msg, uint8_t len) {
+		call Packet.setPayloadLength(msg, len);
+	}
+	command uint8_t IDSAlertPacket.maxPayloadLength() {
+		//TODO return value depending on privacy level 
+		return call Packet.maxPayloadLength();
+	}
+	command void* IDSAlertPacket.getPayload(message_t* msg, uint8_t len) {
+		// Get payload
+		return call Packet.getPayload(msg, len);
+	}
+	
+	
 
 }
 

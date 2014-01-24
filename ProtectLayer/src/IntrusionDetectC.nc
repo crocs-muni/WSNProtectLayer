@@ -39,7 +39,7 @@ implementation{
 	IntrusionDetect = IntrusionDetectP.IntrusionDetect;
 	
 	IntrusionDetectP.ReceiveIDSMsgCopy -> DispatcherC.Sniff_Receive;
-	IntrusionDetectP.IDSAlertSend -> IDSForwarderC.IDSAlertSend;
+//	IntrusionDetectP.IDSAlertSend -> IDSForwarderC.IDSAlertSend;
 	
 	IntrusionDetectP.ReceiveMsgCopy -> PrivacyC.MessageReceive[MSG_IDSCOPY];
 
@@ -55,5 +55,6 @@ implementation{
 	IntrusionDetectP.Crypto -> CryptoC.Crypto;
 	
 	IntrusionDetectP.AMPacket -> AMReceiverC;
-//	IntrusionDetectP.Packet -> AMSenderC;
+	IntrusionDetectP.Packet -> IDSForwarderC.IDSAlertPacket;
+	IntrusionDetectP.AMSend -> IDSForwarderC.IDSAlertSend;
 }
