@@ -104,9 +104,15 @@ implementation{
 	
 	//changed header to unify interface with getKeyToBS, thus changed functionality 
 	command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey){
+	    uint16_t temp = nodeID;
             SavedData_t* pSavedData = NULL;
-            PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%x' .\n", nodeID);
-
+            PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%u'\n", nodeID);
+            printf("Here is a uint8: %u\n", nodeID);
+	    if(nodeID < 50 && nodeID > 0){
+		PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB node ID smaller than 50.\n");
+	    } else {
+		PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB node ID larger than 50.\n");
+	    }
             pSavedData = call SharedData.getNodeState(nodeID);
             if (pSavedData != NULL) {
                 //PrintDbg("KeyDistribP", "Shared key retrieved.\n");

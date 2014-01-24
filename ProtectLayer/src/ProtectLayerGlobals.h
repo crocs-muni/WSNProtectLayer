@@ -367,9 +367,9 @@ typedef uint8_t NODE_REPUTATION;
 
 void PrintDbg(const char* messageClass, const char* formatString, ...) {
     va_list args;
-    va_start(args,formatString);
-    dbg(formatString,args);
-    va_end(args);
+    //va_start(args,formatString);
+    //dbg(formatString,args);
+    //va_end(args);
 
 #ifdef DEBUG_PRINTF
     va_start(args,formatString);
