@@ -190,7 +190,7 @@ implementation {
 						// Simple test of connection IDS providing reputation for TOSSIM
 						//reputation = call IntrusionDetect.getNodeReputation(1);
 				 		//dbg("NodeState", "Reputation is: %d.\n", reputation);
-                                                PrintDbg("Privacy", "Privacy: PrivacyP.LowerReceive.receive, MSG type %d.\n", ourHeader->msgType);
+                                                PrintDbg("Privacy", "Privacy: PrivacyP.LowerReceive.receive, MSG type %x.\n", ourHeader->msgType);
 						//TODO: test if our message
 						retMsg = signal MessageReceive.receive[ourHeader->msgType](msg, payload, len);
 						}					
@@ -249,7 +249,7 @@ implementation {
 			return msg;
 		}
 		
-                PrintDbg("Privacy", "PrivacyP 1 LowerREceive.receive, buffer position(%d).\n", (int)m_recNextToStore);
+                PrintDbg("Privacy", "PrivacyP 1 LowerREceive.receive, buffer position(%x).\n", (int)m_recNextToStore);
 		
 		post task_receiveMessage();
 		

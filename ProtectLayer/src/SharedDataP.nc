@@ -29,7 +29,7 @@ implementation {
 	
 	/** flag signaling whether the memory is currently busy */
 	bool m_busy = FALSE;
-	
+	bool initialized = FALSE;
 	/** 
 	 * Initialize the combinedData structure to initial zeros
 	 */
@@ -109,7 +109,7 @@ implementation {
 		}
 
 		PrintDbg("SharedDataP", "PLInit.init() finished.\n");	
-		
+		initialized = TRUE;
         return SUCCESS;
 	}
 
@@ -119,6 +119,12 @@ implementation {
 	 * @return a pointer to the combinedData structure
 	 */
 	command combinedData_t * SharedData.getAllData(){
+		if(initialized){
+			printf("SharedDataP, getAllData called on initialized data.\n");
+		} else {
+			printf("SharedDataP, getAllData called.\n");
+			printf("SharedDataP, ERROR, data not initialized.\n");
+		}	
 		return &combinedData;
 	}
 	
@@ -128,6 +134,12 @@ implementation {
 	 * @return a pointer to the entire savedData of the combinedData structure
 	 */
 	command SavedData_t * SharedData.getSavedData(){
+		if(initialized){
+			printf("SharedDataP, getSavedData called on initialized data.\n");
+		} else {
+			printf("SharedDataP, getSavedData called.\n");
+			printf("SharedDataP, ERROR, data not initialized.\n");
+		}
 		return combinedData.savedData;
 	}
 	
@@ -139,6 +151,12 @@ implementation {
 	 */
 	command SavedData_t * SharedData.getNodeState(uint16_t nodeId){
 		int i;
+		if(initialized){
+			printf("SharedDataP, getNodeState called on initialized data for node %u.\n", nodeId);
+		} else {
+			printf("SharedDataP, getAllData called for node %u.\n", nodeId);
+			printf("SharedDataP, ERROR, data not initialized.\n");
+		}
 		for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
 			if (combinedData.savedData[i].nodeId == nodeId)
 				return &(combinedData.savedData[i]);
@@ -152,6 +170,12 @@ implementation {
 	 * @return a pointer to the privacy module's private data from the combinedData structure
 	 */
 	command PPCPrivData_t* SharedData.getPPCPrivData() {
+		if(initialized){
+			printf("SharedDataP, getPPCPrivData called on initialized data.\n");
+		} else {
+			printf("SharedDataP, getPPCPrivData called.\n");
+			printf("SharedDataP, ERROR, data not initialized.\n");
+		}
 		return &(combinedData.ppcPrivData);		
 	}
 	
@@ -161,6 +185,12 @@ implementation {
 	 * @return a pointer to the routing module's private data from the combinedData structure
 	 */
 	command RoutePrivData_t* SharedData.getRPrivData() {
+		if(initialized){
+			printf("SharedDataP, getRPrivData called on initialized data.\n");
+		} else {
+			printf("SharedDataP, getRPrivData called.\n");
+			printf("SharedDataP, ERROR, data not initialized.\n");
+		}
 		return &(combinedData.routePrivData);		
 	}
 	
@@ -170,6 +200,12 @@ implementation {
 	 * @return a pointer to the privacy module's private data from the combinedData structure
 	 */
 	command KDCPrivData_t* SharedData.getKDCPrivData() {
+		if(initialized){
+			printf("SharedDataP, getKDCPrivData called on initialized data.\n");
+		} else {
+			printf("SharedDataP, getKDCPrivData called.\n");
+			printf("SharedDataP, ERROR, data not initialized.\n");
+		}
 		return &(combinedData.kdcPrivData);		
 	}	
 
@@ -182,6 +218,7 @@ implementation {
      * <li>EBUSY if a request is already being processed.
 	 */
 	command error_t ResourceArbiter.backupToFlash(){
+		printf("SharedDataP, backupToFlash called.\n");
 		if (!m_busy) {
 			m_busy = TRUE;
 			return call SharedDataWrite.erase();			
@@ -189,7 +226,9 @@ implementation {
 		return EBUSY;
 	}
 
-        default event void ResourceArbiter.backupToFlashDone(error_t result) {}
+        default event void ResourceArbiter.backupToFlashDone(error_t result) {
+		printf("SharedDataP, backupToFlashDone.\n");
+        }
 
 	/**
      * Signals the completion of a write operation. However, data is not

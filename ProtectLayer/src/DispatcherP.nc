@@ -48,6 +48,7 @@ implementation{
 	event void Boot.booted() {
 		//serveState();
 		PrintDbg("DispatcherP", "DispatcherP.Boot.booted() finished\n");
+		
 	}
 
 	
@@ -93,7 +94,7 @@ implementation{
 	}
 	
 	command void Dispatcher.serveState() {
-		PrintDbg("DispatcherP", "serveState(%d) started\n", m_state);
+		PrintDbg("DispatcherP", "serveState(%x) started\n", m_state);
 		switch (m_state) {
 			case STATE_INIT:
 			{
@@ -160,6 +161,6 @@ implementation{
 				break;
 				}		
 		}
-		PrintDbg("DispatcherP", "serveState(%d) finished\n", m_state);
+		PrintDbg("DispatcherP", "serveState(%x) finished\n", m_state);
 	}
 }

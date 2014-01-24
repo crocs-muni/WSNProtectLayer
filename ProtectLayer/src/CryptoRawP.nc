@@ -125,7 +125,7 @@ implementation {
 		uint8_t plainCounter[16];			
 		uint8_t encCounter[16];
 		
-		PrintDbg("CryptoRawP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
+		PrintDbg("CryptoRawP", "KeyDistrib.decryptBufferB(keyDbgID = '%x', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
 		//#ifdef AES
 		
 		
@@ -196,7 +196,7 @@ implementation {
 	
 	
 	command error_t CryptoRaw.deriveKeyB(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
-        PrintDbg("CryptoRawP", "KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID);
+        PrintDbg("CryptoRawP", "KeyDistrib.task_deriveKey(masterKey = '%x') called.\n", m_key1->dbgKeyID);
 		
 		//TODO: predelat na blocking verzi
 		
@@ -233,7 +233,7 @@ implementation {
 		m_key2->dbgKeyID = m_dbgKeyID++;	// assign debug key id
 		#endif 
 		*/ /* AES */
-		PrintDbg("CryptoRawP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
+		PrintDbg("CryptoRawP", "\t derivedKey = '%x')\n", m_key2->dbgKeyID);
 			//m_state &= ~FLAG_STATE_CRYPTO_DERIV;
 		
 	}
