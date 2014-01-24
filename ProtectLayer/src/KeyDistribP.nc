@@ -105,7 +105,7 @@ implementation{
 	//changed header to unify interface with getKeyToBS, thus changed functionality 
 	command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey){
             SavedData_t* pSavedData = NULL;
-            PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%d' .\n", nodeID);
+            PrintDbg("KeyDistribP", "KeyDistrib.getKeyToNodeB called for node '%x' .\n", nodeID);
 
             pSavedData = call SharedData.getNodeState(nodeID);
             if (pSavedData != NULL) {

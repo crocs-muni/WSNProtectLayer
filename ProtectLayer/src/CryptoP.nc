@@ -68,7 +68,7 @@ implementation {
 			//append mac
 			memcpy(buffer+offset+*pLen, xor, BLOCK_SIZE);
 		} else {
-			PrintDbg("CryptoP", " macBufferForNodeB failed, key to nodeID %d not found.\n", nodeID);
+			PrintDbg("CryptoP", " macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID);
 		}
 		return status;
 	}	
@@ -260,7 +260,7 @@ implementation {
 			//derive key from data and predistributed key
 			status = call CryptoRaw.deriveKeyB(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
 			if(status != SUCCESS){
-				PrintDbg("CryptoP", " key derivation for nodeID %d completed with status %d.\n", SavedData->nodeId, status);
+				PrintDbg("CryptoP", " key derivation for nodeID %x completed with status %x.\n", SavedData->nodeId, status);
 			}
 			m_key2->counter = 0;
 			//save key to KDCData shared key		
