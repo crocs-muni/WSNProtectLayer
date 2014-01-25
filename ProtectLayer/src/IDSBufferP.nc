@@ -64,16 +64,23 @@ implementation{
 		signal IDSBuffer.packetForwarded(idsBuffer[id].sender, idsBuffer[id].receiver);
 		
 		// Remove the gap after the forwarded packet!
-		for(i = (id - oldestPacketIndex) % IDS_BUFFER_SIZE; i <= counter; i++) {
-        	memcpy(&idsBuffer[(i + oldestPacketIndex) % IDS_BUFFER_SIZE], &idsBuffer[(i + oldestPacketIndex + 1) % IDS_BUFFER_SIZE], sizeof(idsBufferedPacket_t));
+		// TODO: improve effectiveness!
+//		for(i = (id - oldestPacketIndex) % IDS_BUFFER_SIZE; i < counter; i++) {
+		for(i = id; i < counter; i++) {
+        	memcpy(&idsBuffer[i], &idsBuffer[i + 1], sizeof(idsBufferedPacket_t));
         }
         counter--;
 	}
 	
 	void removeOldestPacket() {
+		uint8_t i;
 		signal IDSBuffer.oldestPacketRemoved(idsBuffer[oldestPacketIndex].sender, idsBuffer[oldestPacketIndex].receiver);
+		// TODO: improve effectiveness!
+		for(i = oldestPacketIndex % IDS_BUFFER_SIZE; i < counter; i++) {
+        	memcpy(&idsBuffer[(i + oldestPacketIndex) % IDS_BUFFER_SIZE], &idsBuffer[(i + oldestPacketIndex + 1) % IDS_BUFFER_SIZE], sizeof(idsBufferedPacket_t));
+        }
 		counter--;
-		// TODO: kontrola!!!
+		// TODO: improve effectiveness, check following:
 //		oldestPacketIndex == (oldestPacketIndex + 1) % IDS_BUFFER_SIZE;
 	}
 }
