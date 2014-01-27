@@ -29,7 +29,7 @@ implementation{
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
 		//is busy?
 		if(TOS_NODE_ID == PRINTF_DEBUG_ID){
-			printf("ForwarderP: Forwarder Receive.receive called.\n");
+			printf("ForwarderP: Forwarder Receive.receive called.\n"); printfflush();
 		}
 		
 		if (m_busy)

@@ -51,8 +51,8 @@ implementation{
 			m_lastMsg = sendMsg;
 			if (call AMSend.send(AM_BROADCAST_ADDR, sendMsg, sizeof(IDSMsg_t)) == SUCCESS)
 			{
-//				printf("task_forwardMessage sent with success\n");
-//				printfflush();
+//				printf("task_forwardMessage sent with success\n"); printfflush();
+//				flushprintf(); printfflush();
 				m_busy = TRUE;
 				return;
 			}
@@ -79,8 +79,8 @@ implementation{
 		m_lastMsg = sendMsg;
 		if (call AMSend.send(AM_BROADCAST_ADDR, sendMsg, sizeof(IDSMsg_t)) == SUCCESS)
 		{
-//				printf("task_forwardMessage sent with success\n");
-//				printfflush();
+//				printf("task_forwardMessage sent with success\n"); printfflush();
+//				flushprintf(); printfflush();
 			m_busy = TRUE;
 			call SendQueue.dequeue();
 		}

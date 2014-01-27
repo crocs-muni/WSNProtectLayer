@@ -108,7 +108,7 @@ implementation {
             memset(&(combinedData.savedData[i].idsData), 0, sizeof(combinedData.savedData[i].idsData));
         }
         if(TOS_NODE_ID == PRINTF_DEBUG_ID){
-            printf("SharedDataP: PLInit.init() finished.\n");
+            printf("SharedDataP: PLInit.init() finished.\n"); printfflush();
         }
         initialized = TRUE;
         return SUCCESS;
@@ -122,10 +122,10 @@ implementation {
     command combinedData_t * SharedData.getAllData(){
         if(TOS_NODE_ID == PRINTF_DEBUG_ID){
             if(initialized){
-                printf("SharedDataP, getAllData called on initialized data.\n");
+                printf("SharedDataP, getAllData called on initialized data.\n"); printfflush();
             } else {
-                printf("SharedDataP, getAllData called.\n");
-                printf("SharedDataP, ERROR, data not initialized.\n");
+                printf("SharedDataP, getAllData called.\n"); printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
             }	
         }
         return &combinedData;
@@ -139,10 +139,10 @@ implementation {
     command SavedData_t * SharedData.getSavedData(){
         if(TOS_NODE_ID == PRINTF_DEBUG_ID){
             if(initialized){
-                printf("SharedDataP, getSavedData called on initialized data.\n");
+                printf("SharedDataP, getSavedData called on initialized data.\n"); printfflush();
             } else {
-                printf("SharedDataP, getSavedData called.\n");
-                printf("SharedDataP, ERROR, data not initialized.\n");
+                printf("SharedDataP, getSavedData called.\n"); printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
             }
         }
         return combinedData.savedData;
@@ -158,10 +158,10 @@ implementation {
         int i;
         if(TOS_NODE_ID == PRINTF_DEBUG_ID){
             if(initialized){
-                printf("SharedDataP, getNodeState called on initialized data for node %u.\n", nodeId);
+                printf("SharedDataP, getNodeState called on initialized data for node %u.\n", nodeId); printfflush();
             } else {
-                printf("SharedDataP, getAllData called for node %u.\n", nodeId);
-                printf("SharedDataP, ERROR, data not initialized.\n");
+                printf("SharedDataP, getAllData called for node %u.\n", nodeId); printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
             }
         }
         for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
@@ -179,10 +179,10 @@ implementation {
     command PPCPrivData_t* SharedData.getPPCPrivData() {
         if(TOS_NODE_ID == PRINTF_DEBUG_ID){
             if(initialized){
-                printf("SharedDataP, getPPCPrivData called on initialized data.\n");
+                printf("SharedDataP, getPPCPrivData called on initialized data.\n"); printfflush();
             } else {
-                printf("SharedDataP, getPPCPrivData called.\n");
-                printf("SharedDataP, ERROR, data not initialized.\n");
+                printf("SharedDataP, getPPCPrivData called.\n"); printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
             }
         }
         return &(combinedData.ppcPrivData);		
@@ -196,10 +196,10 @@ implementation {
     command RoutePrivData_t* SharedData.getRPrivData() {
         if(TOS_NODE_ID == PRINTF_DEBUG_ID){
             if(initialized){
-                printf("SharedDataP, getRPrivData called on initialized data.\n");
+                printf("SharedDataP, getRPrivData called on initialized data.\n"); printfflush();
             } else {
-                printf("SharedDataP, getRPrivData called.\n");
-                printf("SharedDataP, ERROR, data not initialized.\n");
+                printf("SharedDataP, getRPrivData called.\n"); printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
             }
         }
         return &(combinedData.routePrivData);		
@@ -213,10 +213,10 @@ implementation {
     command KDCPrivData_t* SharedData.getKDCPrivData() {
         if(TOS_NODE_ID == PRINTF_DEBUG_ID){
             if(initialized){
-                printf("SharedDataP, getKDCPrivData called on initialized data.\n");
+                printf("SharedDataP, getKDCPrivData called on initialized data.\n"); printfflush();
             } else {
-                printf("SharedDataP, getKDCPrivData called.\n");
-                printf("SharedDataP, ERROR, data not initialized.\n");
+                printf("SharedDataP, getKDCPrivData called.\n"); printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
             }
         }
         return &(combinedData.kdcPrivData);		
@@ -232,7 +232,7 @@ implementation {
      */
     command error_t ResourceArbiter.backupToFlash(){
         if(TOS_NODE_ID == PRINTF_DEBUG_ID){
-            printf("SharedDataP, backupToFlash called.\n");
+            printf("SharedDataP, backupToFlash called.\n"); printfflush();
         }
         if (!m_busy) {
             m_busy = TRUE;
@@ -243,7 +243,7 @@ implementation {
     
     default event void ResourceArbiter.backupToFlashDone(error_t result) {
     if(TOS_NODE_ID == PRINTF_DEBUG_ID){
-    printf("SharedDataP, backupToFlashDone.\n");
+    printf("SharedDataP, backupToFlashDone.\n"); printfflush();
 }
 }
     
