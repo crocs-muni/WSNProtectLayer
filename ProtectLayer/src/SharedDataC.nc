@@ -15,7 +15,7 @@ configuration SharedDataC{
                 #ifndef TOSSIM
 		interface ResourceArbiter;
                 #endif
-		interface Init;
+		interface Init as PLInit;
 	}
 }
 
@@ -27,7 +27,7 @@ implementation{
 	
 	components MainC;
 	
-	Init = SharedDataP.Init;
+	PLInit = SharedDataP.PLInit;
 
 	SharedData = SharedDataP.SharedData;
 	#ifndef TOSSIM
@@ -36,5 +36,5 @@ implementation{
 	SharedDataP.SharedDataWrite -> SharedDataStorage.BlockWrite;
 	#endif
 	
-	MainC.SoftwareInit -> SharedDataP.Init;
+	
 }

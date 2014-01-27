@@ -47,7 +47,7 @@ implementation{
 	LoggerP.BlockWrite -> BlockStorageC;
 	
 	Init = LoggerP.Init;
-	MainC.SoftwareInit -> LoggerP.Init;	
+	MainC.SoftwareInit -> LoggerP.Init;	 //auto init phase 1
 
 	//LoggerP.Notify -> UserButtonC.Notify;
 	//LoggerP.Timer -> TimerMilliC;

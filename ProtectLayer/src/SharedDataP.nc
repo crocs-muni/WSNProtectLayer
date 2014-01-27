@@ -13,7 +13,7 @@ module SharedDataP {
 		#ifndef TOSSIM
 		interface ResourceArbiter;
 		#endif
-		interface Init;
+		interface Init as PLInit;
 	}
 	#ifndef TOSSIM
 	uses {
@@ -33,7 +33,7 @@ implementation {
 	/** 
 	 * Initialize the combinedData structure to initial zeros
 	 */
-	command error_t Init.init() {
+	command error_t PLInit.init() {
             int i = 0;
             int j = 0;
             uint8_t fixedNeighbors[MAX_NEIGHBOR_COUNT] = {4,5,6,7,10,14,15,17,19,22,25,28,29,30,31,32,33,35,36,37,40,41,42,43,44,46,47,48,50};
@@ -47,8 +47,8 @@ implementation {
                 combinedData.savedData[i].kdcData.shared_key.keyValue[1] = (combinedData.savedData[i].nodeId < TOS_NODE_ID) ? TOS_NODE_ID : combinedData.savedData[i].nodeId;
                 combinedData.savedData[i].kdcData.shared_key.dbgKeyID = 0;
 
-                combinedData.savedData[i].idsData.neighbor_reputation = 0;
-                combinedData.savedData[i].idsData.nb_messages = 0;
+                combinedData.savedData[i].idsData.nb_received = 0;
+                combinedData.savedData[i].idsData.nb_forwarded = 0;
             }
             combinedData.ppcPrivData.priv_level = 0;
             // Create key to BS

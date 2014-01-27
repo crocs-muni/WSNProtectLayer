@@ -15,7 +15,7 @@
 #include "ProtectLayerGlobals.h"
 configuration PrivacyC {
 	provides {
-		interface Init;
+		interface Init as PLInit;
 		interface Privacy;
 		
 		// parameterized interfaces for all different types of messages
@@ -31,24 +31,23 @@ implementation {
 	components PrivacyP;   
 	components ActiveMessageC;
 	components new AMSenderC(AM_PROTECTLAYERRADIO);
-	components new AMReceiverC(AM_PROTECTLAYERRADIO);
+	//components new AMReceiverC(AM_PROTECTLAYERRADIO); replaced by dispatcherc
 	components IntrusionDetectC; 
 	components PrivacyLevelC;
 	components RouteC;
 	components SharedDataC;
 	components KeyDistribC;
-        components CryptoC;
-        components ForwarderC;
-        components LoggerC;
+    components CryptoC;
+    components ForwarderC;
+    components LoggerC;
+    components DispatcherC;
        
         //components PrintfC, SerialStartC;  // support for printf over serial console. Can be removed
-  
-	MainC.SoftwareInit -> PrivacyP.Init;	//auto-initialization
-        MainC.SoftwareInit -> PrivacyLevelC.Init;
-        MainC.SoftwareInit -> ForwarderC.Init;
 
-	
-	Init = PrivacyP.Init;
+
+	MainC.SoftwareInit -> PrivacyP.Init; //auto init phase 1
+		
+	PLInit = PrivacyP.PLInit;
 	Privacy = PrivacyP.Privacy;
 	
 	PrivacyP.PrivacyLevel -> PrivacyLevelC.PrivacyLevel;
@@ -59,13 +58,13 @@ implementation {
 	MessagePacket = PrivacyP.MessagePacket;
 	
 	PrivacyP.LowerAMSend -> AMSenderC;
-	PrivacyP.LowerReceive -> AMReceiverC;
+	PrivacyP.LowerReceive -> DispatcherC.PL_Receive;
 	PrivacyP.Packet -> AMSenderC;
 	PrivacyP.AMPacket -> AMSenderC;
 	PrivacyP.AMControl -> ActiveMessageC;
 	
 	PrivacyP.IntrusionDetect -> IntrusionDetectC.IntrusionDetect;
-	PrivacyP.IntrusionDetectInit -> IntrusionDetectC.Init;
+	//PrivacyP.IntrusionDetectInit -> IntrusionDetectC.Init;
 	
 	PrivacyP.Route -> RouteC.Route;
 	

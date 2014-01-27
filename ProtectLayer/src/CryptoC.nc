@@ -7,21 +7,28 @@
 #include "ProtectLayerGlobals.h"
 configuration CryptoC {
 	provides {
-		interface Init;
+		//interface Init;
 		interface Crypto;
 	}
 	
 }
 implementation {
 	components MainC;   
-	components CryptoP;   
+	components CryptoP; 
+	components CryptoRawC;
+	components KeyDistribC;
+	components AESC;
+	components SharedDataC;
 	
-	MainC.SoftwareInit -> CryptoP.Init;	//auto-initialization
+	MainC.SoftwareInit -> CryptoP.Init;	//auto-initialization phase 1
 	
-	Init = CryptoP.Init;
+	//Init = CryptoP.Init; 
 	Crypto = CryptoP.Crypto;
 	
-	Crypto.CryptoRaw -> CryptoRawC;
-	Crypto.KeyDistrib -> KeyDistribC;
-	Crypto.AES -> AESC;
+	
+	CryptoP.SharedData -> SharedDataC.SharedData;
+	CryptoP.CryptoRaw -> CryptoRawC.CryptoRaw;
+	CryptoP.KeyDistrib -> KeyDistribC.KeyDistrib;
+	CryptoP.AES -> AESC.AES;
+	
 }

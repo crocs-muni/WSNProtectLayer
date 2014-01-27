@@ -53,8 +53,9 @@ implementation {
 	 * Start the serial ports when booting 
 	 */
 	command error_t Init.init(){
-   		if (call SerialControl.start() != SUCCESS)
-   			return FAIL;
+   		
+   		//if (call SerialControl.start() != SUCCESS)
+   		//	return FAIL;
    		
    		//TODO zmenit na pouze nahrani aplikace?
    		/*   		

@@ -1,16 +1,14 @@
 #include "ProtectLayerGlobals.h"
 configuration ForwarderC {
-    provides {
-		interface Init;
-                }
 }
 implementation {
     components PrivacyC;
     components ForwarderP;
+    components MainC;
 
-    Init = ForwarderP.Init;
+   
 	
-	
+	MainC.SoftwareInit -> ForwarderP.Init; // auto init phase 1
 		
     ForwarderP.AMSend -> PrivacyC.MessageSend[MSG_FORWARD];
     ForwarderP.Receive -> PrivacyC.MessageReceive[MSG_FORWARD];

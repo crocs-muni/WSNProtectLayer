@@ -25,7 +25,8 @@ typedef enum _error_values {
     ENOTALLKEYSDISCOVERED = 102,    /**< not all keys were discovered */
     EKEYNOTFOUND = 103,             /**< requested key was not found */
     EDATANOTFOUND = 104,    	    /**< requested data structure was not found */
-    EWRONGMAC = 105		    /**< received mac does not match calculated one */		
+    EWRONGMAC = 105,		    /**< received mac does not match calculated one */	    
+    EWRONGHASH = 106
 } _error_values;
 
 /**
@@ -42,13 +43,28 @@ enum {
   AM_FLASH_GET_MSG = 135,
   AM_FLASH_SET_MSG = 136,
   AM_INTRUSION_MSG = 137,
+  AM_CHANGEPL = 138,
+  AM_IDS_ALERT = 139,
   POLICEMAN_TIMER_MESSAGE_MILLI = 5000,
   KEY_LENGTH = 16,
   MAX_NEIGHBOR_COUNT = 30,
   RECEIVE_BUFFER_LEN = 5,
   LOGGED_SIZE = 20,
-  RSSI_THRESHOLD = -73
+  RSSI_THRESHOLD = -73,
+  IDS_MAX_MONITORED_NEIGHBORS = 5,
+  IDS_BUFFER_SIZE = 5,
+  IDS_DROPPING_RATE = 50,
+  IDS_MIN_PACKET_RECEIVED = 5,
+  IDS_FORWARDER_SEND_BUFFER_LEN = 4
 };
+
+enum {
+  STATE_INIT = 0,
+  STATE_READY_TO_DEPLOY = 1,
+  STATE_MAGIC_RECEIVED = 2,
+  STATE_READY_FOR_APP = 3,
+  STATE_WORKING = 4
+}; 
 // NOTE: constants should be defined as item in enum above (to save space) #define MAX_NEIGHBOR_COUNT 	20 /**< Maximum number of neighbors - used to allocate static arrays */
 
 #define FLAG_STATE_KDP_DISCOVERKEYS 0x0001	/**< neighbor keys discovery in progress */
@@ -184,12 +200,17 @@ KDCPrivData_t.txt
 enum {
 	KEY_TOBS = 1,
 	KEY_TONODE = 2,
+	KEY_TOBSCRYPT = 3,
+	KEY_TONODECRYPT = 4,
+	KEY_TOBSMAC = 5,
+	KEY_TONODEMAC = 6,
 } KEY_TYPE;
 
 typedef nx_struct _key {
   nx_uint8_t    keyType;
   nx_uint8_t    keyValue[KEY_LENGTH];
   nx_uint16_t	dbgKeyID;
+  nx_uint32_t 	counter;
 } PL_key_t;
 
 typedef uint16_t node_id_t;
@@ -198,7 +219,7 @@ typedef uint16_t node_id_t;
 // nx_struct only cause of the sending it via serial port
 typedef nx_struct KDCData {
     PL_key_t shared_key;
-    uint8_t counter; 
+    nx_uint8_t counter; 
 } KDCData_t;
 
 /**
@@ -206,8 +227,10 @@ typedef nx_struct KDCData {
 */
 typedef nx_struct IDSData {
 /*@{*/
-	nx_uint8_t neighbor_reputation;	/**< reputation of a neighbor */
-	nx_uint8_t nb_messages;	/**< number of received messages */
+	//nx_uint8_t neighbor_reputation;	/**< reputation of a neighbor */
+	nx_uint16_t nb_received;	/**< number of received messages */
+	nx_uint16_t nb_forwarded;
+	
 /*@}*/
 } IDSData_t;
 
@@ -244,7 +267,7 @@ typedef nx_struct RoutePrivData {
 
 typedef nx_struct KDCPrivData {
     PL_key_t	keyToBS;
-    PL_key_t*	preKeys;
+    PL_key_t	preKeys[20];
 } KDCPrivData_t;
 /**
  * Structure combining all the data that need to be stored on the node by the protection layer
@@ -331,6 +354,16 @@ typedef uint8_t NODE_REPUTATION;
 	IDS_ON = 1, //
 	IDS_OFF = 2  //
 } IDS_STATUS;
+
+/**
+ * Structure of an item in an IDS buffer
+ */
+ typedef struct IDSBufferedPacket {
+ 	nx_uint16_t sender;
+ 	nx_uint16_t receiver;
+ 	nx_uint64_t hashPacket;
+ } idsBufferedPacket_t;
+//typedef uint64_t idsBufferedPacket_t;
 
 void PrintDbg(const char* messageClass, const char* formatString, ...) {
     va_list args;

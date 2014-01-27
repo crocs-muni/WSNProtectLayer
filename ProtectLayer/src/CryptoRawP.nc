@@ -5,7 +5,7 @@
  * 	@date      2012-2013
  */
 #include "ProtectLayerGlobals.h"
-#include "aes.h" //AES constants
+#include "AES.h" //AES constants
 //#include "printf.h"
 
 module CryptoRawP {
@@ -19,61 +19,76 @@ module CryptoRawP {
 	}
 }
 implementation {
-	uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
+	//uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
 	PL_key_t* 	m_key1;		/**< handle to the key used as first (or only) one in cryptographic operations. Value is set before task is posted. */
 	PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
-	uint8_t* 	m_buffer;	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
-	uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-	uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
+	//uint8_t* 	m_buffer;	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
+	//uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
+	//uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
 	uint8_t         exp[240]; //expanded key
+	
 	//
 	//	Init interface
 	//
 	command error_t Init.init() {
+		error_t status = SUCCESS;
                 PrintDbg("CryptoRawP", "Init.init() called.\n");
 		// TODO: do other initialization
-		m_state = 0;
-		m_dbgKeyID = 0;
+		//m_state = 0;
+		//m_dbgKeyID = 0;
+		
+		status = call CryptoRaw.selfTest();
+		PrintDbg("CryptoRawP", " self test finished with result %d.\n", status);
+		
 		return SUCCESS;
 	}
 	
 	//
 	//	CryptoRaw interface
 	//	
-	command error_t CryptoRaw.encryptBufferB(PL_key_t* key, uint8_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
-		
-		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(offset = '%d' buffer = '%d', 1 = '%d', 6 = '%d'.\n", buffer[0],buffer[1],buffer[6]);
-		
-		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(buffer = '%d', 1 = '%d', 2 = '%d'.\n", buffer[0],buffer[1],buffer[2]);
-		
-		#ifdef AES
-		
-		
+	command error_t CryptoRaw.encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen) {
 		uint8_t i;
 		uint8_t j;
 		uint8_t plainCounter[16];			
 		uint8_t encCounter[16];
 		
+		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(offset = '%d' buffer = '%d', 1 = '%d', 6 = '%d'.\n", buffer[0],buffer[1],buffer[6]);
+		
+		PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(buffer = '%d', 1 = '%d', 2 = '%d'.\n", buffer[0],buffer[1],buffer[2]);
+		
+		//#ifdef AES
+		
+		
+		
+		
 		//set rest of counter to zeros to fit AES block
 		memset(plainCounter, 0, 16);	
 		
-		call AES.keyExpansion( exp, key->keyValue);
+		call AES.keyExpansion( exp, (uint8_t*) key->keyValue);
 		
 		//process buffer by blocks 
 		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
 		
-			plainCounter[0] = counter;
+			plainCounter[0] =  key->counter;
+			plainCounter[1] =  (key->counter) >> 8;
+			plainCounter[2] =  (key->counter) >> 16;
+			plainCounter[3] =  (key->counter) >> 24;
 			call AES.encrypt( plainCounter, exp, encCounter);
-			for (j := 0; i < BLOCK_SIZE; j++){
-				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
+			for (j = 0; j < BLOCK_SIZE; j++){
+				buffer[offset + j*BLOCK_SIZE] = buffer[offset + j*BLOCK_SIZE] ^ encCounter[j];
 			}
-			counter++;
+			(key->counter)++;
+			if((key->counter) == 0){
+				PrintDbg("CryptoRawP", " encryptBufferB counter overflow, generate new key requiered.\n");
+				//deal with new key and counter value reset
+			}
 		}
 		
-		#else /* No AES, FAKE encryption*/
-		uint8_t         i = 0;
+		//#else /* No AES, FAKE encryption*/
+		/*
+		//uint8_t         i = 0;
 	   // PrintDbg("CryptoRawP", "KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
 		
 		buffer += offset;
@@ -93,47 +108,55 @@ implementation {
 
 		// Increase length of encrypted data by header
 		*pLen = *pLen + FAKEHEADERLEN;
-		
-		#endif /* AES */
+		*/
+		//#endif /* AES */
 		
 		
 		return SUCCESS;
 	}
 	
 	
-	command error_t CryptoRaw.decryptBufferB(PL_key_t* key, uint8_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen) {
+	command error_t CryptoRaw.decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen) {
 		
 		error_t status = SUCCESS;
-		
-		PrintDbg("CryptoRawP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
-		#ifdef AES
-		
 		uint8_t i;
 		uint8_t j;
 		uint8_t plainCounter[16];			
 		uint8_t encCounter[16];
 		
+		PrintDbg("CryptoRawP", "KeyDistrib.decryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
+		//#ifdef AES
+		
+		
+		
 		//set rest of counter to zeros to fit AES block
 		memset(plainCounter, 0, 16);	
 		
-		call AES.keyExpansion( exp, key->keyValue);
+		call AES.keyExpansion( exp, (uint8_t*)(key->keyValue));
 		
 		//process buffer by blocks 
 		for(i = 0; i < (pLen / BLOCK_SIZE); i++){
 		
-			plainCounter[0] = counter;
+			plainCounter[0] =  key->counter;
+			plainCounter[1] =  (key->counter) >> 8;
+			plainCounter[2] =  (key->counter) >> 16;
+			plainCounter[3] =  (key->counter) >> 24;
 			call AES.decrypt( plainCounter, exp, encCounter);
-			for (j := 0; i < BLOCK_SIZE; j++){
-				buffer[offset + j] = buffer[offset + j] ^ encCounter[j];
+			for (j = 0; j < BLOCK_SIZE; j++){
+				buffer[offset + j*BLOCK_SIZE] = buffer[offset + j*BLOCK_SIZE] ^ encCounter[j];
 			}
-			counter++;
+			(key->counter)++;
+			if((key->counter) == 0){
+				PrintDbg("CryptoRawP", " decryptBufferB counter overflow, generate new key requiered.\n");
+				//deal with new key and counter value reset
+			}
 		}
 		
-		#else /* No AES, FAKE encryption*/
-		uint8_t i = 0;
+		//#else /* No AES, FAKE encryption*/
+		//uint8_t i = 0;
 
 		
-
+		/*
 		buffer += offset;
 
 		// TODO: na define prepinani mezi AES vs. FAKE
@@ -163,14 +186,15 @@ implementation {
 
 		//m_len = Decrypt(m_key1, m_buffer + m_offset, m_len);
 		
-		#endif /* AES */
+		#endif */ /* AES */
 		
 		return status;
+		
 	}
 	
 	
 	
-	command error_t CryptoRaw.deriveKey(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
+	command error_t CryptoRaw.deriveKeyB(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
         PrintDbg("CryptoRawP", "KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID);
 		
 		//TODO: predelat na blocking verzi
@@ -178,14 +202,15 @@ implementation {
 		// TODO: Mod derivace s vyuzitim AESem
 		// derivedKey = E_masterKey(derivationData)
 		
-		#ifdef AES
+		//#ifdef AES
 		
-		call AES.keyExpansion( exp, masterKey->keyValue);
-		call AES.encrypt( derivationData + offset, exp, derivedKey->keyValue);		
+		call AES.keyExpansion( exp, (uint8_t*)(masterKey->keyValue));
+		call AES.encrypt( derivationData + offset, exp, (uint8_t*)(derivedKey->keyValue));		
 		
 		return SUCCESS;
 		
-		#else /* No AES, use previous split-phase version */
+		//#else /* No AES, use previous split-phase version */
+		/*
 		if (m_state & FLAG_STATE_CRYPTO_DERIV) {
 			return EALREADY;	
 		}
@@ -205,25 +230,83 @@ implementation {
 		memcpy(m_key2->keyValue, m_buffer + m_offset, KEY_LENGTH);
 		// we are done
 		m_key2->dbgKeyID = m_dbgKeyID++;	// assign debug key id
-		#endif /* AES */
+		#endif 
+		*/ /* AES */
 		PrintDbg("CryptoRawP", "\t derivedKey = '%d')\n", m_key2->dbgKeyID);
-			m_state &= ~FLAG_STATE_CRYPTO_DERIV;
+			//m_state &= ~FLAG_STATE_CRYPTO_DERIV;
 		
 	}
 	
-	command error_t generateKeyB(PL_key_t* newKey) {
+	command error_t CryptoRaw.generateKeyB(PL_key_t* newKey) {
 	
 		//TODO pokud potřeba
 		return SUCCESS;
 	}
 	
+	command error_t CryptoRaw.hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key, uint8_t* hash){
+		error_t status = SUCCESS;		
+		uint8_t i;
+		
+		PrintDbg("CryptoRawP", " hashDataBlockB called.\n");
+		
+		call AES.keyExpansion( exp, (uint8_t*) key->keyValue);		
+		call AES.encrypt( hash, exp, buffer + offset);
+		for(i = 0; i < BLOCK_SIZE; i++){
+			hash[i] = buffer[i + offset] ^ hash[i];
+		}		
+		return status;
+	}
 	
-	
-	
-	
-	
-	
-	
+	command error_t CryptoRaw.selfTest(){
+		uint8_t data[BLOCK_SIZE] = {0};
+		uint8_t i;
+		uint8_t status = SUCCESS;
+		PrintDbg("CryptoRawP", " self test started.\n");
+		memset(m_key1->keyValue, 0, KEY_SIZE);
+		m_key1->counter = 0;
+		PrintDbg("CryptoRawP", " self test encrypt.\n");
+		if((status = call CryptoRaw.encryptBufferB( m_key1, data, 0, BLOCK_SIZE)) != SUCCESS){
+			PrintDbg("CryptoRawP", " self test encrypt return failed.\n");
+			return status;
+		}
+		if(m_key1->counter != 1){
+			PrintDbg("CryptoRawP", " self test encrypt counter not incremented.\n");
+			return  EINVALIDDECRYPTION;
+		} else {
+			m_key1->counter = 0;
+		}
+		PrintDbg("CryptoRawP", " self test decrypt.\n");
+		if((status = call CryptoRaw.decryptBufferB( m_key1, data, 0, BLOCK_SIZE)) != SUCCESS){
+			PrintDbg("CryptoRawP", " self test decrypt return failed.\n");
+			return status;
+		}
+		if(m_key1->counter != 1){
+			PrintDbg("CryptoRawP", " self test decrypt counter not incremented.\n");
+			 return EINVALIDDECRYPTION;
+		}
+		for(i = 0; i < BLOCK_SIZE; i++){
+			if(data[i] != 0){
+				PrintDbg("CryptoRawP", " self test decrypt not same result after decryption.\n");
+				return  EINVALIDDECRYPTION;
+			}
+		}
+		PrintDbg("CryptoRawP", " self test derive key.\n");			
+		if((status = call CryptoRaw.deriveKeyB(m_key1, data, 0, BLOCK_SIZE, m_key2))!= SUCCESS){
+			PrintDbg("CryptoRawP", " self test derive key failed.\n");
+			return status;
+		}
+		if(memcmp(m_key1, m_key2, sizeof(m_key1))){
+			PrintDbg("CryptoRawP", " self test derive key, derived key is same as master.\n");
+			return  EDIFFERENTKEY;
+		}
+		for(i = 0; i < KEY_SIZE; i++){
+			if(m_key1->keyValue[i] == 0){
+				PrintDbg("CryptoRawP", " self test derive key, derived key is all zeros.\n");
+				return EDIFFERENTKEY;
+			}
+		}
+		return status;
+	}
 	
 	
 /*
@@ -249,9 +332,10 @@ implementation {
 	//
 	//	CryptoRaw interface
 	//
+	/*
 	task void task_encryptBuffer() {
                 error_t status = call CryptoRaw.encryptBufferB(m_key1, m_buffer, m_offset, &m_len);
-
+*/
 /*
                 uint8_t         i = 0;
                 PrintDbg("CryptoRawP", "KeyDistrib.task_encryptBuffer(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue[0], m_key1->keyValue[1]);
@@ -272,7 +356,7 @@ implementation {
                 m_len += FAKEHEADERLEN;
 
 		//m_len = Encrypt(m_key1, m_buffer + m_offset, m_len);
-*/
+
 
 		// we are done
                 signal CryptoRaw.encryptBufferDone(status, m_buffer, m_len);
@@ -297,6 +381,7 @@ implementation {
 
 	task void task_decryptBuffer() {
                error_t status = call CryptoRaw.decryptBufferB(m_key1, m_buffer, m_offset, &m_len);
+               */
 /*
                 uint8_t i = 0;
 
@@ -327,7 +412,7 @@ implementation {
                 }
 
 		//m_len = Decrypt(m_key1, m_buffer + m_offset, m_len);
-*/
+
 		// we are done
                 signal CryptoRaw.decryptBufferDone(status, m_buffer, m_len);
 		// Cleanup
@@ -414,5 +499,5 @@ implementation {
                 PrintDbg("CryptoRawP", "\t newKey = '%d')\n", newKey->dbgKeyID);
                 return SUCCESS;
         }
-
+*/
 }

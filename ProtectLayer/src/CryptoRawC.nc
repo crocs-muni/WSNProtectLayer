@@ -9,21 +9,18 @@ configuration CryptoRawC {
 	provides {
 		interface Init;
 		interface CryptoRaw;
-	}
-	
+	}	
 }
 implementation {
 	components MainC;   
-	components CryptoRawP;   
-	
-	//added AES
+	components CryptoRawP;
 	components AESC;
 	
 	MainC.SoftwareInit -> CryptoRawP.Init;	//auto-initialization
 	
-	Init = CryptoP.Init;
-	CryptoRaw = CryptoRawP.Crypto;
+	Init = CryptoRawP.Init;
+	CryptoRaw = CryptoRawP.CryptoRaw;
 	
-	//added AES
-	CryptoRaw.AES -> AESC;
+	CryptoRawP.AES -> AESC.AES;
+	
 }

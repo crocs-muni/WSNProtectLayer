@@ -18,7 +18,7 @@ interface CryptoRaw {
 			@param[in out] pLen length of buffer to be encrypted, will contain resulting length
 			@return error_t status
 	*/
-	command error_t encryptBufferB(PL_key_t* key, uint16_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen);
 
 	/**
 			Command: Blocking version. Used by other components to start decryption of supplied buffer by supplied key.
@@ -28,7 +28,7 @@ interface CryptoRaw {
 			@param[in] len length of buffer to be decrypted
 			@return error_t status
 	*/
-	command error_t decryptBufferB(PL_key_t* key, uint16_t* counter, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	command error_t decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen);
 		
 		
 	/**
@@ -50,8 +50,24 @@ interface CryptoRaw {
 	*/	
 	// IS USED???
 	command error_t generateKeyB(PL_key_t* newKey);
+	
+	/**	
+		Command: function to calculate AES based hash of data in buffer.
+		makes one iteration. Length of data is aes block size
+		@param[in out] buffer with data, replaced with calculated hash
+		@param[in] offset			
+		@param[in] key key for encryption
+		@param[out] hash calculated value
+		@return error_t status
+	*/
+	command error_t hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key, uint8_t* hash);
 		
 		
+	/**
+		Command: self test of Cryptoraw component
+		@return error_t SUCCESS or error message
+	*/
+	command error_t selfTest();
 		
 /*** DEPRICATED ***/
 
@@ -64,7 +80,7 @@ interface CryptoRaw {
 		@param[in] len length of buffer to be encrypted 
 		@return error_t status
 	*/	
-	command error_t encryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len);
+	//command error_t encryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len);
         /**
 		Event: Signalized when encryptBuffer task was finished 
 		@param[out] status returned by Crypto.encryptBuffer command
@@ -73,7 +89,7 @@ interface CryptoRaw {
 		@return nothing
 	*/	
 
-	event void encryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen);
+	//event void encryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen);
 
 	/**
 		Command: Used by other components to start decryption of supplied buffer by supplied key. 
@@ -82,7 +98,7 @@ interface CryptoRaw {
 		@param[in] len length of buffer to be decrypted 
 		@return error_t status
 	*/	
-	command error_t decryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len);
+	//command error_t decryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len);
 	/**
 		Event: Signalized when decryptBuffer task was finished 
 		@param[out] status returned by Crypto.decryptBuffer command
@@ -90,7 +106,7 @@ interface CryptoRaw {
 		@param[out] resultLen length of decrypted data
 		@return nothing
 	*/	
-	event void decryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen);
+	//event void decryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen);
 
 	/**
 		Command: Used by other components to derive new key from master key and derivation data. 
@@ -100,28 +116,28 @@ interface CryptoRaw {
 		@param[in] len length of derivation data
 		@return error_t status
 	*/	
-	command error_t deriveKey(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey);
+	//command error_t deriveKey(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey);
 	/**
 		Event: Signalized when deriveKey task was finished 
 		@param[out] status returned by Crypto.deriveKey command
 		@param[out] derivedKey handle to newly derived key
 		@return nothing
 	*/	
-	event void deriveKeyDone(error_t status, PL_key_t* derivedKey);
+	//event void deriveKeyDone(error_t status, PL_key_t* derivedKey);
 
 	/**
 		Command: Used by other components to generate random new key
 		@param[in] newKey handle to free slot where new key should be generated
 		@return error_t status
 	*/	
-	command error_t generateKey(PL_key_t* newKey);
+	//command error_t generateKey(PL_key_t* newKey);
 	/**
 		Event: Signalized when generateKey task was finished 
 		@param[out] status returned by Crypto.generateKey command
 		@param[out] newKey handle to newly generated key
 		@return nothing
 	*/	
-	event void generateKeyDone(error_t status, PL_key_t* newKey);
+	//event void generateKeyDone(error_t status, PL_key_t* newKey);
 
 
 	/**
@@ -129,5 +145,5 @@ interface CryptoRaw {
 			@param[in] newKey handle to free slot where new key should be generated
 			@return error_t status
 	*/
-    command error_t generateKeyBlocking(PL_key_t* newKey);
+	//command error_t generateKeyBlocking(PL_key_t* newKey);
 }

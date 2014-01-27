@@ -12,12 +12,16 @@ module IntrusionDetectP {
 		interface AMSend;
 		interface Receive;
 		interface Receive as ReceiveMsgCopy;
+		interface Receive as ReceiveIDSMsgCopy;
 		interface SharedData;
 		interface Timer<TMilli> as TimerIDS;
 		interface BlockWrite;
+		interface IDSBuffer;
+		interface Send as IDSAlertSend;
 	}
 	provides {
 		interface Init;
+		interface Init as PLInit;
 		interface IntrusionDetect;
 	}
 }
@@ -32,7 +36,8 @@ implementation {
 	bool m_storageBusy = FALSE;
 
 	bool m_radioBusy = FALSE;
-	combinedData_t * combinedData;
+//	combinedData_t * combinedData;
+	SavedData_t*    pSavedData = NULL;
 	NODE_REPUTATION reputation;
 	SavedData_t * savedData;
 	IDS_STATUS ids_status = IDS_RESET;
@@ -46,7 +51,6 @@ implementation {
 		// TODO: do other initialization
 		// TODO: how will we collect the data from SharedData
                 dbg("IDSState", "IDS initialization called.\n");
-		combinedData = call SharedData.getAllData();
 		//call TimerIDS.startPeriodic(1024);
 		
 		m_logMsg = &m_memLogMsg;
@@ -54,12 +58,19 @@ implementation {
 		return SUCCESS;
 	}
 	
-	command NODE_REPUTATION IntrusionDetect.getNodeReputation(uint8_t nodeid) {
-		//savedData = call SharedData.getNodeState(nodeid);
-		//reputation = (*savedData).idsData.neighbor_reputation;
-		reputation =  (*call SharedData.getNodeState(nodeid)).idsData.neighbor_reputation;
-                dbg("IDSState", "Reputation of node %d is: %d.\n", nodeid, reputation);
-		return reputation;
+//	command NODE_REPUTATION IntrusionDetect.getNodeReputation(uint8_t nodeid) {
+//		//savedData = call SharedData.getNodeState(nodeid);
+//		//reputation = (*savedData).idsData.neighbor_reputation;
+//		reputation =  (*call SharedData.getNodeState(nodeid)).idsData.neighbor_reputation;
+//                dbg("IDSState", "Reputation of node %d is: %d.\n", nodeid, reputation);
+//		return reputation;
+//	}
+
+	command error_t PLInit.init()
+	{
+		//combinedData = call SharedData.getAllData();
+		pSavedData = call SharedData.getSavedData();
+		return SUCCESS;
 	}
 	
 	command void IntrusionDetect.switchIDSoff(){
@@ -157,8 +168,25 @@ implementation {
 
 	// Messages passed to the IDS from privacy component
 	event message_t * ReceiveMsgCopy.receive(message_t *msg, void *payload, uint8_t len){
-                PrintDbg("IDS", "ReceiveMsgCopy.receive\n");
-                //is storage busy?
+
+//        PrintDbg("IDS", "ReceiveMsgCopy.receive\n");
+		uint8_t msgType;
+                
+        SPHeader_t* spHeader;        
+        spHeader = (SPHeader_t*) payload;
+        
+        msgType = spHeader->msgType;
+        
+        // AES (or another cryptographic function) of the payload should be computed in order
+        // to identify content of the messages
+        // Buffer for each of the node will contain:
+        // Sender id, Receiver id, Content, RSSI?
+        
+        
+        return msg;
+
+		/* This was used for logging to EEPROM - will not be used any more
+		//is storage busy?
 		if (m_storageBusy)
 		{
 			// storage busy, packet cannot be logged
@@ -181,9 +209,8 @@ implementation {
 				return msg;
 			}
 		}
-
+		*/
 		
-
 	}
 
 	event void BlockWrite.eraseDone(error_t error){
@@ -201,5 +228,23 @@ implementation {
 	}
 
 	event void BlockWrite.syncDone(error_t error){
+	}
+
+	event void IDSBuffer.oldestPacketRemoved(uint16_t sender, uint16_t receiver){
+		// TODO Auto-generated method stub
+	}
+
+	event void IDSBuffer.packetForwarded(uint16_t sender, uint16_t receiver){
+		pSavedData[sender].idsData.nb_forwarded++;
+	}
+
+	event message_t * ReceiveIDSMsgCopy.receive(message_t *msg, void *payload, uint8_t len){
+		// TODO Auto-generated method stub
+		return msg;
+	}
+
+
+	event void IDSAlertSend.sendDone(message_t *msg, error_t error){
+		// TODO Auto-generated method stub
 	}
 }

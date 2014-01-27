@@ -111,7 +111,7 @@ implementation{
 			m_radioBusy=FALSE;
 	}
 	
-	
+	/*
 	//
 	// Crypto interface
 	//
@@ -127,7 +127,7 @@ implementation{
 	event void Crypto.generateKeyDone(error_t status, PL_key_t *newKey){
 		//not used
 	}
-	
+	*/
 	
 	
 	
