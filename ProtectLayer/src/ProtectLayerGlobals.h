@@ -15,6 +15,9 @@
 #define DEBUG_PRINTF
 #define NEW_PRINTF_SEMANTICS
 
+// define for printf, writes to output only if TOS_NODE_ID is equal to this DEBUG_ID
+#define PRINTF_DEBUG_ID 19
+
 #include "printf.h"
 #include <stdarg.h>
 
