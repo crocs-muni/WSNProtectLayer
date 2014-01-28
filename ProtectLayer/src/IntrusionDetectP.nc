@@ -54,7 +54,7 @@ implementation {
     command error_t Init.init() {
         // TODO: do other initialization
         // TODO: how will we collect the data from SharedData
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("IDSState: IDS initialization called.\n");
         }
         //call TimerIDS.startPeriodic(1024);
@@ -182,7 +182,7 @@ implementation {
         
         SPHeader_t* spHeader;        
         spHeader = (SPHeader_t*) payload;
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("IDSState: A copy of a message from Privacy component received.\n");
         }
         
@@ -260,7 +260,7 @@ implementation {
         IDSMsg_t* idspkt;
         
         savedData = call SharedData.getNodeState(receiver);
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("IDSState: Neighbor %d dropped a packet. IDS alert will be sent.\n", receiver);
         }
         
@@ -286,7 +286,7 @@ implementation {
     event void IDSBuffer.packetForwarded(uint16_t sender, uint16_t receiver){
         savedData = call SharedData.getNodeState(sender);
         savedData->idsData.nb_forwarded++;
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("IDSState: Neighbor %d forwarded packet.\n", sender);
         }
     }
@@ -298,7 +298,7 @@ implementation {
         uint64_t hashedPacket;
         uint16_t sender = call AMPacket.source(msg);
         uint16_t receiver = call AMPacket.destination(msg);
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("IDSState: A copy of an IDSAlert from IDSForwarder received. Sender: %d, receiver: %d.\n", sender, receiver);
         }
         
@@ -308,7 +308,7 @@ implementation {
         
         if ( (savedData = call SharedData.getNodeState(receiver)) != NULL) {
             (*savedData).idsData.nb_received++;
-            if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                 printf("IDSState: Receiver %d is our neighbor, PRR incremented.\n", receiver);
             }
         }

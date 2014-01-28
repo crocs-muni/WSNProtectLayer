@@ -42,7 +42,7 @@ implementation{
     */
     command error_t PLInit.init() {
         //uint8_t i = 0;
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("KeyDistribP: KeyDistribP.PLInit.init() entered\n");
         }
         
@@ -54,7 +54,7 @@ implementation{
         // m_keyToBS initialization
         //m_keyToBS.keyType = KEY_TOBS;
         //for (i = 0; i < KEY_LENGTH; i++) m_keyToBS.keyValue[i] = 0;
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("KeyDistribP: KeyDistribP.PLInit.init() finished\n");
         }
         
@@ -77,17 +77,17 @@ implementation{
     */	
     command error_t KeyDistrib.discoverKeys() {
         error_t status = SUCCESS;
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("KeyDistribP: KeyDistrib.discoverKeys called.\n");
         }
         //#ifdef BLOCKING
         if((status = call Crypto.initCryptoIIB()) != SUCCESS){
-            if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                 printf("KeyDistribP: KeyDistrib.discoverKeys failed.\n");
             }
             return status;
         }
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("KeyDistribP: KeyDistrib.discoverKeys finished.\n");
         }
         return status;
@@ -115,7 +115,7 @@ implementation{
     command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey){
         //uint16_t temp = nodeID;
         SavedData_t* pSavedData = NULL;
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             //printf("This is node with ID %u \n", TOS_NODE_ID);
             printf("KeyDistribP: KeyDistrib.getKeyToNodeB called for node '%u'\n", nodeID);
         }
@@ -129,7 +129,7 @@ implementation{
             return SUCCESS;
         }
         else {
-            if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                 printf("KeyDistribP: Failed to obtain SharedData.getNodeState.\n");
             }
             return EKEYNOTFOUND;
@@ -138,12 +138,12 @@ implementation{
     
     command error_t KeyDistrib.getKeyToBSB(PL_key_t* pBSKey) {
         KDCPrivData_t* KDCPrivData = NULL;
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("KeyDistribP: getKeyToBSB called.\n");
         }
         KDCPrivData = call SharedData.getKDCPrivData();
         if(KDCPrivData == NULL){
-            if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                 printf("KeyDistribP: getKeyToBSB key not received\n");
             }
             return EKEYNOTFOUND;
@@ -155,7 +155,7 @@ implementation{
     
     command error_t KeyDistrib.selfTest(){
         uint8_t status = SUCCESS;
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("KeyDistribP:  Self test initiated.\n");
             
             m_testKey = NULL;

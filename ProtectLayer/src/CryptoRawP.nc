@@ -57,7 +57,7 @@ implementation {
         uint8_t encCounter[16];
         
         // BUGBUG: wrong arguments 
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("CryptoRawP: KeyDistrib.encryptBufferB(offset = '0x%x' buffer = '0x%x', 1 = '0x%x', 6 = '0x%x'.\n", offset, buffer[0],buffer[1],buffer[6]);
             
             
@@ -87,7 +87,7 @@ implementation {
             }
             (key->counter)++;
             if((key->counter) == 0){
-                if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+                /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                     printf("CryptoRawP:  encryptBufferB counter overflow, generate new key requiered.\n");
                 }
                 //deal with new key and counter value reset
@@ -132,7 +132,7 @@ implementation {
         uint8_t j;
         uint8_t plainCounter[16];			
         uint8_t encCounter[16];
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("CryptoRawP: KeyDistrib.decryptBufferB(keyDbgID = '%x', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]);
         }
         //#ifdef AES
@@ -157,7 +157,7 @@ implementation {
             }
             (key->counter)++;
             if((key->counter) == 0){
-                if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+                /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                     printf("CryptoRawP:  decryptBufferB counter overflow, generate new key requiered.\n");
                 }
                 //deal with new key and counter value reset
@@ -209,7 +209,7 @@ implementation {
     
     
     command error_t CryptoRaw.deriveKeyB(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("CryptoRawP: KeyDistrib.task_deriveKey(masterKey = '%x') called.\n", m_key1->dbgKeyID);
         }
         
@@ -248,7 +248,7 @@ implementation {
         m_key2->dbgKeyID = m_dbgKeyID++;	// assign debug key id
         #endif 
         */ /* AES */
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("CryptoRawP: \t derivedKey = '%x')\n", m_key2->dbgKeyID);
         }
         //m_state &= ~FLAG_STATE_CRYPTO_DERIV;
@@ -264,7 +264,7 @@ implementation {
     command error_t CryptoRaw.hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key, uint8_t* hash){
         error_t status = SUCCESS;		
         uint8_t i;
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("CryptoRawP:  hashDataBlockB called.\n");
         }
         
@@ -280,70 +280,70 @@ implementation {
         uint8_t data[BLOCK_SIZE] = {0};
         uint8_t i;
         uint8_t status = SUCCESS;
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("CryptoRawP:  self test started.\n");
         }
         memset(m_key1->keyValue, 0, KEY_SIZE);
         m_key1->counter = 0;
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("CryptoRawP:  self test encrypt.\n");
         }
         if((status = call CryptoRaw.encryptBufferB( m_key1, data, 0, BLOCK_SIZE)) != SUCCESS){
-            if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                 printf("CryptoRawP:  self test encrypt return failed.\n");
             }
             return status;
         }
         if(m_key1->counter != 1){
-            if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                 printf("CryptoRawP:  self test encrypt counter not incremented.\n");
             }
             return  EINVALIDDECRYPTION;
         } else {
             m_key1->counter = 0;
         }
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("CryptoRawP:  self test decrypt.\n");
         }
         if((status = call CryptoRaw.decryptBufferB( m_key1, data, 0, BLOCK_SIZE)) != SUCCESS){
-            if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                 printf("CryptoRawP:  self test decrypt return failed.\n");
             }
             
             return status;
         }
         if(m_key1->counter != 1){
-            if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                 printf("CryptoRawP:  self test decrypt counter not incremented.\n");
             }
             return EINVALIDDECRYPTION;
         }
         for(i = 0; i < BLOCK_SIZE; i++){
             if(data[i] != 0){
-                if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+                /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                     printf("CryptoRawP:  self test decrypt not same result after decryption.\n");
                 }
                 return  EINVALIDDECRYPTION;
             }
         }
-        if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             printf("CryptoRawP:  self test derive key.\n");
         }
         if((status = call CryptoRaw.deriveKeyB(m_key1, data, 0, BLOCK_SIZE, m_key2))!= SUCCESS){
-            if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                 printf("CryptoRawP:  self test derive key failed.\n");
             }
             return status;
         }
         if(memcmp(m_key1, m_key2, sizeof(m_key1))){
-            if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                 printf("CryptoRawP:  self test derive key, derived key is same as master.\n");
             }
             return  EDIFFERENTKEY;
         }
         for(i = 0; i < KEY_SIZE; i++){
             if(m_key1->keyValue[i] == 0){
-                if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+                /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
                     printf("CryptoRawP:  self test derive key, derived key is all zeros.\n");
                 }
                 return EDIFFERENTKEY;
