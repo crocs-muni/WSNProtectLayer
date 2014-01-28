@@ -27,8 +27,8 @@ implementation {
   components IntruderDetectC;
   components CC2420ActiveMessageC;
 
-  components PrintfC, SerialStartC;
-  App.Boot -> MainC;
+  components PrintfC;
+  //App.Boot -> MainC;
 
   components ProtectLayerC;
 
