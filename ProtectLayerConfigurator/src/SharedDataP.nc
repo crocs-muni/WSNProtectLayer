@@ -17,8 +17,8 @@ module SharedDataP {
 	}
 	#ifndef TOSSIM
 	uses {
-		interface BlockRead as SharedDataRead;
-		interface BlockWrite as SharedDataWrite;
+		interface BlockRead as FlashDataRead;
+		interface BlockWrite as FlashDataWrite;
 	}
 	#endif
 }
@@ -27,8 +27,19 @@ implementation {
 	/** storage variable with the entire combinedData structure */
 	combinedData_t combinedData;
 	
+	/** pointer to the currently processed key */
+	nx_uint8_t * currentKey;
+	
 	/** flag signaling whether the memory is currently busy */
 	bool m_busy = FALSE;
+	
+	/** flag signaling operations regarding combined data storage */
+	bool combDataFlag = FALSE;
+	
+	/** indicator of current position in memory */
+	storage_addr_t memPosition = 0;
+	
+	uint8_t nbOfStoredKeys = 0;
 	
 	/** 
 	 * Initialize the combinedData structure to initial zeros
@@ -128,15 +139,16 @@ implementation {
  	 * <li>SUCCESS if the request was accepted, 
      * <li>EBUSY if a request is already being processed.
 	 */
-	command error_t ResourceArbiter.backupToFlash(){
+	command error_t ResourceArbiter.saveCombinedDataToFlash(){
 		if (!m_busy) {
 			m_busy = TRUE;
-			return call SharedDataWrite.erase();			
+			combDataFlag = TRUE;
+			return call FlashDataWrite.erase();			
 		}
 		return EBUSY;
 	}
 
-        default event void ResourceArbiter.backupToFlashDone(error_t result) {}
+        default event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result) {}
 
 	/**
      * Signals the completion of a write operation. However, data is not
@@ -149,9 +161,16 @@ implementation {
      * @param error SUCCESS if the operation was successful, FAIL if
      *   it failed
      */
-	event void SharedDataWrite.writeDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
+	event void FlashDataWrite.writeDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
     	m_busy = FALSE;
-	    signal ResourceArbiter.backupToFlashDone(err);
+    	if (combDataFlag) {
+	    	signal ResourceArbiter.saveCombinedDataToFlashDone(err);
+	    } else {
+	    	memPosition += len;
+			nbOfStoredKeys++;
+			signal ResourceArbiter.saveKeyToFlashDone(err);
+		}
+    	combDataFlag = FALSE;
 	}
 
 	/**
@@ -163,16 +182,42 @@ implementation {
      *   <li>EINVAL if the parameters are invalid
      *   <li>EBUSY if a request is already being processed.
 	 */
-	command error_t ResourceArbiter.restoreFromFlash(){
+	command error_t ResourceArbiter.restoreCombinedDataFromFlash(){
 		if (!m_busy) {
 			m_busy = TRUE;
-			return call SharedDataRead.read(0, &combinedData, sizeof(combinedData_t));
+			combDataFlag = TRUE;
+			return call FlashDataRead.read(0, &combinedData, sizeof(combinedData_t));
 		}
 		return EBUSY;
 	}
 	
-        default event void ResourceArbiter.restoreFromFlashDone(error_t result) {}
+    default event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {}
 
+	command error_t ResourceArbiter.saveKeyToFlash(nx_uint8_t * key) {
+		if (!m_busy) {
+			m_busy = TRUE;
+			if (memPosition == 0) {
+				currentKey = key;
+				return call FlashDataWrite.erase();
+			} else {
+				return call FlashDataWrite.write(memPosition, key, KEY_LENGTH);
+			}
+		}
+		return EBUSY;
+	}
+	
+	default event void ResourceArbiter.saveKeyToFlashDone(error_t result) {}
+
+	command error_t ResourceArbiter.restoreKeyFromFlash(uint8_t neighbourId){
+		if (!m_busy) {
+			m_busy = TRUE;
+			return call FlashDataRead.read((neighbourId - 1) * KEY_LENGTH, currentKey, KEY_LENGTH);
+		}
+		return EBUSY;
+	}
+	
+	default event void ResourceArbiter.restoreKeyFromFlashDone(error_t result) {}
+	
 	/**
      * Signals the completion of a read operation.
      *
@@ -182,9 +227,14 @@ implementation {
      * @param error SUCCESS if the operation was successful, FAIL if
      *   it failed
      */
-	event void SharedDataRead.readDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
+	event void FlashDataRead.readDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
     	m_busy = FALSE;
-	    signal ResourceArbiter.restoreFromFlashDone(err);
+    	if (combDataFlag) {
+	    	signal ResourceArbiter.restoreCombinedDataFromFlashDone(err);
+	    } else {
+	    	signal ResourceArbiter.restoreKeyFromFlashDone(err);
+	    }
+	    combDataFlag = FALSE;
 	}
 
 	/**
@@ -196,7 +246,7 @@ implementation {
      * @param error SUCCESS if the operation was successful, FAIL if
      *   it failed
      */
-	event void SharedDataRead.computeCrcDone(storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error){
+	event void FlashDataRead.computeCrcDone(storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error){
 	}
 
 	/**
@@ -206,7 +256,7 @@ implementation {
      * @param error SUCCESS if the operation was successful, FAIL if
      *   it failed
      */
-	event void SharedDataWrite.syncDone(error_t error){
+	event void FlashDataWrite.syncDone(error_t error){
 	}
 
 	/**
@@ -215,10 +265,27 @@ implementation {
    	 * @param error SUCCESS if the operation was successful, FAIL if
    	 *   it failed
    	 */
-	event void SharedDataWrite.eraseDone(error_t error){
+	event void FlashDataWrite.eraseDone(error_t error){
 		if (error == SUCCESS) {
-			call SharedDataWrite.write(0, &combinedData, sizeof(combinedData_t));
+			if (combDataFlag) {
+				//TODO possible extension in order not to overwrite combinedData by keys and vice versa
+				//either create a separate memory block in the *.xml config or share the memPosition? 
+				call FlashDataWrite.write(0, &combinedData, sizeof(combinedData_t));
+			} else {
+				call FlashDataWrite.write(memPosition, currentKey, KEY_LENGTH);
+			}
+		} else {
+			combDataFlag = FALSE;
 		}
 	}
 	#endif
+
+	command nx_uint8_t * ResourceArbiter.getCurrentKey() {
+		return currentKey;
+	}
+	
+	command uint32_t ResourceArbiter.getNumberOfStoredKeys() {
+		//printf("number of stored keys: %d", (memPosition / KEY_LENGTH));
+		return memPosition / KEY_LENGTH; 
+	}
 }

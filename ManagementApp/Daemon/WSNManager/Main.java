@@ -18,6 +18,7 @@ public class Main
             m.run();
         }
         catch (Exception e){
+        	e.printStackTrace();
             System.err.println(e.getMessage());
         }
     }
@@ -25,34 +26,34 @@ public class Main
     public Main() {}
     
     public void run(){
-        Telos.SavedDataPartKeys t = new Telos.SavedDataPartKeys();
+//        Telos.SavedDataPartKeys t = new Telos.SavedDataPartKeys();
         
-        System.out.println(t.SD_KEY_TYPE.getId());
-        System.out.println(t.SD_KEY_VALUE.getId());
+//        System.out.println(t.SD_KEY_TYPE.getId());
+//        System.out.println(t.SD_KEY_VALUE.getId());
         
-//         try {    
-//             //initialize context with services
-//             Context context = new Context();
-//             
-//             //read config file;
-//             Configuration c = new ConfigLoader("wsnmanager.conf.xml").getConfig();
-// 
-//             //register current configuration as a data service
-//             context.set(c.getServiceName(), c);
-//            
-//             //Class extending Service 
-//             new Database(context);
-//             new ModelsLoader(context);
-//             Telos.NodeDriver d = new Telos.NodeDriver(context);
-//             
-//             //freeze context
-//             context.freeze();
-//             
-//             
-//             //run services
-//             d.run();
-//             
-//             
+         try {    
+             //initialize context with services
+             Context context = new Context();
+             
+             //read config file;
+             Configuration c = new ConfigLoader("wsnmanager.conf.xml").getConfig();
+ 
+             //register current configuration as a data service
+             context.set(c.getServiceName(), c);
+            
+             //Class extending Service 
+             new Database(context);
+             new ModelsLoader(context);
+             Telos.NodeDriver d = new Telos.NodeDriver(context);
+             
+             //freeze context
+             context.freeze();
+             
+             
+             //run services
+             d.run();
+             
+             
 //             ///// SOME TESTS... //////////////
 //             /*ModelsLoader m = (ModelsLoader)context.get("model.modelsloader");
 //             
@@ -74,9 +75,10 @@ public class Main
 //             for(short tmp: ddr){
 //                 System.out.println(tmp);
 //             }*/
-//         }
-//         catch (Exception e){
-//             throw new RuntimeException(e);
-//         }
+         }
+         catch (Exception e){
+        	 e.printStackTrace();
+             throw new RuntimeException(e);
+         }
     }
 }

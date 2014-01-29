@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `config` (
 	`node_id`		TINYINT(3)	NOT NULL COMMENT 'Node ID refrenece',
 	`neighbor_id`		VARCHAR(20)	NOT NULL COMMENT 'Node id (parted as byte array) specifing neighbor of node_id',
 	`item_name`		VARCHAR(100)	NOT NULL COMMENT 'Value name',
-	`value`			TINYBLOB	NOT NULL COMMENT 'Binary representation of value',
+	`value`			VARCHAR(50)	NOT NULL COMMENT 'Binary representation of value',
 
 	CONSTRAINT PRIMARY KEY (`id`),
 	CONSTRAINT FOREIGN KEY (`application_id`) REFERENCES `application` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,

@@ -20,12 +20,17 @@ implementation{
 	components new SerialAMSenderC(AM_CON_PPCPD_MSG) as ConfPPCPDSend;
 	components new SerialAMSenderC(AM_CON_RPD_MSG) as ConfRPDSend;
 	components new SerialAMSenderC(AM_CON_KDCPD_MSG) as ConfKDCPDSend;
+	components new SerialAMSenderC(AM_KEY_MSG) as ConfKeySend;
+	
 	components new SerialAMReceiverC(AM_CON_GET_MSG) as ConfGet;
 	components new SerialAMReceiverC(AM_CON_SD_MSG) as ConfSDGet;
         components new SerialAMReceiverC(AM_CON_SD_PART_MSG) as ConfSDPartGet;
 	components new SerialAMReceiverC(AM_CON_PPCPD_MSG) as ConfPPCPDGet;
 	components new SerialAMReceiverC(AM_CON_RPD_MSG) as ConfRPDGet;
 	components new SerialAMReceiverC(AM_CON_KDCPD_MSG) as ConfKDCPDGet;
+	
+	components new SerialAMReceiverC(AM_KEY_MSG) as ConfKeyGet;
+	
 	components SerialActiveMessageC;
 	components SharedDataC;
 	components LedsC;
@@ -45,10 +50,12 @@ implementation{
 	ConfigurationP.ConfPPCPDSend -> ConfPPCPDSend;
 	ConfigurationP.ConfRPDSend -> ConfRPDSend;
 	ConfigurationP.ConfKDCPDSend -> ConfKDCPDSend;
+	ConfigurationP.ConfKeySend -> ConfKeySend;
 	
 	ConfigurationP.PacketPPCPD -> ConfPPCPDSend;
 	ConfigurationP.PacketRPD -> ConfRPDSend;
 	ConfigurationP.PacketKDCPD -> ConfKDCPDSend;
+	ConfigurationP.PacketKey -> ConfKeySend;
 	
 	ConfigurationP.ConfGet -> ConfGet;
 	ConfigurationP.ConfSDGet -> ConfSDGet;
@@ -56,10 +63,12 @@ implementation{
 	ConfigurationP.ConfPPCPDGet -> ConfPPCPDGet;
 	ConfigurationP.PacketRPD -> ConfRPDSend;
 	ConfigurationP.ConfKDCPDGet -> ConfKDCPDGet;
+	ConfigurationP.ConfKeyGet -> ConfKeyGet;
 	
 	ConfigurationP.SerialControl -> SerialActiveMessageC;
 	
 	ConfigurationP.SharedData -> SharedDataC.SharedData;
+	ConfigurationP.ResourceArbiter -> SharedDataC.ResourceArbiter;
 	
 	ConfigurationP.Leds -> LedsC;
 	

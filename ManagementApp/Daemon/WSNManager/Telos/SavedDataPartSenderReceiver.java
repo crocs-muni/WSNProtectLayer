@@ -86,10 +86,6 @@ public class SavedDataPartSenderReceiver extends BaseSenderReceiver {
             
             try {       
                 switch(sdm.get_key()){
-                    case 206: //nx_uint16_t
-                        this.neighborId = shortArrayToString(sdm.get_data(), sdm.get_len());
-                        row.set("neighbor_id", this.neighborId);
-                        break;
                         
                     case 200: //nx_uint8_t
                         row.set("item_name","savedData_kdcData_shared_key_keyType");
@@ -118,6 +114,12 @@ public class SavedDataPartSenderReceiver extends BaseSenderReceiver {
                         row.set("item_name","savedData_idsData_nb_messages");
                         row.set("value", sdm.get_data()[0]);
                         break;
+                    case 206: //nx_uint16_t
+                    	row.set("item_name","savedData_nodeId");
+                    	this.neighborId = shortArrayToString(sdm.get_data(), sdm.get_len());
+                    	row.set("neighbor_id", this.neighborId);
+                    	row.set("value", sdm.get_data()[0]);
+                    	break;
                     default:
                         throw new Exception("Ivalid key value: " + sdm.get_key());
                 }
@@ -177,6 +179,11 @@ public class SavedDataPartSenderReceiver extends BaseSenderReceiver {
                 }
                 else if(row.get("item_name").equals("savedData_idsData_nb_messages")){
                     m.set_key((short)205);
+                    m.set_len((short)1);
+                    m.set_data(new short[]{Short.parseShort(row.get("value"))});
+                }
+                else if(row.get("item_name").equals("savedData_nodeId")){
+                    m.set_key((short)206);
                     m.set_len((short)1);
                     m.set_data(new short[]{Short.parseShort(row.get("value"))});
                 }

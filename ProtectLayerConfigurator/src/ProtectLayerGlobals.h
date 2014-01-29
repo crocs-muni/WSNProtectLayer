@@ -43,6 +43,7 @@ enum {
   AM_FLASH_SET_MSG = 136,
   AM_INTRUSION_MSG = 137,
   AM_CON_SD_PART_MSG = 138,
+  AM_KEY_MSG = 139,
   POLICEMAN_TIMER_MESSAGE_MILLI = 5000,
   KEY_LENGTH = 16,
   MAX_NEIGHBOR_COUNT = 30,
@@ -256,6 +257,7 @@ typedef nx_struct KDCPrivData {
     PL_key_t	keyToBS;
     PL_key_t	preKeys[20];
 } KDCPrivData_t;
+
 /**
  * Structure combining all the data that need to be stored on the node by the protection layer
  */
@@ -336,6 +338,11 @@ typedef nx_struct flash_set_msg {
 typedef nx_struct intrusion_msg {
 	nx_int8_t rssi;
 } intrusion_msg_t;
+
+typedef nx_struct key_msg {
+	nx_uint32_t counter;
+	nx_uint8_t keyValue[KEY_LENGTH];
+} key_msg_t;
 
 /**
 	Type for reputation of a neighbor

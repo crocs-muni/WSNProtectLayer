@@ -7,6 +7,7 @@ BUILD_EXTRA_DEPS += FlashSetMsg.java
 BUILD_EXTRA_DEPS += SavedDataMsg.java
 BUILD_EXTRA_DEPS += SavedDataPartMsg.java
 BUILD_EXTRA_DEPS += ConfGetMsg.java
+BUILD_EXTRA_DEPS += KeyMsg.java
 
 CLEAN_EXTRA = *.class *Msg.java
 
@@ -36,6 +37,8 @@ SavedDataPartMsg.java: folders
 
 ConfGetMsg.java: folders
 	mig java -target=null -java-classname=ConfGetMsg ProtectLayerGlobals.h con_get_msg -o build/msg/$@
-
-
+	
+KeyMsg.java: folders
+	mig java -target=null -java-classname=KeyMsg ProtectLayerGlobals.h key_msg -o build/msg/$@
+	
 include $(MAKERULES)

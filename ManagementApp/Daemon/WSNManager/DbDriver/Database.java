@@ -46,6 +46,7 @@ public class Database extends App.Service implements DatabaseInterface {
             this.connect();
         }
         catch (DbException e){
+        	e.printStackTrace();
             System.err.println(e.getMessage());
             System.err.println();
         }
@@ -90,6 +91,7 @@ public class Database extends App.Service implements DatabaseInterface {
             sb.getStatement().executeUpdate();
         }
         catch (Exception e){
+        	e.printStackTrace();
             throw new DbWriteException(e);
         }
     }
@@ -99,6 +101,7 @@ public class Database extends App.Service implements DatabaseInterface {
             this.connection.setAutoCommit(false);
         }
         catch (Exception e){
+        	e.printStackTrace();
             throw new DbException(e);
         }
     }

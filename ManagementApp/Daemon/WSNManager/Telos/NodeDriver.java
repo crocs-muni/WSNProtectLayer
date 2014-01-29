@@ -59,6 +59,7 @@ public class NodeDriver extends BaseController {
                 
                 //4) download config for test
                 (new ConfGetSender(this, r.get("id"))).sendMessage();
+                
             }
         }
         catch (Exception e){

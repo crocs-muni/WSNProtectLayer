@@ -110,6 +110,7 @@ public class SavedDataSenderReceiver extends BaseSenderReceiver {
                 this.models.config.saveOrUpdate(row);*/
             }
             catch (Exception e){
+            	e.printStackTrace();
                 System.err.println(e.getMessage());
             }
         }
@@ -152,6 +153,7 @@ public class SavedDataSenderReceiver extends BaseSenderReceiver {
             }
         }
         catch (Exception e){
+        	e.printStackTrace();
             System.err.println(e.getMessage());
         }
     }

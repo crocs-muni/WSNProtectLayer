@@ -30,6 +30,7 @@ public class LogReceiver extends BaseSenderReceiver {
                 this.models.logs.save(row);
             }
             catch (Exception e){
+            	e.printStackTrace();
                 System.err.println(e.getMessage());
             }
         }

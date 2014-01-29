@@ -15,26 +15,30 @@ module ConfigurationP {
 		interface SplitControl as SerialControl;
 
 		interface AMSend as ConfSDSend;
-                interface AMSend as ConfSDPartSend;
+        interface AMSend as ConfSDPartSend;
 		interface AMSend as ConfPPCPDSend;
 		interface AMSend as ConfRPDSend;
 		interface AMSend as ConfKDCPDSend;
+		interface AMSend as ConfKeySend;
 		interface Receive as ConfGet;
 		interface Receive as ConfSDGet;
-                interface Receive as ConfSDPartGet;
+        interface Receive as ConfSDPartGet;
 		interface Receive as ConfPPCPDGet;
 		interface Receive as ConfRPDGet;
 		interface Receive as ConfKDCPDGet;
+		interface Receive as ConfKeyGet;
 		interface Packet as PacketSD;
-                interface Packet as PacketSDPart;
+        interface Packet as PacketSDPart;
 		interface Packet as PacketPPCPD;
 		interface Packet as PacketRPD;
 		interface Packet as PacketKDCPD;
+		interface Packet as PacketKey;
 		interface AMPacket;
 		interface PacketAcknowledgements as Acks;
 
 		interface Leds;
 		interface SharedData;
+		interface ResourceArbiter;
 
 		interface Queue<message_t>;
 	}
@@ -53,14 +57,17 @@ implementation {
 	uint16_t msgCounter = 0;
 	/** counter of the savedData messages */
 	uint8_t counterSD = 0;
-        /** counter for partional sd messages */
-        uint8_t partSD = 0;
+    /** counter for partional sd messages */
+    uint8_t partSD = 0;
+    /** counter for the stored keys */
+    uint16_t keyCounter = 1;
 	
 	task void sendSDMessageTask();
-        task void sendSDPartMessageTask();
+    task void sendSDPartMessageTask();
 	task void sendPPCPDMessageTask();
 	task void sendRPDMessageTask();
 	task void sendKDCPDMessageTask();
+	task void sendKeyMessageTask();
 
 	/** 
 	 * Start the radio and serial ports when booting 
@@ -113,62 +120,61 @@ implementation {
 		return msg;
 	}
 
-        event message_t * ConfSDPartGet.receive(message_t * msg, void * payload, uint8_t len){
-                con_sd_part_msg_t * csd = (con_sd_part_msg_t * ) payload;
-                uint8_t i = 0;
-                uint16_t tmp = 0;
+    event message_t * ConfSDPartGet.receive(message_t * msg, void * payload, uint8_t len){
+    	con_sd_part_msg_t * csd = (con_sd_part_msg_t * ) payload;
+        uint8_t i = 0;
+        uint16_t tmp = 0;
 
-                switch (csd->key){
-			case SD_NODE_ID:
-                                tmp |= csd->data[0];
-                                tmp = tmp << 8;
-                                tmp |= csd->data[1];
+		switch (csd->key){
+    		case SD_NODE_ID:
+            	tmp |= csd->data[0];
+                tmp = tmp << 8;
+                tmp |= csd->data[1];
   
-                                (call SharedData.getAllData())->savedData->nodeId = tmp;
+  				(call SharedData.getAllData())->savedData->nodeId = tmp;
 
 				break;
 
-                        case SD_KEY_TYPE: //nx_uint8_t
-                                (call SharedData.getAllData())->savedData->kdcData.shared_key.keyType = csd->data[0];
-                                break;
+			case SD_KEY_TYPE: //nx_uint8_t
+            	(call SharedData.getAllData())->savedData->kdcData.shared_key.keyType = csd->data[0];
+                break;
 
-                        case SD_KEY_VALUE: //KEY_LENGTH * nx_uint8_t
-                                for(i = 0; i < KEY_LENGTH && i < csd->len; i++){
-                                        (call SharedData.getAllData())->savedData->kdcData.shared_key.keyValue[i] = csd->data[i];
-                                }
-                                break;
-
-                        case SD_DBG_KEY_ID: //nx_uint16_t
-                                tmp |= csd->data[0];
-                                tmp = tmp << 8;
-                                tmp |= csd->data[1];
-  
-                                (call SharedData.getAllData())->savedData->kdcData.shared_key.dbgKeyID = tmp;
-
-                                break;
-
-                        case SD_COUNTER: //nx_uint8_t
-                                (call SharedData.getAllData())->savedData->kdcData.counter = csd->data[0];
-                                break;
-    
-                        case SD_REPUTATION: //nx_uint8_t
-                                (call SharedData.getAllData())->savedData->idsData.neighbor_reputation = csd->data[0];
-                                break;
-
-                        case SD_NB_MESSAGES: //nx_uint8_t
-                                (call SharedData.getAllData())->savedData->idsData.nb_messages = csd->data[0];
-                                break;
-
-                        default:
-                                break;
-
-                        /*default:
-                                partSD = 0;
-                                return msg;*/
-
+			case SD_KEY_VALUE: //KEY_LENGTH * nx_uint8_t
+            	for(i = 0; i < KEY_LENGTH && i < csd->len; i++){
+     	        	(call SharedData.getAllData())->savedData->kdcData.shared_key.keyValue[i] = csd->data[i];
                 }
-                return msg;
+                break;
+
+			case SD_DBG_KEY_ID: //nx_uint16_t
+            	tmp |= csd->data[0];
+                tmp = tmp << 8;
+                tmp |= csd->data[1];
+  
+				(call SharedData.getAllData())->savedData->kdcData.shared_key.dbgKeyID = tmp;
+
+				break;
+
+			case SD_COUNTER: //nx_uint8_t
+            	(call SharedData.getAllData())->savedData->kdcData.counter = csd->data[0];
+    			break;
+    
+            case SD_REPUTATION: //nx_uint8_t
+            	(call SharedData.getAllData())->savedData->idsData.neighbor_reputation = csd->data[0];
+                break;
+
+			case SD_NB_MESSAGES: //nx_uint8_t
+            	(call SharedData.getAllData())->savedData->idsData.nb_messages = csd->data[0];
+                break;
+
+			default:
+            	break;
+
+                /*default:
+                partSD = 0;
+                return msg;*/
         }
+        return msg;
+    }
 
 	/**
 	 * Saves the incoming settings for this node's privacy protection module
@@ -219,6 +225,18 @@ implementation {
 		if(len == sizeof(con_get_msg_t)) {
 			//post sendSDMessageTask();
                         post sendSDPartMessageTask();
+		}
+		return msg;
+	}
+	
+	/**
+	 * Receives new key to be stored in the memory
+	 */
+	event message_t * ConfKeyGet.receive(message_t * msg, void * payload,
+			uint8_t len) {
+		if(len == sizeof(key_msg_t)) {
+			key_msg_t * keym = (key_msg_t * ) payload;
+			call ResourceArbiter.saveKeyToFlash(keym->keyValue);
 		}
 		return msg;
 	}
@@ -465,6 +483,47 @@ implementation {
 			kdcm->kdcPrivData = *call SharedData.getKDCPrivData();
 			if(call ConfKDCPDSend.send(AM_BROADCAST_ADDR, &packet,
 					(uint8_t) sizeof(con_kdcpd_msg_t)) == SUCCESS) {
+				serialBusy = TRUE;
+			}
+		}
+	}
+
+	event void ConfKeySend.sendDone(message_t *msg, error_t error){
+		serialBusy = FALSE;
+		if (error == SUCCESS) {
+			if (++keyCounter <= call ResourceArbiter.getNumberOfStoredKeys()) {
+				call ResourceArbiter.restoreKeyFromFlash((uint8_t)(keyCounter));
+			} else {
+				keyCounter = 1;
+			}
+		}
+	}
+
+	event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result){
+		// TODO Auto-generated method stub
+	}
+
+	event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result){
+		// TODO Auto-generated method stub
+	}
+
+	event void ResourceArbiter.saveKeyToFlashDone(error_t result){
+		call ResourceArbiter.restoreKeyFromFlash((uint8_t)(keyCounter));
+	}
+
+	event void ResourceArbiter.restoreKeyFromFlashDone(error_t result){
+		post sendKeyMessageTask();
+	}
+	
+	task void sendKeyMessageTask() {
+		if(! serialBusy) {
+			key_msg_t * keym = (key_msg_t * ) call PacketKey.getPayload(&packet,
+					sizeof(key_msg_t));
+					
+			keym->counter = keyCounter;
+			memcpy(keym->keyValue, call ResourceArbiter.getCurrentKey(), KEY_LENGTH);
+			if (call ConfKeySend.send(AM_BROADCAST_ADDR, &packet,
+					(uint8_t) sizeof(key_msg_t)) == SUCCESS) {
 				serialBusy = TRUE;
 			}
 		}
