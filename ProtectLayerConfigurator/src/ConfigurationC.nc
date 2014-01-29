@@ -61,7 +61,6 @@ implementation{
 	ConfigurationP.ConfSDGet -> ConfSDGet;
         ConfigurationP.ConfSDPartGet -> ConfSDPartGet;
 	ConfigurationP.ConfPPCPDGet -> ConfPPCPDGet;
-	ConfigurationP.PacketRPD -> ConfRPDSend;
 	ConfigurationP.ConfKDCPDGet -> ConfKDCPDGet;
 	ConfigurationP.ConfKeyGet -> ConfKeyGet;
 	

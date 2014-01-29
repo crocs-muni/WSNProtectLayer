@@ -471,7 +471,7 @@ implementation {
 		if(! serialBusy) {
 			//TODO data are too big for this packet
 			con_kdcpd_msg_t * kdcm = (con_kdcpd_msg_t * ) call PacketKDCPD.getPayload(&packet,
-					sizeof(con_kdcpd_msg_t));
+					(uint8_t)sizeof(con_kdcpd_msg_t));
 
 			if(kdcm == NULL) {
 				return;
