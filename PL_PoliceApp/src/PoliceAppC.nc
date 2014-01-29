@@ -40,7 +40,7 @@ implementation {
   uint32_t received_packets = 0;
 
   void setLeds(uint16_t val) {
-      PrintDbg("NodeState", "setLeds%u\n", val);
+      printf("NodeState, setLeds%u\n", val);
 
       if (val & 0x01) call Leds.led0Toggle();
       if (val & 0x02) call Leds.led1Toggle();
@@ -56,7 +56,7 @@ implementation {
   }
 
   event void Boot.booted() {
-    PrintDbg("NodeState", "Node has booted.\n");
+    printf("NodeState, Node has booted.\n");
 	call AMControl.start();
     
     //dbg("NodeState", "Node has booted.\n");
@@ -67,12 +67,12 @@ implementation {
     if (err == SUCCESS) {
       call TimerStillAlive.startPeriodic(TIMER_STILL_ALIVE);
       // not used now call TimerMSNDetect.startPeriodic(TIMER_MSN_DETECTED);
-      PrintDbg("NodeState", "Radio started successfully.\n");
+      printf("NodeState, Radio started successfully.\n");
 
     }
     else {
       call AMControl.start();
-      PrintDbg("NodeState", "Radio did not start!\n");
+      printf("NodeState, Radio did not start!\n");
 
     }
   }
@@ -84,8 +84,8 @@ implementation {
     setLeds(2);
 
     counter++;
-    //PrintDbg("NodeState", "TimerStillAlive fired with counter %x %x.\n", counter & 0xff, (counter >> 8) & 0xff);
-    PrintDbg("NodeState", "TimerStillAlive fired with counter.\n");
+    //printf("NodeState", "TimerStillAlive fired with counter %x %x.\n", counter & 0xff, (counter >> 8) & 0xff);
+    printf("NodeState, TimerStillAlive fired with counter.\n");
 
     if (!busy) {
       PoliceAppMsg_StillAlive* btrpkt = (PoliceAppMsg_StillAlive*)(call Packet.getPayload(&pkt, sizeof(PoliceAppMsg_StillAlive)));
@@ -106,7 +106,7 @@ implementation {
 
   event void TimerMSNDetect.fired() {
     setLeds(4);
-    PrintDbg("NodeState", "TimerMSNDetect fired.\n");
+    printf("NodeState, TimerMSNDetect fired.\n");
 
     counter++;
     if (!busy) {
@@ -127,7 +127,7 @@ implementation {
   }
 
   event void MovementSensor.movementDetected() {
-    PrintDbg("NodeState", "movementDetected.\n");
+    printf("NodeState, movementDetected.\n");
     setLeds(1);
 
     counter++;
@@ -154,7 +154,7 @@ implementation {
   }
 
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
-    PrintDbg("PoliceAppC", "Message received.\n");
+    printf("PoliceAppC, Message received.\n");
 /*
     // Distinguish between different message types 	
     if ((*(nx_uint16_t*) payload) == MSGTYPE_STILLALIVE) {

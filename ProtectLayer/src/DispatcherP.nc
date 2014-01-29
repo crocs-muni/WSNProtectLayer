@@ -47,9 +47,8 @@ implementation{
     
     event void Boot.booted() {
         //serveState();
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("DispatcherP: DispatcherP.Boot.booted() finished\n");
-        }
+
+            printf("DispatcherP: DispatcherP.Boot.booted() finished\n"); printfflush();
         
     }
     
@@ -96,9 +95,9 @@ implementation{
     }
     
     command void Dispatcher.serveState() {
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("DispatcherP: serveState(%x) started\n", m_state);
-        }
+
+            printf("DispatcherP: serveState(%x) started\n", m_state); printfflush();
+
         switch (m_state) {
         case STATE_INIT:
         {
@@ -165,8 +164,8 @@ implementation{
             break;
         }		
         }
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("DispatcherP: serveState(%x) finished\n", m_state);
-        }
+
+            printf("DispatcherP: serveState(%x) finished\n", m_state); printfflush();
+
     }
 }

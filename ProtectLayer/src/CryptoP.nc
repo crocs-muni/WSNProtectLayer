@@ -36,7 +36,7 @@ implementation {
     //	Init interface
     //
     command error_t Init.init() {
-        //printf("CryptoP:  Init.init() called.\n");
+        //printf("CryptoP:  Init.init() called.\n"); printfflush();
         
         // TODO: do other initialization
         //m_state = 0;
@@ -50,9 +50,9 @@ implementation {
         uint8_t xor[16];
         error_t status = SUCCESS;
         
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  macBufferForNodeB called.\n");
-        }
+        
+        printf("CryptoP:  macBufferForNodeB called.\n"); printfflush();
+        
         
         memcpy(xor, buffer + offset, BLOCK_SIZE);
         if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1)) == SUCCESS){	
@@ -71,9 +71,9 @@ implementation {
             //append mac
             memcpy(buffer+offset+*pLen, xor, BLOCK_SIZE);
         } else {
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID);
-            }
+            
+            printf("CryptoP:  macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID); printfflush();
+            
             
         }
         return status;
@@ -85,9 +85,9 @@ implementation {
         uint8_t xor[16];
         error_t status = SUCCESS;
         
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  macBufferForBSB called.\n");
-        }
+        
+        printf("CryptoP:  macBufferForBSB called.\n"); printfflush();
+        
         
         memcpy(xor, buffer + offset, BLOCK_SIZE);
         if((status = call KeyDistrib.getKeyToBSB(m_key1)) == SUCCESS){	
@@ -106,9 +106,9 @@ implementation {
             //append mac
             memcpy(buffer + offset + *pLen, xor, BLOCK_SIZE);
         } else {			
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  macBufferForBSB failed, key to BS not found.\n");
-            }
+            
+            printf("CryptoP:  macBufferForBSB failed, key to BS not found.\n"); printfflush();
+            
             
         }
         return status;
@@ -118,18 +118,18 @@ implementation {
         uint8_t mac[BLOCK_SIZE];
         error_t status = SUCCESS;
         
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  verifyMacFromNodeB called.\n");
-        }
+        
+        printf("CryptoP:  verifyMacFromNodeB called.\n"); printfflush();
+        
         
         memcpy(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
         status = call Crypto.macBufferForNodeB(nodeID, buffer, offset, pLen - BLOCK_SIZE); //calculate new mac
         if((memcmp(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE))){ //compare new with received
             status = EWRONGMAC;
             
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  verifyMacFromNodeB message MAC does not match.\n");
-            }
+            
+            printf("CryptoP:  verifyMacFromNodeB message MAC does not match.\n"); printfflush();
+            
             
             return status;		
         }
@@ -140,9 +140,9 @@ implementation {
         uint8_t mac[BLOCK_SIZE];
         error_t status = SUCCESS;
         
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  verifyMacFromBSB called.\n");
-        }
+        
+        printf("CryptoP:  verifyMacFromBSB called.\n"); printfflush();
+        
         
         
         memcpy(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
@@ -150,9 +150,8 @@ implementation {
         if((memcmp(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE))){ //compare new with received
             status = EWRONGMAC;
             
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  verifyMacFromBSB message MAC does not match.\n");
-            }
+            printf("CryptoP:  verifyMacFromBSB message MAC does not match.\n"); printfflush();
+            
             
             return status;		
         }
@@ -162,30 +161,25 @@ implementation {
     command error_t Crypto.protectBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         error_t status = SUCCESS;		
         
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  protectBufferForNodeB called.\n");
-        }
+        printf("CryptoP:  protectBufferForNodeB called.\n"); printfflush();
+        
         
         
         if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1))!= SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  protectBufferForNodeB key not retrieved.\n");
-            }
+            
+            printf("CryptoP:  protectBufferForNodeB key not retrieved.\n"); printfflush();
             
             return status;
         }
         if((status = call CryptoRaw.encryptBufferB( m_key1, buffer, offset, *pLen))!= SUCCESS){
             
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  protectBufferForNodeB key not retrieved.\n");
-            }
+            printf("CryptoP:  protectBufferForNodeB key not retrieved.\n"); printfflush();
             
             return status;
         }
         if((status = call Crypto.macBufferForNodeB(nodeID, buffer, offset, pLen))!= SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  protectBufferForNodeB key not retrieved.\n");
-            }
+            
+            printf("CryptoP:  protectBufferForNodeB key not retrieved.\n"); printfflush();
             
             return status;
         }
@@ -195,28 +189,28 @@ implementation {
     command error_t Crypto.unprotectBufferFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){		
         error_t status = SUCCESS;		
         
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  unprotectBufferFromNodeB called.\n");
-        }
+        printf("CryptoP:  unprotectBufferFromNodeB called.\n"); printfflush();
+        
         
         if((status = call Crypto.verifyMacFromNodeB(nodeID, buffer, offset, pLen)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  unprotectBufferFromNodeB mac verification failed.\n");
-            }
+            
+            printf("CryptoP:  unprotectBufferFromNodeB mac verification failed.\n"); printfflush();
+            
+            
             
             return status;
         }
         if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1))!= SUCCESS){	
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  unprotectBufferFromNodeB key not retrieved.\n");
-            }
+            
+            printf("CryptoP:  unprotectBufferFromNodeB key not retrieved.\n"); printfflush();
+            
             
             return status;
         }
         if((status = call CryptoRaw.decryptBufferB( m_key1, buffer, offset, *pLen))!= SUCCESS){	
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  unprotectBufferFromNodeB decryption failed.\n");
-            }
+            
+            printf("CryptoP:  unprotectBufferFromNodeB decryption failed.\n"); printfflush();
+            
             
             return status;
         }
@@ -227,58 +221,56 @@ implementation {
     command error_t Crypto.protectBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         error_t status = SUCCESS;		
         
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  protectBufferForBSB called.\n");
-        }
+        
+        printf("CryptoP:  protectBufferForBSB called.\n"); printfflush();
         
         
         if((status = call KeyDistrib.getKeyToBSB( m_key1)) != SUCCESS){	
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  protectBufferForBSB key not retrieved.\n");
-            }
+            
+            printf("CryptoP:  protectBufferForBSB key not retrieved.\n"); printfflush();
             
             return status;		
         }
         if((status = call CryptoRaw.encryptBufferB( m_key1, buffer, offset, *pLen)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  protectBufferForBSB encrypt failed.\n");
-            }
+            
+            printf("CryptoP:  protectBufferForBSB encrypt failed.\n"); printfflush();
             
             return status;		
         }
         if((status = call Crypto.macBufferForBSB( buffer, offset, pLen)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  protectBufferForBSB mac failed.\n");
+            
+            if(TOS_NODE_ID == PRINTF_DEBUG_ID){
+                printf("CryptoP:  protectBufferForBSB mac failed.\n"); printfflush();
+                
+                return status;		
             }
             
-            return status;		
+            return status;
         }
-        
-        return status;
-    }	
+    }
     
     command error_t Crypto.unprotectBufferFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         error_t status = SUCCESS;		
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{	
-            printf("CryptoP:  unprotectBufferFromBSB called.\n");
-        }
+        
+        printf("CryptoP:  unprotectBufferFromBSB called.\n"); printfflush();
+        
         
         if((status = call Crypto.verifyMacFromBSB( buffer, offset, pLen)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  unprotectBufferFromBSB mac verification failed.\n");
-            }
+            
+            printf("CryptoP:  unprotectBufferFromBSB mac verification failed.\n"); printfflush();
+            
             return status;
         }
         if((status = call KeyDistrib.getKeyToBSB( m_key1)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  unprotectBufferFromBSB BS key not retrieved.\n");
-            }
+            
+            printf("CryptoP:  unprotectBufferFromBSB BS key not retrieved.\n"); printfflush();
+            
             return status;
         }
         if((status = call CryptoRaw.decryptBufferB( m_key1, buffer, offset, *pLen)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  unprotectBufferFromBSB decrypt buffer failed.\n");
-            }
+            
+            printf("CryptoP:  unprotectBufferFromBSB decrypt buffer failed.\n"); printfflush();
+            
             return status;
         }		
         return status;
@@ -299,9 +291,8 @@ implementation {
 #ifndef min
 #define min( a, b ) ( ((a) < (b)) ? (a) : (b) )
 #endif
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{	
-            printf("CryptoP:  initCryptoIIB called.\n");
-        }
+        
+        printf("CryptoP:  initCryptoIIB called.\n"); printfflush();
         
         KDCPrivData = call SharedData.getKDCPrivData();
         SavedData = call SharedData.getSavedData();
@@ -328,9 +319,9 @@ implementation {
             //derive key from data and predistributed key
             status = call CryptoRaw.deriveKeyB(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
             if(status != SUCCESS){
-                /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                    printf("CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData->nodeId, status);
-                }
+                
+                printf("CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData->nodeId, status); printfflush();
+                
             }
             m_key2->counter = 0;
             //save key to KDCData shared key		
@@ -347,15 +338,15 @@ implementation {
         uint8_t i;
         uint8_t j;
         uint8_t tempHash[BLOCK_SIZE];
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{		
-            printf("CryptoP:  hashDataB called.\n");
-        }
+        
+        printf("CryptoP:  hashDataB called.\n"); printfflush();
+        
         memset(m_key1->keyValue, 0, KEY_SIZE); //init default key value
         for(i = 0; i < pLen/BLOCK_SIZE; i++){
             if((status = call CryptoRaw.hashDataBlockB(buffer, offset + i * BLOCK_SIZE, m_key1, tempHash)) != SUCCESS){
-                /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                    printf("CryptoP:  hashDataB calculation failed.\n");
-                }
+                
+                printf("CryptoP:  hashDataB calculation failed.\n"); printfflush();
+                
                 return status;
             }
             for(j = 0; j < BLOCK_SIZE; j++){
@@ -372,9 +363,9 @@ implementation {
                 buffer[j + offset] = 0;
             }
             if((status = call CryptoRaw.hashDataBlockB(buffer, offset + pLen - (pLen % BLOCK_SIZE), m_key1, hash)) != SUCCESS){
-                /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                    printf("CryptoP:  hashDataB calculation failed.\n");
-                }
+                
+                printf("CryptoP:  hashDataB calculation failed.\n"); printfflush();
+                
                 return status;
             }
         }
@@ -385,13 +376,13 @@ implementation {
         uint8_t tempHash[BLOCK_SIZE];
         uint8_t status;
         uint8_t i;
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP: hashDataHalfB called.\n");
-        }
+        
+        printf("CryptoP: hashDataHalfB called.\n"); printfflush();
+        
         if((status = call Crypto.hashDataB(buffer, offset, pLen, tempHash)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP: hashDataHalfB calculation failed.\n");
-            }
+            
+            printf("CryptoP: hashDataHalfB calculation failed.\n"); printfflush();
+            
             return status;
         }
         for (i = 0; i < BLOCK_SIZE/2; i++){
@@ -404,18 +395,18 @@ implementation {
     command error_t Crypto.verifyHashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash){
         error_t status = SUCCESS;
         uint8_t tempHash[BLOCK_SIZE];
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  verifyHashDataB called.\n");
-        }
+        
+        printf("CryptoP:  verifyHashDataB called.\n"); printfflush();
+        
         if((status = call Crypto.hashDataB(buffer, offset, pLen, tempHash)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  verifyHashDataB failed to calculate hash.\n");
-            }
+            
+            printf("CryptoP:  verifyHashDataB failed to calculate hash.\n"); printfflush();
+            
         }
         if(memcmp(tempHash, hash, BLOCK_SIZE) != 0){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  verifyHashDataB hash not verified.\n");
-            }
+            
+            printf("CryptoP:  verifyHashDataB hash not verified.\n"); printfflush();
+            
             return EWRONGHASH;
         }
         return status;
@@ -424,18 +415,18 @@ implementation {
     command error_t Crypto.verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t hash){
         error_t status = SUCCESS;
         uint64_t tempHash;
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  verifyHashDataB called.\n");
-        }
+        
+        printf("CryptoP:  verifyHashDataB called.\n"); printfflush();
+        
         if((status = call Crypto.hashDataHalfB(buffer, offset, pLen, &tempHash)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  verifyHashDataB failed to calculate hash.\n");
-            }
+            
+            printf("CryptoP:  verifyHashDataB failed to calculate hash.\n"); printfflush();
+            
         }
         if(tempHash != hash){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  verifyHashDataB hash not verified.\n");
-            }
+            
+            printf("CryptoP:  verifyHashDataB hash not verified.\n"); printfflush();
+            
             return EWRONGHASH;
         }
         return status;		
@@ -444,9 +435,9 @@ implementation {
     command bool Crypto.verifySignature( uint8_t* buffer, uint8_t offset, uint8_t pLen, PRIVACY_LEVEL level, uint8_t counter){
         uint8_t i;
         uint8_t signature[BLOCK_SIZE];
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  verifySignature called.\n");
-        }
+        
+        printf("CryptoP:  verifySignature called.\n"); printfflush();
+        
         for(i = 0; i < counter; i++){			
             call Crypto.hashDataB( buffer, offset, pLen, buffer + offset);			
         }
@@ -463,86 +454,88 @@ implementation {
         uint8_t hash[BLOCK_SIZE];
         uint64_t halfHash = 0;
         uint8_t macLength = BLOCK_SIZE;
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  Self test started.\n");
-        }
+        
+        printf("CryptoP:  Self test started.\n"); printfflush();
+        
         memset(m_buffer, 1, BLOCK_SIZE);
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  hashDataB test started.\n");
-        }
+        
+        printf("CryptoP:  hashDataB test started.\n"); printfflush();
+        
         if((status = call Crypto.hashDataB(m_buffer, 0, BLOCK_SIZE, hash)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  hashDataB failed.\n");
-            }
+            
+            printf("CryptoP:  hashDataB failed.\n"); printfflush();
+            
             return status;
         }		
         if((status = call Crypto.verifyHashDataB(m_buffer, 0, BLOCK_SIZE, hash)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  verifyHashDataB failed.\n");
-            }
+            
+            printf("CryptoP:  verifyHashDataB failed.\n"); printfflush();
+            
             return status;			
         }
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  hashDataHalfB started.\n");
-        }
+        
+        printf("CryptoP:  hashDataHalfB started.\n"); printfflush();
+        
         if((status = call Crypto.hashDataHalfB(m_buffer, 0, BLOCK_SIZE, &halfHash)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  hashDataHalfB failed.\n");
-            }
+            
+            printf("CryptoP:  hashDataHalfB failed.\n"); printfflush();
+            
             return status;		 
         }		
         if((status = call Crypto.verifyHashDataHalfB(m_buffer, 0, BLOCK_SIZE, halfHash)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  verifyHashDataB failed.\n");
-            }
+            
+            printf("CryptoP:  verifyHashDataB failed.\n"); printfflush();
+            
             return status;
         }
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  macBufferForBSB started.\n");
-        }
+        
+        printf("CryptoP:  macBufferForBSB started.\n"); printfflush();
+        
         if((status = call Crypto.macBufferForBSB(m_buffer, 0, &macLength)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  macBufferForBSB failed.\n");
-            }
+            
+            printf("CryptoP:  macBufferForBSB failed.\n"); printfflush();
+            
+            
             return status;
         }
         if(macLength != 2 * BLOCK_SIZE){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  macBufferForBSB failed to append hash.\n");
-            }
+            
+            printf("CryptoP:  macBufferForBSB failed to append hash.\n"); printfflush();
+            
             return EWRONGHASH;
         }
         if((status = call Crypto.verifyMacFromBSB(m_buffer, 0, &macLength)) != SUCCESS){
             
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  verifyMacFromBSB failed.\n");
-            }
+            
+            printf("CryptoP:  verifyMacFromBSB failed.\n"); printfflush();
+            
             return status;
         }
-        /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-            printf("CryptoP:  macBufferForNodeB started.\n");
-        }
+        
+        printf("CryptoP:  macBufferForNodeB started.\n"); printfflush();
+        
         macLength = BLOCK_SIZE;
         if((status = call Crypto.macBufferForNodeB( 0, m_buffer, 0, &macLength)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  macBufferForNodeB failed.\n");
-            }
+            
+            printf("CryptoP:  macBufferForNodeB failed.\n"); printfflush();
+            
             return status;
         }
         if(macLength != 2 * BLOCK_SIZE){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  macBufferForNodeB failed to append hash.\n");
-            }
+            
+            printf("CryptoP:  macBufferForNodeB failed to append hash.\n"); printfflush();
+            
             return EWRONGHASH;
         }
         if((status = call Crypto.verifyMacFromNodeB( 0, m_buffer, 0, &macLength)) != SUCCESS){
-            /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
-                printf("CryptoP:  verifyMacFromNodeB failed.\n");
-            }
+            
+            printf("CryptoP:  verifyMacFromNodeB failed.\n"); printfflush();
+            
+            
             return status;
         }
         return status;
-        
-    }	
+    }
 }
+
 

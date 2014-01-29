@@ -377,10 +377,10 @@ void PrintDbg(const char* messageClass, const char* formatString, ...) {
 
 #ifdef DEBUG_PRINTF
     va_start(args,formatString);
-    printf("%s: ", messageClass);
-    printf(formatString,args);
+    printf("%s: ", messageClass); printfflush();
+    printf(formatString,args); printfflush();
     va_end(args);
-    //printfflush();
+    //flushprintf(); printfflush();
 #endif
 
 }
