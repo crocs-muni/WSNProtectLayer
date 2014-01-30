@@ -44,6 +44,20 @@ for node in $nodelist; do
 	echo ""
 	echo -e "Current node: ${UBlu}$node${RCol} file: $nodefile"
 	
+	# Is something already listening?
+	PCS=`ps aux | grep 'tools.PrintfClient' | grep "$node" | grep -v 'grep' | sed -e 's/^[ \t]*//' | sed -e 's/[ ]\+/ /g'`
+	if [ -n "$PCS" ]; then
+		PID=`echo $PCS | cut -f 2 -d ' '`
+		echo -e -n "Something is already listening on the node\n[$PCS]\nGoing to kill it...                                      "
+		kill -9 $PID
+		RT=$?
+		if [ ! $RT -eq 0 ]; then
+			echo -e "${Red}Error: ${RCol}PID $PID cannot be killed"
+		else
+			echo -e "${Gre}[  OK  ]${RCol}"
+		fi
+	fi
+
 	if [ $reset -eq 1 ]; then
 		echo -n "Going to reboot node $node                   "
 		`which tos-bsl` --telosb -r -c $node &> /dev/null
@@ -59,4 +73,5 @@ for node in $nodelist; do
 	java net.tinyos.tools.PrintfClient -comm "serial@$node:telosb" &> $nodefile &
 	echo -e "${Gre}[  OK  ]${RCol}"
 done
+
 
