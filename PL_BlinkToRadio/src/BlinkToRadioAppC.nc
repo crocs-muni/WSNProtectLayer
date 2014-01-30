@@ -49,7 +49,7 @@ implementation {
   components LedsC;
   components BlinkToRadioC as App;
   components new TimerMilliC() as Timer0;
-
+  components new TimerMilliC() as InitTimer; // init timer (radio init)
 /*  
   ---> Original Components
   components ActiveMessageC;
@@ -59,13 +59,14 @@ implementation {
   ---> Replaced by new ProtectLayerC	
 */
   components ProtectLayerC;
+  
   components PrintfC;
-    
   components SerialStartC;
-
+  
   App.Boot -> MainC;
   App.Leds -> LedsC;
   App.Timer0 -> Timer0;
+  App.InitTimer -> InitTimer;
 
 /* 
   ---> Original wirings 
@@ -77,9 +78,7 @@ implementation {
   ---> Replaced by new one to ProtectLayerC
  */
   App.Packet -> ProtectLayerC.Packet; 
-  //App.AMPacket -> PrivacyC; // not used at all
   App.AMControl -> ProtectLayerC.AMControl;
   App.AMSend -> ProtectLayerC.AMSend;
   App.Receive -> ProtectLayerC.Receive;
-
 } 
