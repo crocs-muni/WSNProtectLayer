@@ -25,8 +25,6 @@ implementation{
 	components new BlockStorageC(VOLUME_SHAREDDATA) as SharedDataStorage;
 	#endif
 	
-	components MainC;
-	
 	PLInit = SharedDataP.PLInit;
 
 	SharedData = SharedDataP.SharedData;
@@ -35,6 +33,4 @@ implementation{
 	SharedDataP.SharedDataRead -> SharedDataStorage.BlockRead;
 	SharedDataP.SharedDataWrite -> SharedDataStorage.BlockWrite;
 	#endif
-	
-	
 }

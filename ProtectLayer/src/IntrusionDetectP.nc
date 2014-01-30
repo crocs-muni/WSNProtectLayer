@@ -55,8 +55,6 @@ implementation {
         // TODO: do other initialization
         // TODO: how will we collect the data from SharedData
 
-            printf("IDSState: IDS initialization called.\n"); printfflush();
-
         //call TimerIDS.startPeriodic(1024);
         
         m_logMsg = &m_memLogMsg;

@@ -34,15 +34,12 @@ implementation {
     //
     command error_t Init.init() {
         //error_t status = SUCCESS;
-        //printf("CryptoRawP: Init.init() called.\n"); printfflush();
         
         // TODO: do other initialization
         //m_state = 0;
         //m_dbgKeyID = 0;
         
-        //status = call CryptoRaw.selfTest();
-        //printf("CryptoRawP:  self test finished with result %d.\n", status); printfflush();
-        
+        //status = call CryptoRaw.selfTest();        
         
         return SUCCESS;
     }

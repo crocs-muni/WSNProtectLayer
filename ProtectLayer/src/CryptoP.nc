@@ -35,9 +35,7 @@ implementation {
     //
     //	Init interface
     //
-    command error_t Init.init() {
-        //printf("CryptoP:  Init.init() called.\n"); printfflush();
-        
+    command error_t Init.init() {        
         // TODO: do other initialization
         //m_state = 0;
         //m_dbgKeyID = 0;
