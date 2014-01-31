@@ -48,9 +48,7 @@ implementation {
         uint8_t xor[16];
         error_t status = SUCCESS;
         
-        
         printf("CryptoP:  macBufferForNodeB called.\n"); // printfflush();
-        
         
         memcpy(xor, buffer + offset, BLOCK_SIZE);
         if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1)) == SUCCESS){	
@@ -119,6 +117,13 @@ implementation {
         
         printf("CryptoP:  verifyMacFromNodeB called.\n"); // printfflush();
         
+        // TODO: verify this condition, may be buggy
+        // Check sanity of the input parameters
+        if (*pLen < BLOCK_SIZE){
+        	printf("CryptoP; ERROR; Insane input par. %u %u\n", offset, *pLen);
+        	return FAIL;
+        }
+        
         memcpy(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
         status = call Crypto.macBufferForNodeB(nodeID, buffer, offset, &newPlen); //calculate new mac
 	
@@ -140,6 +145,13 @@ implementation {
         uint8_t newPlen = (*pLen) - BLOCK_SIZE;
 
         printf("CryptoP:  verifyMacFromBSB called.\n"); // printfflush();
+        
+        // TODO: verify this condition, may be buggy
+        // Check sanity of the input parameters
+        if (*pLen < BLOCK_SIZE){
+        	printf("CryptoP; ERROR; Insane input par. %u %u\n", offset, *pLen);
+        	return FAIL;
+        }
         
         memcpy(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
         status = call Crypto.macBufferForBSB(buffer, offset, &newPlen); //calculate new mac
