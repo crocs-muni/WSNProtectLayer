@@ -115,13 +115,13 @@ implementation {
     command error_t Crypto.verifyMacFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         uint8_t mac[BLOCK_SIZE];
         error_t status = SUCCESS;
-        
+        uint8_t newPlen = (*pLen) - BLOCK_SIZE;
         
         printf("CryptoP:  verifyMacFromNodeB called.\n"); // printfflush();
         
-        
         memcpy(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
-        status = call Crypto.macBufferForNodeB(nodeID, buffer, offset, pLen - BLOCK_SIZE); //calculate new mac
+        status = call Crypto.macBufferForNodeB(nodeID, buffer, offset, &newPlen); //calculate new mac
+	
         if((memcmp(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE))){ //compare new with received
             status = EWRONGMAC;
             
@@ -137,14 +137,12 @@ implementation {
     command error_t Crypto.verifyMacFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         uint8_t mac[BLOCK_SIZE];
         error_t status = SUCCESS;
-        
-        
+        uint8_t newPlen = (*pLen) - BLOCK_SIZE;
+
         printf("CryptoP:  verifyMacFromBSB called.\n"); // printfflush();
         
-        
-        
         memcpy(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
-        status = call Crypto.macBufferForBSB(buffer, offset, pLen - BLOCK_SIZE); //calculate new mac
+        status = call Crypto.macBufferForBSB(buffer, offset, &newPlen); //calculate new mac
         if((memcmp(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE))){ //compare new with received
             status = EWRONGMAC;
             
@@ -157,7 +155,7 @@ implementation {
     }	
     
     command error_t Crypto.protectBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
-        error_t status = SUCCESS;		
+        error_t status = SUCCESS;	
         
         printf("CryptoP:  protectBufferForNodeB called.\n"); // printfflush();
         
@@ -181,6 +179,7 @@ implementation {
             
             return status;
         }
+        
         return status;
     }	
     
@@ -193,7 +192,6 @@ implementation {
         if((status = call Crypto.verifyMacFromNodeB(nodeID, buffer, offset, pLen)) != SUCCESS){
             
             printf("CryptoP:  unprotectBufferFromNodeB mac verification failed.\n"); // printfflush();
-            
             
             
             return status;
