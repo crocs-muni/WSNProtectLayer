@@ -12,6 +12,7 @@ implementation {
 	components new AMSenderC(AM_INTRUSION_MSG);
 	components ActiveMessageC;
 	components LedsC;
+	components UserButtonC;
 	
 	MainC.SoftwareInit -> IntruderP.Init;	//auto-initialization
 	
@@ -26,5 +27,8 @@ implementation {
 	IntruderP.Packet -> AMSenderC;
 	IntruderP.Acks -> AMSenderC;
 	
+	IntruderP.Get -> UserButtonC;
+	IntruderP.Notify -> UserButtonC;
+
 	IntruderP.Leds -> LedsC;
 }

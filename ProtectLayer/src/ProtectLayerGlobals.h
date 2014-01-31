@@ -344,6 +344,7 @@ typedef struct flash_set_msg {
 
 typedef struct intrusion_msg {
 	int8_t rssi;
+	bool isIntruder; /**< if set to false, the intruder is in fact an authorized wearer of MSN */
 } intrusion_msg_t;
 
 /**
