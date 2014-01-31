@@ -169,14 +169,13 @@ implementation {
             // check if I am receiver of the message
             if (ourHeader->receiver == TOS_NODE_ID)
             {
-                
                 //decrypt
-                decLen= m_receiveBuffer[m_recNextToProcess].len - sizeof(SPHeader_t);
-                //status = call KeyDistrib.getKeyToNodeB(ourHeader->sender, key);
-                status = SUCCESS;//call Crypto.unprotectBufferFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
+                decLen= m_receiveBuffer[m_recNextToProcess].len - sizeof(SPHeader_t);                                
+                status = call Crypto.unprotectBufferFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
+                
+                printf("Privacy: task_receiveMessage 3, ourHeader->receiver == TOS_NODE_ID, status=%d l=%u ln=%u\n", status, m_receiveBuffer[m_recNextToProcess].len, decLen); // printfflush();
+                
                 m_receiveBuffer[m_recNextToProcess].len = decLen + sizeof(SPHeader_t);
-
-                printf("Privacy: task_receiveMessage 3, ourHeader->receiver == TOS_NODE_ID\n"); // printfflush();
 
                 // msg is for me
                 // check MSG_TYPE
@@ -435,7 +434,7 @@ implementation {
             m_radioBusy=TRUE;
             }
             
-            printf("privacyP: sendtask, lowSend=%p c=%d\n", sReq.msg, m_lastMsgSender);
+            printf("privacyP: sendtask, lowSend=%p c=%d ln=%d\n", sReq.msg, m_lastMsgSender, sReq.len);
             
         } else {
         	if (!call RetxmitTimer.isRunning()) {
