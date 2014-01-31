@@ -15,8 +15,8 @@ module DispatcherP{
         //interface Init as ForwarderCInit;
         //interface Init as PrivacyLevelCInit;
         interface Boot;	
-        
-        
+        interface Privacy;
+	
     }
     provides {
         interface Receive as PL_Receive;
@@ -43,15 +43,9 @@ implementation{
         return SUCCESS;
     }
     
-    
-    
     event void Boot.booted() {
-        //serveState();
-
-            printf("DispatcherP: DispatcherP.Boot.booted() finished\n"); printfflush();
         
     }
-    
     
     void passToIDS(message_t* msg, void* payload, uint8_t len)
     {
@@ -96,7 +90,7 @@ implementation{
     
     command void Dispatcher.serveState() {
 
-            printf("DispatcherP: serveState(%x) started\n", m_state); printfflush();
+        printf("DispatcherP: <serveState(%x)>\n", m_state); // printfflush();
 
         switch (m_state) {
         case STATE_INIT:
@@ -121,7 +115,7 @@ implementation{
             
             m_state = STATE_READY_TO_DEPLOY;
             
-            break;
+            //BUGBUG no break!!! break;
         }
         case STATE_READY_TO_DEPLOY:
         {
@@ -156,16 +150,18 @@ implementation{
             
         case STATE_WORKING:
         {
-            // TODO: init app
-            // call App.init
-            
             m_state = STATE_WORKING;
+            
+            // Signalize to the ProtectLayer that initialization is
+            // completed. PL will pass this information to the application.
+            // 
+            call Privacy.startApp(SUCCESS);
             
             break;
         }		
         }
 
-            printf("DispatcherP: serveState(%x) finished\n", m_state); printfflush();
+        printf("DispatcherP: </serveState(%x)>\n", m_state); printfflush();
 
     }
 }

@@ -371,6 +371,29 @@ typedef uint8_t NODE_REPUTATION;
  } idsBufferedPacket_t;
 //typedef uint64_t idsBufferedPacket_t;
 
+enum {
+#if PLATFORM_MICAZ || PLATFORM_TELOSA || PLATFORM_TELOSB || PLATFORM_TMOTE || PLATFORM_INTELMOTE2 || PLATFORM_SHIMMER || PLATFORM_IRIS
+  FORWARD_PACKET_TIME = 7,
+#else
+  FORWARD_PACKET_TIME = 32,
+#endif
+};
+
+enum {
+  SENDDONE_OK_OFFSET        = FORWARD_PACKET_TIME,
+  SENDDONE_OK_WINDOW        = FORWARD_PACKET_TIME,
+  SENDDONE_NOACK_OFFSET     = FORWARD_PACKET_TIME,
+  SENDDONE_NOACK_WINDOW     = FORWARD_PACKET_TIME,
+  SENDDONE_FAIL_OFFSET      = FORWARD_PACKET_TIME  << 2,
+  SENDDONE_FAIL_WINDOW      = SENDDONE_FAIL_OFFSET,
+  LOOPY_OFFSET              = FORWARD_PACKET_TIME  << 2,
+  LOOPY_WINDOW              = LOOPY_OFFSET,
+  CONGESTED_WAIT_OFFSET     = FORWARD_PACKET_TIME  << 2,
+  CONGESTED_WAIT_WINDOW     = CONGESTED_WAIT_OFFSET,
+  NO_ROUTE_RETRY            = 10000
+};
+
+
 void PrintDbg(const char* messageClass, const char* formatString, ...) {
     va_list args;
     //va_start(args,formatString);

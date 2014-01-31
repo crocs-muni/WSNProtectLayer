@@ -25,6 +25,9 @@ module PrivacyP {
         interface Crypto;
         interface Logger;
         interface Dispatcher;
+        
+        interface Timer<TMilli> as RetxmitTimer;
+        interface Random;
     }
     
     provides {
@@ -61,7 +64,7 @@ implementation {
     
     
     
-    
+    static void startRetxmitTimer(uint16_t mask, uint16_t offset);
     
     //
     //	Init interface
@@ -122,7 +125,7 @@ implementation {
         m_msgForIDS.len = len;
         
         // signal to IDS and update memory field for next msg
-        m_msgForIDS.msg = signal MessageReceive.receive[MSG_IDSCOPY](m_msgForIDS.msg, m_msgForIDS.payload, m_msgForIDS.len);
+        //m_msgForIDS.msg = signal MessageReceive.receive[MSG_IDSCOPY](m_msgForIDS.msg, m_msgForIDS.payload, m_msgForIDS.len);
         
     }
     
@@ -133,23 +136,21 @@ implementation {
     task void task_receiveMessage() {
         
         message_t* retMsg = NULL;
-        message_t* msg;
-        uint8_t len=0;
-        void* payload;
-        SPHeader_t* ourHeader;
+        message_t* msg = NULL;
+        uint8_t len = 0;
+        void* payload = NULL;
+        SPHeader_t* ourHeader = NULL;
         //PL_key_t * key; encrypt has nodeID parameter, key is not required
-        uint8_t decLen=0;
+        uint8_t decLen = 0;
         error_t status = SUCCESS;
         
         // Get msg to be processed , TODO we could check if isEmpty, but it never should be emtpy
         msg = m_receiveBuffer[m_recNextToProcess].msg;
         
-        
         // Get our header from payload
         ourHeader = (SPHeader_t*) m_receiveBuffer[m_recNextToProcess].payload;
 
-            printf("Privacy: task_receiveMessage 2, buffer position %d\n", (int)m_recNextToProcess); printfflush();
-
+        printf("Privacy: task_receiveMessage 2, buffer position %d\n", (int)m_recNextToProcess); // printfflush();
         
         switch (ourHeader->privacyLevel) {
         case PLEVEL_0: {
@@ -163,14 +164,14 @@ implementation {
                 status = call Crypto.unprotectBufferFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
                 m_receiveBuffer[m_recNextToProcess].len = decLen + sizeof(SPHeader_t);
 
-                    printf("Privacy: task_receiveMessage 3, ourHeader->receiver == TOS_NODE_ID\n"); printfflush();
+                printf("Privacy: task_receiveMessage 3, ourHeader->receiver == TOS_NODE_ID\n"); // printfflush();
 
                 // msg is for me
                 // check MSG_TYPE
                 if (ourHeader->msgType == MSG_APP)
                 {
 
-                        printf("Privacy: task_receiveMessage 4, ourHeader->msgType == MSG_APP\n"); printfflush();
+                	printf("Privacy: task_receiveMessage 4, ourHeader->msgType == MSG_APP\n"); // printfflush();
 
                     //copy msg and pass to IDS
                     passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
@@ -180,7 +181,7 @@ implementation {
                 else
                 {
 
-                        printf("Privacy: task_receiveMessage 4, ourHeader->msgType != MSG_APP\n"); printfflush();
+                        printf("Privacy: task_receiveMessage 4, ourHeader->msgType != MSG_APP\n"); // printfflush();
 
                     // other type of msg, remove protections if any,
                     //TODO
@@ -195,7 +196,7 @@ implementation {
                     //reputation = call IntrusionDetect.getNodeReputation(1);
                     //dbg("NodeState", "Reputation is: %d.\n", reputation);
 
-                        printf("Privacy: Privacy: PrivacyP.LowerReceive.receive, MSG type %x.\n", ourHeader->msgType); printfflush();
+                    printf("Privacy: PrivacyP.LowerReceive.receive, MSG type %x.\n", ourHeader->msgType); // printfflush();
 
                     //TODO: test if our message
                     retMsg = signal MessageReceive.receive[ourHeader->msgType](msg, payload, len);
@@ -204,7 +205,7 @@ implementation {
             else
             {
 
-                    printf("Privacy: task_receiveMessage 3, ourHeader->receiver != TOS_NODE_ID\n"); printfflush();
+                    printf("Privacy: task_receiveMessage 3, ourHeader->receiver != TOS_NODE_ID\n"); // printfflush();
 
                 // It is not for me, pass copy to IDS
                 passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
@@ -227,9 +228,11 @@ implementation {
         }
         
         // empty message_t slot, update which slot to process next and end task
+        atomic {
         m_receiveBuffer[m_recNextToProcess].msg = retMsg;
         m_receiveBuffer[m_recNextToProcess].isEmpty=1;
         m_recNextToProcess = (m_recNextToProcess+1)%RECEIVE_BUFFER_LEN;
+        }
         
         return;	
     }	
@@ -244,12 +247,14 @@ implementation {
         //get new message_t to be returned
         if (m_receiveBuffer[m_recNextToStore].isEmpty)
         {
+        	atomic{
             tmpMsg = m_receiveBuffer[m_recNextToStore].msg; 
             m_receiveBuffer[m_recNextToStore].msg = msg;
             m_receiveBuffer[m_recNextToStore].payload = payload;
             m_receiveBuffer[m_recNextToStore].len = len;
             m_receiveBuffer[m_recNextToStore].isEmpty = 0;
-            m_recNextToStore = (m_recNextToStore+1)%RECEIVE_BUFFER_LEN; // update pointer to next position to which next msg will be stored 
+            m_recNextToStore = (m_recNextToStore+1)%RECEIVE_BUFFER_LEN; // update pointer to next position to which next msg will be stored
+            } 
         }
         else
         {
@@ -257,7 +262,7 @@ implementation {
             return msg;
         }
 
-            printf("Privacy: PrivacyP 1 LowerREceive.receive, buffer position(%x).\n", (int)m_recNextToStore); printfflush();
+        printf("Privacy: PrivacyP 1 LowerREceive.receive, buffer position(%u).\n", m_recNextToStore);// // printfflush();
 
         post task_receiveMessage();
         
@@ -303,8 +308,15 @@ implementation {
         uint8_t encLen;
         
         // check if radio is busy or not
-        if (m_radioBusy)
+        if (m_radioBusy){
+        	if (!call RetxmitTimer.isRunning()) {
+        		// If retransmit timer is not running, start it with
+        		// a randomized value. It will trigger this task again.
+        		startRetxmitTimer(SENDDONE_FAIL_WINDOW, SENDDONE_FAIL_OFFSET);
+        	}
+        	
             return;
+        }
         
         //find next message to send in buffer
         while(m_buffer[m_nextId].msg==NULL && count<MSG_COUNT)
@@ -316,7 +328,11 @@ implementation {
             dbg("Privacy","Privacy: PrivacyP.task_sendMessage, nothing in the buffer\n");
             return; //no message to send, buffer is empty
         }
+        if (m_buffer[m_nextId].msg==NULL){
+        	printf("PrivacyP: ERR, nullMsg\n");
+        }
         
+        atomic {
         //get info SendRequest from m_buffer
         sReq.addr = m_buffer[m_nextId].addr;
         sReq.msg = m_buffer[m_nextId].msg;
@@ -325,7 +341,7 @@ implementation {
         // store msg pointer for further check in sendDone	
         m_lastMsg = sReq.msg;
         m_lastMsgSender = m_nextId;
-        
+        }
         
         //check who is sending msg, if forwarding only, treat it differently
         if (m_nextId == MSG_FORWARD)
@@ -363,7 +379,7 @@ implementation {
             spHeader->sender = TOS_NODE_ID;
         }
         
-        //printf("PrivacyP: task_messageSend, offset %d .\n", sizeof(SPHeader_t)); printfflush();
+        //printf("PrivacyP: task_messageSend, offset %d .\n", sizeof(SPHeader_t)); // printfflush();
         
         
         //encryption
@@ -398,25 +414,30 @@ implementation {
         
         rval = call LowerAMSend.send(sReq.addr,sReq.msg,sReq.len);
         if(rval == SUCCESS) {
-            //sent succesfully, clear buffer and increase id
+            // Sent successfully, clear buffer and increase id.
+            atomic {
             m_buffer[m_nextId].addr = 0;
             m_buffer[m_nextId].msg = NULL;
             m_buffer[m_nextId].len = 0;
             m_nextId = (m_nextId+1)%MSG_COUNT;
             m_radioBusy=TRUE;
+            }
+            
+            printf("privacyP: sendtask, lowSend=%p c=%d\n", sReq.msg, m_lastMsgSender);
+            
+        } else {
+        	if (!call RetxmitTimer.isRunning()) {
+        		startRetxmitTimer(SENDDONE_FAIL_WINDOW, SENDDONE_FAIL_OFFSET);
+        	}
+        	
+        	printf("privacyP: sendtask, lowSend fail=%p, code=%d\n", sReq.msg, rval);
         }
-        // TODO: if rval is not SUCCESS
-        return;
         
+        return;
     }
     
     
-    command error_t MessageSend.send[uint8_t id](am_addr_t addr, message_t* msg, uint8_t len) {
-        
-        
-        //     printf("Privacy: PrivacyP MessageSend.send called.\n"); printfflush();
-        
-        
+    command error_t MessageSend.send[uint8_t id](am_addr_t addr, message_t* msg, uint8_t len) {        
         // check if Id is within bounds
         if (id>=MSG_COUNT)
             return FAIL;
@@ -428,24 +449,35 @@ implementation {
         }
         //dbg("Privacy","Privacy: PrivacyP.MessageSend.send, adding msg of type %d\n",id);
         // put message into buffer
+        atomic{
         m_buffer[id].addr = addr;
         m_buffer[id].msg = msg;
         m_buffer[id].len = len;
-        //    printf("Privacy: PrivacyP MessageSend.send, msg put into buffer with id %d.\n", id); printfflush();
-        
-        
-        
+        }
+                
         // is the radio busy?
-        if (!m_radioBusy)
+        if (!m_radioBusy){
             post task_sendMessage();
+        } else { 
+        	startRetxmitTimer(SENDDONE_FAIL_WINDOW, SENDDONE_FAIL_OFFSET);
+        }
         
         return SUCCESS;
     }
     
+    static void startRetxmitTimer(uint16_t window, uint16_t offset) {                                                                                                      
+	    uint16_t r = call Random.rand16();
+	    r %= window;
+	    r += offset;
+	    call RetxmitTimer.startOneShot(r);
+    }
+    
+    event void RetxmitTimer.fired() {                                                                                                                                      
+	    post task_sendMessage();
+    }
     
     
     command error_t MessageSend.cancel[uint8_t id](message_t* msg) {
-        
         return FAIL; 
         
         /*
@@ -489,56 +521,81 @@ implementation {
     //test if our message was sent
     if (m_lastMsg != msg)
     return;
-    dbg("Privacy","Privacy: PrivacyP.LowerAMSend.sendDone, radio not busy from now\n");
-    // radio not busy
+    
+    // radio not busy, schedule sending task.
     m_radioBusy = FALSE;
-    post task_sendMessage();
+    startRetxmitTimer(SENDDONE_OK_WINDOW, SENDDONE_OK_OFFSET);
+    
+    printf("privacyP: sendtask, lowSendDone, p=%p c=%d code=%d\n", msg, m_lastMsgSender, error);
+    dbg("Privacy","Privacy: PrivacyP.LowerAMSend.sendDone, radio not busy from now\n");
+    
     // Signal to particular interface 
     signal MessageSend.sendDone[m_lastMsgSender](msg, error);
 }
+
+	//
+	// Radio & ProtectLayer initialization
+	//
+
+    void radioStartDone(error_t err);
+    task void radioStart(){
+    	error_t err = call AMControl.start();
+    	
+    	// The returned value can be also EALREADY in which
+    	// case startDone is not called, so in order to prevent
+    	// being stuck here call it manually.
+    	if (err!=SUCCESS){
+    		radioStartDone(err);
+    	}
+    }
     
+    task void radioStarted(){
+    	printf("PrivacyP: radio started.");
+    	call Dispatcher.serveState();
+    }
     
+    void radioStartDone(error_t err){
+    	if (err == SUCCESS || err==EALREADY) {
+    		// Radio was started successfully or was already started.
+    		// In both cases proceed to PL initialization in
+    		// a Dispatcher. This is done in a task
+    		// since initialization can take a long time.
+		    post radioStarted();
+		    
+		} else {
+			// Starting the radio was not successful.
+			// Try it again in  
+			post radioStart();
+		}
+    }
+    
+    command void Privacy.startApp(error_t err) {
+        // Dispatcher has everything initialized right now.
+		printf("PrivacyP: Going to signal message AMControl.startDone()\n");
+		signal MessageAMControl.startDone(err);
+    }
     
     //
     // AMControl interface
-    //  
-    
-    
+    //
     event void AMControl.startDone(error_t err) {
-    if (err == SUCCESS) {
-    // todo: remove when magic will be imolemeted
-    call Dispatcher.serveState();
-
-    printf("PrivacyP: Going to signal message AMControl.startDone()\n"); printfflush();
-    
-    // signal to upper layers
-    signal MessageAMControl.startDone(err);
-    
-}
-    else {
-    // try to restart again
-    call AMControl.start();
-}
-}	
+	    radioStartDone(err);
+    }
+    	
     event void AMControl.stopDone(error_t err) {
-    // do nothing
-}	
+        // do nothing
+    }	
     
     //
     // MessageAMControl (aka SplitPhase) interface
     //	
     command error_t MessageAMControl.start() {
-    //printf("PrivacyP.MessageAMControl.start() entered\n"); printfflush();
-    // TODO: if our AMControl is not running yet, start it 
-
-    printf("NodeState: MessageAMControl starting approach.\n"); printfflush();
-
-    
-    // todo: our init before running radio
-    call Dispatcher.serveState();
-    
-    call AMControl.start();
-    
+    printf("NodeState: <MessageAMControl>\n"); // printfflush();
+	
+	// For real operation, radio has to be started at first
+	// due to routing, key establishment, etc...
+	// Radio start is done in task, until start is successful.
+	post radioStart();
     return SUCCESS;	
 }
     command error_t MessageAMControl.stop() {

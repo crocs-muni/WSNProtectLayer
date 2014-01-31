@@ -46,6 +46,7 @@ implementation{
 	DispatcherP.SharedDataCInit -> SharedDataC.PLInit;
 	DispatcherP.IntrusionDetectCInit -> IntrusionDetectC.PLInit;
 	DispatcherP.KeyDistribCInit -> KeyDistribC.Init;
+	DispatcherP.Privacy -> PrivacyC.Privacy;
 	//DispatcherP.ForwarderCInit -> ForwarderC.Init;
 	//DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
 	

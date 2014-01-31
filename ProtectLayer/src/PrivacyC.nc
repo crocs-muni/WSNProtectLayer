@@ -15,7 +15,7 @@
 #include "ProtectLayerGlobals.h"
 configuration PrivacyC {
 	provides {
-		interface Init as PLInit;
+		interface Init as PLInit;		
 		interface Privacy;
 		
 		// parameterized interfaces for all different types of messages
@@ -41,8 +41,8 @@ implementation {
     components ForwarderC;
     components LoggerC;
     components DispatcherC;
-       
-        //components PrintfC, SerialStartC;  // support for printf over serial console. Can be removed
+    components new TimerMilliC() as RetxmitTimer;
+    components RandomC;
 
 
 	MainC.SoftwareInit -> PrivacyP.Init; //auto init phase 1
@@ -70,8 +70,10 @@ implementation {
 	
 	PrivacyP.SharedData -> SharedDataC.SharedData;
 	PrivacyP.KeyDistrib -> KeyDistribC.KeyDistrib;
-        PrivacyP.Crypto -> CryptoC.Crypto;
-        PrivacyP.Logger -> LoggerC;
+	PrivacyP.Crypto -> CryptoC.Crypto;
+	PrivacyP.Logger -> LoggerC;
         
     PrivacyP.Dispatcher -> DispatcherC;
+    PrivacyP.RetxmitTimer -> RetxmitTimer;
+    PrivacyP.Random -> RandomC;
 }

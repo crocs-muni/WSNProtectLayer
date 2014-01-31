@@ -17,4 +17,13 @@ interface Privacy {
 	 * @returns Current privacy level. 
 	 */
 	command PRIVACY_LEVEL getCurrentPrivacyLevel();
+	
+	
+	/**
+	 * Signalize to the application ProtectLayer initialization
+	 * result.
+	 * 
+	 * @param error State of the PL initialization
+	 */
+	command void startApp(error_t error);
 }
