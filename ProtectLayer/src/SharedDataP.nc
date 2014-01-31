@@ -52,8 +52,8 @@ implementation {
         // Create key to BS
         combinedData.kdcPrivData.keyToBS.keyType = KEY_TOBS;
         memset(combinedData.kdcPrivData.keyToBS.keyValue, 0, KEY_LENGTH);
-        combinedData.kdcPrivData.keyToBS.dbgKeyID = 0;				
-        combinedData.kdcPrivData.preKeys[i].counter = 0;
+        combinedData.kdcPrivData.keyToBS.dbgKeyID = 0;
+        combinedData.kdcPrivData.keyToBS.counter  = 0;
         
         //
         //  Init routing table to BS for current node
@@ -107,7 +107,7 @@ implementation {
             memset(&(combinedData.savedData[i].kdcData), 0, sizeof(combinedData.savedData[i].kdcData));
             memset(&(combinedData.savedData[i].idsData), 0, sizeof(combinedData.savedData[i].idsData));
         }
-            printf("SharedDataP: PLInit.init() finished.\n"); printfflush();
+            printf("SharedDataP: PLInit.init() finished.\n"); // printfflush();
 
         initialized = TRUE;
         return SUCCESS;
@@ -121,10 +121,9 @@ implementation {
     command combinedData_t * SharedData.getAllData(){
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getAllData called on initialized data.\n"); printfflush();
+                printf("SharedDataP, getAllData called on initialized data.\n");
             } else {
-                printf("SharedDataP, getAllData called.\n"); printfflush();
-                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n");
             }	
         }
         return &combinedData;
@@ -138,10 +137,9 @@ implementation {
     command SavedData_t * SharedData.getSavedData(){
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getSavedData called on initialized data.\n"); printfflush();
+                printf("SharedDataP, getSavedData called on initialized data.\n");
             } else {
-                printf("SharedDataP, getSavedData called.\n"); printfflush();
-                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n");
             }
         }
         return combinedData.savedData;
@@ -157,10 +155,10 @@ implementation {
         int i;
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getNodeState called on initialized data for node %u.\n", nodeId); printfflush();
+                printf("SharedDataP, getNodeState called on initialized data for node %u.\n", nodeId); // printfflush();
             } else {
-                printf("SharedDataP, getAllData called for node %u.\n", nodeId); printfflush();
-                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
+                printf("SharedDataP, getAllData called for node %u.\n", nodeId); // printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n"); // printfflush();
             }
         }
         for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
@@ -178,10 +176,10 @@ implementation {
     command PPCPrivData_t* SharedData.getPPCPrivData() {
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getPPCPrivData called on initialized data.\n"); printfflush();
+                printf("SharedDataP, getPPCPrivData called on initialized data.\n"); // printfflush();
             } else {
-                printf("SharedDataP, getPPCPrivData called.\n"); printfflush();
-                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
+                printf("SharedDataP, getPPCPrivData called.\n"); // printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n"); // printfflush();
             }
         }
         return &(combinedData.ppcPrivData);		
@@ -195,10 +193,10 @@ implementation {
     command RoutePrivData_t* SharedData.getRPrivData() {
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getRPrivData called on initialized data.\n"); printfflush();
+                printf("SharedDataP, getRPrivData called on initialized data.\n"); // printfflush();
             } else {
-                printf("SharedDataP, getRPrivData called.\n"); printfflush();
-                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
+                printf("SharedDataP, getRPrivData called.\n"); // printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n"); // printfflush();
             }
         }
         return &(combinedData.routePrivData);		
@@ -212,10 +210,10 @@ implementation {
     command KDCPrivData_t* SharedData.getKDCPrivData() {
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getKDCPrivData called on initialized data.\n"); printfflush();
+                printf("SharedDataP, getKDCPrivData called on initialized data.\n"); // printfflush();
             } else {
-                printf("SharedDataP, getKDCPrivData called.\n"); printfflush();
-                printf("SharedDataP, ERROR, data not initialized.\n"); printfflush();
+                printf("SharedDataP, getKDCPrivData called.\n"); // printfflush();
+                printf("SharedDataP, ERROR, data not initialized.\n"); // printfflush();
             }
         }
         return &(combinedData.kdcPrivData);		
@@ -231,7 +229,7 @@ implementation {
      */
     command error_t ResourceArbiter.backupToFlash(){
 
-            printf("SharedDataP, backupToFlash called.\n"); printfflush();
+            printf("SharedDataP, backupToFlash called.\n"); // printfflush();
 
         if (!m_busy) {
             m_busy = TRUE;
@@ -242,7 +240,7 @@ implementation {
     
     default event void ResourceArbiter.backupToFlashDone(error_t result) {
 
-    printf("SharedDataP, backupToFlashDone.\n"); printfflush();
+    printf("SharedDataP, backupToFlashDone.\n"); // printfflush();
 
 }
     
