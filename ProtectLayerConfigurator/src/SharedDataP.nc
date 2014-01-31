@@ -39,8 +39,6 @@ implementation {
 	/** indicator of current position in memory */
 	storage_addr_t memPosition = 0;
 	
-	uint8_t nbOfStoredKeys = 0;
-	
 	/** 
 	 * Initialize the combinedData structure to initial zeros
 	 */
@@ -167,7 +165,6 @@ implementation {
 	    	signal ResourceArbiter.saveCombinedDataToFlashDone(err);
 	    } else {
 	    	memPosition += len;
-			nbOfStoredKeys++;
 			signal ResourceArbiter.saveKeyToFlashDone(err);
 		}
     	combDataFlag = FALSE;

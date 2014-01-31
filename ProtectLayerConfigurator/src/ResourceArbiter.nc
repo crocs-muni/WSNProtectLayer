@@ -75,6 +75,15 @@ interface ResourceArbiter {
 	 */
 	event void restoreKeyFromFlashDone(error_t result);
 	
+	/**
+	 * Pointer to the last key read from memory or the first key to be written to memory.
+	 * 
+	 * @return pointer to the last key
+	 */
 	command nx_uint8_t * getCurrentKey();
+	
+	/**
+	 * @return number of keys stored to the flash memory
+	 */
 	command uint32_t getNumberOfStoredKeys();
 }
