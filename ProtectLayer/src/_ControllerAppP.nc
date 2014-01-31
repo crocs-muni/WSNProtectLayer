@@ -9,7 +9,7 @@ module ControllerAppP {
 implementation {
 
 	event void Boot.booted() {
-		//printf("ControllerAppP.Boot.booted() entered"); printfflush(); printfflush();
+		//printf("ControllerAppP.Boot.booted() entered"); // printfflush(); // printfflush();
 		// TODO: may initilialize additional components, that are now wired to Boot.SoftwareInit
 		//call PPC.init();
 		//call IDS.init();

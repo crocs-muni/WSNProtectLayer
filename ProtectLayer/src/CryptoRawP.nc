@@ -55,7 +55,7 @@ implementation {
         
         // BUGBUG: wrong arguments 
         
-        printf("CryptoRawP: KeyDistrib.encryptBufferB(buffer = '0x%x', 1 = '0x%x', 2 = '0x%x'.\n", buffer[0],buffer[1],buffer[2]); printfflush();
+        printf("CryptoRawP: KeyDistrib.encryptBufferB(buffer = '0x%x', 1 = '0x%x', 2 = '0x%x'.\n", buffer[0],buffer[1],buffer[2]); // printfflush();
         
         
         //#ifdef AES
@@ -82,7 +82,7 @@ implementation {
             (key->counter)++;
             if((key->counter) == 0){
                 
-                printf("CryptoRawP:  encryptBufferB counter overflow, generate new key requiered.\n"); printfflush();
+                printf("CryptoRawP:  encryptBufferB counter overflow, generate new key requiered.\n"); // printfflush();
                 
                 //deal with new key and counter value reset
             }
@@ -91,7 +91,7 @@ implementation {
         //#else /* No AES, FAKE encryption*/
         /*
         //uint8_t         i = 0;
-       // printf("CryptoRawP: KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]); printfflush();
+       // printf("CryptoRawP: KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]); // printfflush();
        
        
         buffer += offset;
@@ -127,7 +127,7 @@ implementation {
         uint8_t plainCounter[16];			
         uint8_t encCounter[16];
         
-        printf("CryptoRawP: KeyDistrib.decryptBufferB(keyDbgID = '%x', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]); printfflush();
+        printf("CryptoRawP: KeyDistrib.decryptBufferB(keyDbgID = '%x', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]); // printfflush();
         
         //#ifdef AES
         
@@ -152,7 +152,7 @@ implementation {
             (key->counter)++;
             if((key->counter) == 0){
                 
-                printf("CryptoRawP:  decryptBufferB counter overflow, generate new key requiered.\n"); printfflush();
+                printf("CryptoRawP:  decryptBufferB counter overflow, generate new key requiered.\n"); // printfflush();
                 
                 //deal with new key and counter value reset
             }
@@ -180,14 +180,14 @@ implementation {
                 *pLen -= FAKEHEADERLEN;
             }
             else {
-                printf("CryptoRawP: Different key used for encryption \n"); printfflush();
+                printf("CryptoRawP: Different key used for encryption \n"); // printfflush();
                 
                 status = EDIFFERENTKEY;
             }
             
         }
         else {
-            printf("CryptoRawP: ENC tag not detected.\n"); printfflush();
+            printf("CryptoRawP: ENC tag not detected.\n"); // printfflush();
             
             status = EINVALIDDECRYPTION;
         }
@@ -204,7 +204,7 @@ implementation {
     
     command error_t CryptoRaw.deriveKeyB(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
         
-        printf("CryptoRawP: KeyDistrib.task_deriveKey(masterKey = '%x') called.\n", m_key1->dbgKeyID); printfflush();
+        printf("CryptoRawP: KeyDistrib.task_deriveKey(masterKey = '%x') called.\n", m_key1->dbgKeyID); // printfflush();
         
         //TODO: predelat na blocking verzi
         
@@ -242,7 +242,7 @@ implementation {
         #endif 
         */ /* AES */
         
-        printf("CryptoRawP: \t derivedKey = '%x')\n", m_key2->dbgKeyID); printfflush();
+        printf("CryptoRawP: \t derivedKey = '%x')\n", m_key2->dbgKeyID); // printfflush();
         
         //m_state &= ~FLAG_STATE_CRYPTO_DERIV;
         
@@ -258,7 +258,7 @@ implementation {
         error_t status = SUCCESS;		
         uint8_t i;
         
-        printf("CryptoRawP:  hashDataBlockB called.\n"); printfflush();
+        printf("CryptoRawP:  hashDataBlockB called.\n"); // printfflush();
         
         
         call AES.keyExpansion( exp, (uint8_t*) key->keyValue);		
@@ -274,69 +274,69 @@ implementation {
         uint8_t i;
         uint8_t status = SUCCESS;
         
-        printf("CryptoRawP:  self test started.\n"); printfflush();
+        printf("CryptoRawP:  self test started.\n"); // printfflush();
         
         memset(m_key1->keyValue, 0, KEY_SIZE);
         m_key1->counter = 0;
         
-        printf("CryptoRawP:  self test encrypt.\n"); printfflush();
+        printf("CryptoRawP:  self test encrypt.\n"); // printfflush();
         
         if((status = call CryptoRaw.encryptBufferB( m_key1, data, 0, BLOCK_SIZE)) != SUCCESS){
             
-            printf("CryptoRawP:  self test encrypt return failed.\n"); printfflush();
+            printf("CryptoRawP:  self test encrypt return failed.\n"); // printfflush();
             
             return status;
         }
         if(m_key1->counter != 1){
             
-            printf("CryptoRawP:  self test encrypt counter not incremented.\n"); printfflush();
+            printf("CryptoRawP:  self test encrypt counter not incremented.\n"); // printfflush();
             
             return  EINVALIDDECRYPTION;
         } else {
             m_key1->counter = 0;
         }
         
-        printf("CryptoRawP:  self test decrypt.\n"); printfflush();
+        printf("CryptoRawP:  self test decrypt.\n"); // printfflush();
         
         if((status = call CryptoRaw.decryptBufferB( m_key1, data, 0, BLOCK_SIZE)) != SUCCESS){
             
-            printf("CryptoRawP:  self test decrypt return failed.\n"); printfflush();
+            printf("CryptoRawP:  self test decrypt return failed.\n"); // printfflush();
             
             return status;
         }
         if(m_key1->counter != 1){
             
-            printf("CryptoRawP:  self test decrypt counter not incremented.\n"); printfflush();
+            printf("CryptoRawP:  self test decrypt counter not incremented.\n"); // printfflush();
             
             return EINVALIDDECRYPTION;
         }
         for(i = 0; i < BLOCK_SIZE; i++){
             if(data[i] != 0){
                 
-                printf("CryptoRawP:  self test decrypt not same result after decryption.\n"); printfflush();
+                printf("CryptoRawP:  self test decrypt not same result after decryption.\n"); // printfflush();
                 
                 return  EINVALIDDECRYPTION;
             }
         }
         
-        printf("CryptoRawP:  self test derive key.\n"); printfflush();
+        printf("CryptoRawP:  self test derive key.\n"); // printfflush();
         
         if((status = call CryptoRaw.deriveKeyB(m_key1, data, 0, BLOCK_SIZE, m_key2))!= SUCCESS){
             
-            printf("CryptoRawP:  self test derive key failed.\n"); printfflush();
+            printf("CryptoRawP:  self test derive key failed.\n"); // printfflush();
             
             return status;
         }
         if(memcmp(m_key1, m_key2, sizeof(m_key1))){
             
-            printf("CryptoRawP:  self test derive key, derived key is same as master.\n"); printfflush();
+            printf("CryptoRawP:  self test derive key, derived key is same as master.\n"); // printfflush();
             
             return  EDIFFERENTKEY;
         }
         for(i = 0; i < KEY_SIZE; i++){
             if(m_key1->keyValue[i] == 0){
                 
-                printf("CryptoRawP:  self test derive key, derived key is all zeros.\n"); printfflush();
+                printf("CryptoRawP:  self test derive key, derived key is all zeros.\n"); // printfflush();
                 
                 return EDIFFERENTKEY;
             }
@@ -374,7 +374,7 @@ implementation {
 */
     /*
                 uint8_t         i = 0;
-                printf("CryptoRawP: KeyDistrib.task_encryptBuffer(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue[0], m_key1->keyValue[1]); printfflush();
+                printf("CryptoRawP: KeyDistrib.task_encryptBuffer(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue[0], m_key1->keyValue[1]); // printfflush();
                 
                 
                 // BUGBUG: no real encryption is performed, only transformation from DATA into form ENC|keyID|DATA (without |) is performed
@@ -402,7 +402,7 @@ implementation {
         m_state &= ~FLAG_STATE_CRYPTO_ENCRYPTION;
     }
     command error_t CryptoRaw.encryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len) {
-                printf("CryptoRawP: KeyDistrib.encryptBuffer(keyID = '%d') called.\n", key->dbgKeyID); printfflush();
+                printf("CryptoRawP: KeyDistrib.encryptBuffer(keyID = '%d') called.\n", key->dbgKeyID); // printfflush();
                 
         if (m_state & FLAG_STATE_CRYPTO_ENCRYPTION) {
             return EALREADY;	
@@ -424,7 +424,7 @@ implementation {
                 uint8_t i = 0;
                 
                 
-                printf("CryptoRawP: KeyDistrib.task_decryptBuffer(keyID = '%d', keyValue = '0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue); printfflush();
+                printf("CryptoRawP: KeyDistrib.task_decryptBuffer(keyID = '%d', keyValue = '0x%x') called.\n", m_key1->dbgKeyID, m_key1->keyValue); // printfflush();
                 
                 
                 // BUGBUG: no real decryption is performed, only transformation from ENC|keyID|DATA into DATA and check for expected key value
@@ -440,14 +440,14 @@ implementation {
                         m_len -= FAKEHEADERLEN;
                     }
                     else {
-                        printf("CryptoRawP: Different key used for encryption \n"); printfflush();
+                        printf("CryptoRawP: Different key used for encryption \n"); // printfflush();
                         
                         status = EDIFFERENTKEY;
                     }
                     
                 }
                 else {
-                    printf("CryptoRawP: ENC tag not detected.\n"); printfflush();
+                    printf("CryptoRawP: ENC tag not detected.\n"); // printfflush();
                     
                     status = EINVALIDDECRYPTION;
                 }
@@ -462,7 +462,7 @@ implementation {
     }
     
     command error_t CryptoRaw.decryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len) {
-                printf("CryptoRawP: KeyDistrib.decryptBuffer(keyID = '%d') called.\n", key->dbgKeyID); printfflush();
+                printf("CryptoRawP: KeyDistrib.decryptBuffer(keyID = '%d') called.\n", key->dbgKeyID); // printfflush();
                 
         if (m_state & FLAG_STATE_CRYPTO_DECRYPTION) {
             return EALREADY;	
@@ -479,20 +479,20 @@ implementation {
     
     
     task void task_deriveKey() {
-                printf("CryptoRawP: KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID); printfflush();
+                printf("CryptoRawP: KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID); // printfflush();
                 
                 //m_len = Encrypt(m_key1, m_buffer + m_offset, m_len);
                 memcpy(m_key2->keyValue, m_buffer + m_offset, KEY_LENGTH);
         // we are done
         m_key2->dbgKeyID = m_dbgKeyID++;	// assign debug key id
-                printf("CryptoRawP: \t derivedKey = '%d')\n", m_key2->dbgKeyID); printfflush();
+                printf("CryptoRawP: \t derivedKey = '%d')\n", m_key2->dbgKeyID); // printfflush();
                 
         m_state &= ~FLAG_STATE_CRYPTO_DERIV;
         signal CryptoRaw.deriveKeyDone(SUCCESS, m_key2);
     }
     
     command error_t CryptoRaw.deriveKey(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
-                printf("CryptoRawP: KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID); printfflush();
+                printf("CryptoRawP: KeyDistrib.task_deriveKey(masterKey = '%d') called.\n", m_key1->dbgKeyID); // printfflush();
                 
         if (m_state & FLAG_STATE_CRYPTO_DERIV) {
             return EALREADY;	
@@ -511,7 +511,7 @@ implementation {
     //default event void CryptoRaw.deriveKeyDone(error_t status, PL_key_t* derivedKey) {}
     
     task void task_generateKey() {
-                printf("CryptoRawP: KeyDistrib.task_generateKey() called.\n"); printfflush();
+                printf("CryptoRawP: KeyDistrib.task_generateKey() called.\n"); // printfflush();
                 
         // RNG(m_key1->keyValue, KEY_LENGTH);
         // we are done
@@ -522,7 +522,7 @@ implementation {
     }
     
     command error_t CryptoRaw.generateKey(PL_key_t* newKey) {
-                printf("CryptoRawP: KeyDistrib.generateKey().\n"); printfflush();
+                printf("CryptoRawP: KeyDistrib.generateKey().\n"); // printfflush();
                 
         if (m_state & FLAG_STATE_CRYPTO_GENERATE) {
             return EALREADY;	
@@ -539,12 +539,12 @@ implementation {
     //default event void CryptoRaw.generateKeyDone(error_t status, PL_key_t* newKey) {}
     
         command error_t CryptoRaw.generateKeyBlocking(PL_key_t* newKey) {
-                printf("CryptoRawP: KeyDistrib.generateKeyBlocking().\n"); printfflush();
+                printf("CryptoRawP: KeyDistrib.generateKeyBlocking().\n"); // printfflush();
                 
                 newKey->keyType = KEY_TONODE;
                 newKey->dbgKeyID = m_dbgKeyID++;	// assign debug key id
                 // TODO: RNG(newKey->keyValue, KEY_LENGTH);
-                printf("CryptoRawP: \t newKey = '%d')\n", newKey->dbgKeyID); printfflush();
+                printf("CryptoRawP: \t newKey = '%d')\n", newKey->dbgKeyID); // printfflush();
                 
                 return SUCCESS;
         }

@@ -22,6 +22,7 @@
 #include <stdarg.h>
 
 
+
 typedef enum _error_values {
     EDIFFERENTKEY = 100,            /**< different key was used to protect message */
     EINVALIDDECRYPTION = 101,       /**< invalid format of message to be decrypted */
@@ -377,10 +378,10 @@ void PrintDbg(const char* messageClass, const char* formatString, ...) {
 
 #ifdef DEBUG_PRINTF
     va_start(args,formatString);
-    printf("%s: ", messageClass); printfflush();
-    printf(formatString,args); printfflush();
+    printf("%s: ", messageClass); // printfflush();
+    printf(formatString,args); // printfflush();
     va_end(args);
-    //flushprintf(); printfflush();
+    //flushprintf(); // printfflush();
 #endif
 
 }
