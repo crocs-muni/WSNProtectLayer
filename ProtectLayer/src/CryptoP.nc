@@ -45,7 +45,7 @@ implementation {
     command error_t Crypto.macBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         uint8_t i;
         uint8_t j;
-        uint8_t xor[16];
+        uint8_t xor[BLOCK_SIZE];
         error_t status = SUCCESS;
         
         printf("CryptoP:  macBufferForNodeB called.\n"); // printfflush();
@@ -60,7 +60,7 @@ implementation {
                 
                 call AES.encrypt( xor, exp, xor);
                 for (j = 0; i < BLOCK_SIZE; j++){
-                    xor[j] = buffer[offset + i + j] ^ xor[j];
+                    xor[j] = (*pLen < (i*BLOCK_SIZE+j)) ? xor[j] : buffer[offset + i*BLOCK_SIZE + j] ^ xor[j];
                 }			
             }
             
@@ -78,7 +78,7 @@ implementation {
     command error_t Crypto.macBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){		
         uint8_t i;
         uint8_t j;
-        uint8_t xor[16];
+        uint8_t xor[BLOCK_SIZE];
         error_t status = SUCCESS;
         
         
@@ -95,7 +95,7 @@ implementation {
                 
                 call AES.encrypt( xor, exp, xor);
                 for (j = 0; i < BLOCK_SIZE; j++){
-                    xor[j] = buffer[offset + i + j] ^ xor[j];
+                    xor[j] = (*pLen < (i*BLOCK_SIZE+j)) ? xor[j] : buffer[offset + i*BLOCK_SIZE + j] ^ xor[j];
                 }			
             }
             
