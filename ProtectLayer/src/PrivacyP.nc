@@ -120,9 +120,14 @@ implementation {
     void passToIDS(message_t* msg, void* payload, uint8_t len)
     {
         // copy message content to IDS msg
-        memcpy(m_msgForIDS.msg,msg,sizeof(message_t));
-        m_msgForIDS.payload = call Packet.getPayload(m_msgForIDS.msg, len);
-        m_msgForIDS.len = len;
+        if (msg==NULL || payload==NULL){
+        	printf("PrivacyP: pass2IDS ERR null\n");
+        	return;
+        }
+        
+        //memcpy(m_msgForIDS.msg,msg,sizeof(message_t));
+        //m_msgForIDS.payload = call Packet.getPayload(m_msgForIDS.msg, len);
+        //m_msgForIDS.len = len;
         
         // signal to IDS and update memory field for next msg
         //m_msgForIDS.msg = signal MessageReceive.receive[MSG_IDSCOPY](m_msgForIDS.msg, m_msgForIDS.payload, m_msgForIDS.len);
@@ -145,7 +150,14 @@ implementation {
         error_t status = SUCCESS;
         
         // Get msg to be processed , TODO we could check if isEmpty, but it never should be emtpy
-        msg = m_receiveBuffer[m_recNextToProcess].msg;
+		msg = m_receiveBuffer[m_recNextToProcess].msg;
+		
+		if (m_receiveBuffer[m_recNextToProcess].isEmpty){
+        	printf("privacyP: task_receiveMessage IS EMPTY!");
+        }
+        if (msg==NULL){
+        	printf("privacyP: task_receiveMessage IS NULL!");	
+        }
         
         // Get our header from payload
         ourHeader = (SPHeader_t*) m_receiveBuffer[m_recNextToProcess].payload;
@@ -161,7 +173,7 @@ implementation {
                 //decrypt
                 decLen= m_receiveBuffer[m_recNextToProcess].len - sizeof(SPHeader_t);
                 //status = call KeyDistrib.getKeyToNodeB(ourHeader->sender, key);
-                status = call Crypto.unprotectBufferFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
+                status = SUCCESS;//call Crypto.unprotectBufferFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
                 m_receiveBuffer[m_recNextToProcess].len = decLen + sizeof(SPHeader_t);
 
                 printf("Privacy: task_receiveMessage 3, ourHeader->receiver == TOS_NODE_ID\n"); // printfflush();
@@ -237,9 +249,10 @@ implementation {
         return;	
     }	
     
-    
-    
-    
+    /**
+     * Message received from the lower AM interface.
+     * Message is stored to the buffer if there is space for it.
+     */
     event message_t* LowerReceive.receive(message_t* msg, void* payload, uint8_t len) {
         
         message_t * tmpMsg = NULL;
@@ -254,18 +267,17 @@ implementation {
             m_receiveBuffer[m_recNextToStore].len = len;
             m_receiveBuffer[m_recNextToStore].isEmpty = 0;
             m_recNextToStore = (m_recNextToStore+1)%RECEIVE_BUFFER_LEN; // update pointer to next position to which next msg will be stored
-            } 
+            }
+            
+            printf("Privacy: PrivacyP 1 LowerREceive.receive, buffer #%u,p=%p\n", m_recNextToStore, msg);// // printfflush(); 
         }
         else
         {
             //buffer full, return original message without modification
             return msg;
-        }
+        }        
 
-        printf("Privacy: PrivacyP 1 LowerREceive.receive, buffer position(%u).\n", m_recNextToStore);// // printfflush();
-
-        post task_receiveMessage();
-        
+        post task_receiveMessage();        
         return tmpMsg;
     } 
     
