@@ -45,15 +45,26 @@
 module BlinkToRadioC {
   uses interface Boot;
   uses interface Leds;
+  uses interface Timer<TMilli> as InitTimer;
   uses interface Timer<TMilli> as Timer0;
   uses interface Packet;
-  //uses interface AMPacket;
+  
   uses interface AMSend;
   uses interface Receive;
   uses interface SplitControl as AMControl;
+  uses interface SplitControl as SerialControl;
 }
 implementation {
-
+  enum {
+  		TIMER_START=5000,
+  		TIMER_FAIL_START=1000,
+  };
+  
+  // Initialization state of the node;
+  // 0 = after reboot -> start radio
+  // 1= radio started successfully -> start program
+  int initState=0;	
+  
   uint16_t counter;
   message_t pkt;
   bool busy = FALSE;
@@ -76,29 +87,61 @@ implementation {
 
   event void Boot.booted() {
     call Leds.led0On();
-    printf("BlinkToRadio booted\n");
-    printfflush();
-    call AMControl.start();
-    dbg("NodeState", "Node has booted.\n");
-    
-  }
 
+    // Prepare initialization TIMER_START ms after boot.
+    // Due to this delay one is able to attach PrintfClient
+    // after node reset so no message is missed.
+	call InitTimer.startOneShot(TIMER_START);
+  }
+  
+  void task startRadio() {      
+      call AMControl.start();
+  }
+  
+  event void InitTimer.fired() {
+      call Leds.led1Toggle();
+      
+      if (initState==0){
+      	post startRadio();
+      	
+      } else {
+      	call Timer0.startPeriodic(TIMER_PERIOD_MILLI);
+	    dbg("NodeState", "Radio started successfully.\n");
+	      
+	    printf("## Blink2Radio started!!\n");
+	    printfflush();
+	    
+	    call Leds.led2On();
+      }
+  }
+  
   event void AMControl.startDone(error_t err) {
     if (err == SUCCESS) {
-      call Timer0.startPeriodic(TIMER_PERIOD_MILLI);
-      dbg("NodeState", "Radio started successfully.\n");
+      initState=1;
     }
-    else {
-      call AMControl.start();
-      dbg("NodeState", "Radio did not start!\n");
-    }
+    
+    call InitTimer.startOneShot(TIMER_FAIL_START);
   }
-
+	
   event void AMControl.stopDone(error_t err) {
   }
-
+  
+  event void SerialControl.startDone(error_t err){
+	if (err == SUCCESS){
+		initState=1;
+	}
+	
+	call InitTimer.startOneShot(TIMER_FAIL_START);
+  }
+    
+  event void SerialControl.stopDone(error_t error){
+  }
+	
   event void Timer0.fired() {
     dbg("NodeState", "Timer fired.\n");  
+    printf("## Timer fired. busy=%d\n", busy);
+	printfflush();
+	
     counter++;
     if (!busy) {
       BlinkToRadioMsg* btrpkt = 

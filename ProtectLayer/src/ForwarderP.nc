@@ -19,7 +19,7 @@ implementation{
 	// interface Init
 	//
 	command error_t Init.init(){
-                m_msg = &m_msgMemory;
+		m_msg = &m_msgMemory;
 		return SUCCESS;
 	}
 	

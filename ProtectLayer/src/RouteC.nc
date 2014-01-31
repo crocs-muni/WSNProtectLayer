@@ -13,16 +13,13 @@ configuration RouteC {
 		interface Route;
 	}
 }
-implementation {
-	components MainC;   
+implementation {   
 	components RouteP;
 	components SharedDataC;
 	components RandomC;
 	
 	RouteP.Random -> RandomC.Random;
 	RouteP.SharedData -> SharedDataC.SharedData;
-	
-	//MainC.SoftwareInit -> RouteP.Init;	//auto-initialization
 	
 	PLInit = RouteP.PLInit;
 	Route = RouteP.Route;

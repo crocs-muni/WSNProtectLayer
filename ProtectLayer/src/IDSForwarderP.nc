@@ -26,7 +26,7 @@ implementation{
 	// interface Init
 	//
 	command error_t Init.init(){
-                //m_msgIDSAlert = &m_msgMemory;
+		//m_msgIDSAlert = &m_msgMemory;
 		return SUCCESS;
 	}
 	

@@ -12,12 +12,9 @@ configuration KeyDistribC {
 	}
 }
 implementation {
-	components MainC;   
 	components KeyDistribP;  
 	components CryptoC;
-        components SharedDataC;
-        
-	//MainC.SoftwareInit -> KeyDistribP.Init;	//auto-initialization phase 1
+	components SharedDataC;
 
 	Init = KeyDistribP.PLInit;
 	KeyDistrib = KeyDistribP.KeyDistrib;
