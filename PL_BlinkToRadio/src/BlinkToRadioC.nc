@@ -42,6 +42,7 @@
 
 #include "../../ProtectLayer/src/ProtectLayerGlobals.h"
 
+
 module BlinkToRadioC {
   uses interface Boot;
   uses interface Leds;
@@ -52,7 +53,6 @@ module BlinkToRadioC {
   uses interface AMSend;
   uses interface Receive;
   uses interface SplitControl as AMControl;
-  uses interface SplitControl as SerialControl;
 }
 implementation {
   enum {
@@ -96,6 +96,7 @@ implementation {
   
   void task startRadio() {      
       call AMControl.start();
+      call Leds.led1Toggle();
   }
   
   event void InitTimer.fired() {
@@ -104,12 +105,11 @@ implementation {
       if (initState==0){
       	post startRadio();
       	
+      	//initState=1;
+      	//call InitTimer.startOneShot(TIMER_FAIL_START);
       } else {
-      	call Timer0.startPeriodic(TIMER_PERIOD_MILLI);
+      	call Timer0.startOneShot(TIMER_PERIOD_MILLI);
 	    dbg("NodeState", "Radio started successfully.\n");
-	      
-	    printf("## Blink2Radio started!!\n");
-	    printfflush();
 	    
 	    call Leds.led2On();
       }
@@ -125,49 +125,60 @@ implementation {
 	
   event void AMControl.stopDone(error_t err) {
   }
-  
-  event void SerialControl.startDone(error_t err){
-	if (err == SUCCESS){
-		initState=1;
-	}
-	
-	call InitTimer.startOneShot(TIMER_FAIL_START);
-  }
-    
-  event void SerialControl.stopDone(error_t error){
-  }
 	
   event void Timer0.fired() {
     dbg("NodeState", "Timer fired.\n");  
-    printf("## Timer fired. busy=%d\n", busy);
-	printfflush();
+    printf("## Timer fired. busy=%d counter=%d\n", busy, counter);
+    
+    call Leds.led2Toggle();
+    printfflush();
 	
     counter++;
-    if (!busy) {
+    if (0 && !busy) {
       BlinkToRadioMsg* btrpkt = 
 	(BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
       if (btrpkt == NULL) {
-	return;
+      	printf("## ERROR\n"); 
+		return;
       }
+      
+      atomic{
       btrpkt->nodeid = TOS_NODE_ID;
       btrpkt->counter = counter;
-      if (call AMSend.send(AM_BROADCAST_ADDR, 
-          &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
+      }
+      
+      if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
+      	call Leds.led1Toggle();
         busy = TRUE;
       }
     }
+    
+    //if (busy == FALSE){
+    	call Timer0.startOneShot(TIMER_PERIOD_MILLI);
+    //}    
   }
 
   event void AMSend.sendDone(message_t* msg, error_t err) {
     if (&pkt == msg) {
       busy = FALSE;
+      if (err==SUCCESS){
+      	call Leds.led0Toggle();
+      }
+      printf("## SendDone.\n");
+      
+      call Timer0.startOneShot(TIMER_PERIOD_MILLI);
     }
   }
 
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
   	dbg("NodeState", "Message received.\n");
+  	call Leds.led1Toggle();
+    	printf("## Msg received\n");
+    	printfflush();
+    	
     if (len == sizeof(BlinkToRadioMsg)) {
       BlinkToRadioMsg* btrpkt = (BlinkToRadioMsg*)payload;
+    	
       setLeds(btrpkt->counter);
       received_packets++;
       dbg("NodeState", "Sender is: %d, values is: %d.\n", btrpkt->nodeid, btrpkt->counter);
