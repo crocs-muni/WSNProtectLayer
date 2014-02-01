@@ -8,7 +8,6 @@
  * 	@date      2012-2013
  */
 
-#include "printf.h"
 #include "ProtectLayerGlobals.h"
 module ConfigurationP {
 	uses {

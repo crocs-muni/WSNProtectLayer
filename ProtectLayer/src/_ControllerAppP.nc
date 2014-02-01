@@ -1,5 +1,5 @@
 #include "ProtectLayerGlobals.h"
-#include "printf.h" 
+
 module ControllerAppP {
     uses {
     	interface Boot;

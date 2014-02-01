@@ -117,7 +117,7 @@ implementation {
             memset(&(combinedData.savedData[i].kdcData), 0, sizeof(combinedData.savedData[i].kdcData));
             memset(&(combinedData.savedData[i].idsData), 0, sizeof(combinedData.savedData[i].idsData));
         }
-            printf("SharedDataP: PLInit.init() finished.\n"); // printfflush();
+            pl_printf("SharedDataP: PLInit.init() finished.\n");
 
         initialized = TRUE;
         return SUCCESS;
@@ -131,9 +131,9 @@ implementation {
     command combinedData_t * SharedData.getAllData(){
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getAllData called on initialized data.\n");
+                pl_printf("SharedDataP, getAllData called on initialized data.\n");
             } else {
-                printf("SharedDataP, ERROR, data not initialized.\n");
+                pl_printf("SharedDataP, ERROR, data not initialized.\n");
             }	
         }
         return &combinedData;
@@ -147,9 +147,9 @@ implementation {
     command SavedData_t * SharedData.getSavedData(){
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getSavedData called on initialized data.\n");
+                pl_printf("SharedDataP, getSavedData called on initialized data.\n");
             } else {
-                printf("SharedDataP, ERROR, data not initialized.\n");
+                pl_printf("SharedDataP, ERROR, data not initialized.\n");
             }
         }
         return combinedData.savedData;
@@ -165,10 +165,10 @@ implementation {
         int i;
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getNodeState called on initialized data for node %u.\n", nodeId); // printfflush();
+                pl_printf("SharedDataP, getNodeState called on initialized data for node %u.\n", nodeId);
             } else {
-                printf("SharedDataP, getAllData called for node %u.\n", nodeId); // printfflush();
-                printf("SharedDataP, ERROR, data not initialized.\n"); // printfflush();
+                pl_printf("SharedDataP, getAllData called for node %u.\n", nodeId); 
+                pl_printf("SharedDataP, ERROR, data not initialized.\n");
             }
         }
         for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
@@ -186,10 +186,10 @@ implementation {
     command PPCPrivData_t* SharedData.getPPCPrivData() {
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getPPCPrivData called on initialized data.\n"); // printfflush();
+                pl_printf("SharedDataP, getPPCPrivData called on initialized data.\n"); 
             } else {
-                printf("SharedDataP, getPPCPrivData called.\n"); // printfflush();
-                printf("SharedDataP, ERROR, data not initialized.\n"); // printfflush();
+                pl_printf("SharedDataP, getPPCPrivData called.\n"); 
+                pl_printf("SharedDataP, ERROR, data not initialized.\n"); 
             }
         }
         return &(combinedData.ppcPrivData);		
@@ -203,10 +203,10 @@ implementation {
     command RoutePrivData_t* SharedData.getRPrivData() {
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getRPrivData called on initialized data.\n"); // printfflush();
+                pl_printf("SharedDataP, getRPrivData called on initialized data.\n");
             } else {
-                printf("SharedDataP, getRPrivData called.\n"); // printfflush();
-                printf("SharedDataP, ERROR, data not initialized.\n"); // printfflush();
+                pl_printf("SharedDataP, getRPrivData called.\n");
+                pl_printf("SharedDataP, ERROR, data not initialized.\n");
             }
         }
         return &(combinedData.routePrivData);		
@@ -220,10 +220,10 @@ implementation {
     command KDCPrivData_t* SharedData.getKDCPrivData() {
         /*if(TOS_NODE_ID == PRINTF_DEBUG_ID)*/{
             if(initialized){
-                printf("SharedDataP, getKDCPrivData called on initialized data.\n"); // printfflush();
+                pl_printf("SharedDataP, getKDCPrivData called on initialized data.\n"); 
             } else {
-                printf("SharedDataP, getKDCPrivData called.\n"); // printfflush();
-                printf("SharedDataP, ERROR, data not initialized.\n"); // printfflush();
+                pl_printf("SharedDataP, getKDCPrivData called.\n"); 
+                pl_printf("SharedDataP, ERROR, data not initialized.\n"); 
             }
         }
         return &(combinedData.kdcPrivData);		
@@ -238,7 +238,7 @@ implementation {
      * <li>EBUSY if a request is already being processed.
      */
     command error_t ResourceArbiter.saveCombinedDataToFlash(){
-        printf("SharedDataP, saveCombinedDataToFlash called.\n"); // printfflush();
+        pl_printf("SharedDataP, saveCombinedDataToFlash called.\n"); 
 
         if (!m_busy) {
 			m_busy = TRUE;
@@ -249,7 +249,7 @@ implementation {
     }
     
     default event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result) {
-    	printf("SharedDataP, saveCombinedDataToFlashDone.\n"); // printfflush();
+    	pl_printf("SharedDataP, saveCombinedDataToFlashDone.\n"); 
 
 }
     
@@ -389,7 +389,7 @@ command error_t ResourceArbiter.saveKeyToFlash(nx_uint8_t * key) {
 	}
 	
 	command uint32_t ResourceArbiter.getNumberOfStoredKeys() {
-		//printf("number of stored keys: %d", (memPosition / KEY_LENGTH));
+		//pl_printf("number of stored keys: %d", (memPosition / KEY_LENGTH));
 		return memPosition / KEY_LENGTH; 
 	}
 }

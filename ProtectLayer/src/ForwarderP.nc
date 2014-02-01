@@ -1,4 +1,4 @@
-#include "printf.h"
+#include "ProtectLayerGlobals.h"
 
 /**
  * This if only a draft implementation!
@@ -39,7 +39,7 @@ implementation{
 	//
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
 		//is busy?
-		printf("ForwarderP: Forwarder Receive.receive called.\n"); // printfflush();
+		pl_printf("ForwarderP: Forwarder Receive.receive called.\n"); 
 
 		if (m_busy)
 		{
@@ -57,7 +57,7 @@ implementation{
 			m_len = len;
 			m_busy = TRUE;
 			}
-			printf("Fwd: add; 2send=%p, free=%p\n", m_lastMsg, m_msg);
+			pl_printf("Fwd: add; 2send=%p, free=%p\n", m_lastMsg, m_msg);
 			
 			post sendTask();
 			return m_msg;
@@ -76,7 +76,7 @@ implementation{
 			m_busy = FALSE;
 			}
 			
-			printf("Fwd: fwded msg %p err=%d\n", msg, error);
+			pl_printf("Fwd: fwded msg %p err=%d\n", msg, error);
     	}
 	}
 	

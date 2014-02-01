@@ -1,5 +1,4 @@
 #include "ProtectLayerGlobals.h"
-#include "printf.h"
 
 module DispatcherP{
     uses {
@@ -99,7 +98,7 @@ implementation{
     
     command void Dispatcher.serveState() {
 
-        printf("DispatcherP: <serveState(%x)>\n", m_state); // printfflush();
+        pl_printf("DispatcherP: <serveState(%x)>\n", m_state); 
 
         switch (m_state) {
         case STATE_INIT:
@@ -170,7 +169,7 @@ implementation{
         }		
         }
 
-        printf("DispatcherP: </serveState(%x)>\n", m_state); printfflush();
-
+        pl_printf("DispatcherP: </serveState(%x)>\n", m_state); 
+        pl_printfflush();
     }
 }

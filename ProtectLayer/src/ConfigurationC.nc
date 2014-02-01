@@ -4,7 +4,6 @@
  * 	@version   0.1
  * 	@date      2012-2013
  */
-#include "printf.h"
 #include "ProtectLayerGlobals.h"
 configuration ConfigurationC{
 	provides {

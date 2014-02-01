@@ -18,10 +18,8 @@
 // define for printf, writes to output only if TOS_NODE_ID is equal to this DEBUG_ID
 #define PRINTF_DEBUG_ID 19
 
-#include "printf.h"
 #include <stdarg.h>
-
-
+#include "ProtectLayerLog.h"
 
 typedef enum _error_values {
     EDIFFERENTKEY = 100,            /**< different key was used to protect message */
@@ -392,7 +390,6 @@ enum {
   CONGESTED_WAIT_WINDOW     = CONGESTED_WAIT_OFFSET,
   NO_ROUTE_RETRY            = 10000
 };
-
 
 void PrintDbg(const char* messageClass, const char* formatString, ...) {
     va_list args;
