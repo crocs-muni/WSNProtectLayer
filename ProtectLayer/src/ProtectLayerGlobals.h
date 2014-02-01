@@ -12,8 +12,8 @@
 #include "message.h"
 
 // Define to supress warning from printf function
-#define DEBUG_PRINTF
-#define NEW_PRINTF_SEMANTICS
+#define DEBUG_PRINTF 
+#define PL_LOG_MAX_LEVEL 4
 
 // define for printf, writes to output only if TOS_NODE_ID is equal to this DEBUG_ID
 #define PRINTF_DEBUG_ID 19
@@ -390,23 +390,6 @@ enum {
   CONGESTED_WAIT_WINDOW     = CONGESTED_WAIT_OFFSET,
   NO_ROUTE_RETRY            = 10000
 };
-
-void PrintDbg(const char* messageClass, const char* formatString, ...) {
-    va_list args;
-    //va_start(args,formatString);
-    //dbg(formatString,args);
-    //va_end(args);
-
-#ifdef DEBUG_PRINTF
-    va_start(args,formatString);
-    printf("%s: ", messageClass); // printfflush();
-    printf(formatString,args); // printfflush();
-    va_end(args);
-    //flushprintf(); // printfflush();
-#endif
-
-}
-
 
 #endif
 

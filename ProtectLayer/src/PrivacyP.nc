@@ -120,7 +120,7 @@ implementation {
     {
         // copy message content to IDS msg
         if (msg==NULL || payload==NULL){
-        	pl_log(PL_LOG_ERROR, TAG, "pass2IDS ERR null\n");
+        	pl_log_e(TAG, "pass2IDS ERR null\n");
         	return;
         }
         
@@ -152,16 +152,16 @@ implementation {
 		msg = m_receiveBuffer[m_recNextToProcess].msg;
 		
 		if (m_receiveBuffer[m_recNextToProcess].isEmpty){
-        	pl_log(PL_LOG_ERROR, TAG, "task_receiveMessage IS EMPTY!\n");
+        	pl_log_e(TAG, "task_receiveMessage IS EMPTY!\n");
         }
         if (msg==NULL){
-        	pl_log(PL_LOG_ERROR, TAG, "task_receiveMessage IS NULL!\n");	
+        	pl_log_e(TAG, "task_receiveMessage IS NULL!\n");	
         }
         
         // Get our header from payload
         ourHeader = (SPHeader_t*) m_receiveBuffer[m_recNextToProcess].payload;
 
-        pl_printf("Privacy: task_receiveMessage 2, buffer position %d\n", (int)m_recNextToProcess); 
+        pl_log_d(TAG, "task_receiveMessage 2, buffer position %d\n", (int)m_recNextToProcess); 
         
         switch (ourHeader->privacyLevel) {
         case PLEVEL_0: {
@@ -172,7 +172,7 @@ implementation {
                 decLen= m_receiveBuffer[m_recNextToProcess].len - sizeof(SPHeader_t);                                
                 status = call Crypto.unprotectBufferFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
                 
-                pl_printf("Privacy: task_receiveMessage 3, ourHeader->receiver == TOS_NODE_ID, status=%d l=%u ln=%u\n", status, m_receiveBuffer[m_recNextToProcess].len, decLen); 
+                pl_log_d(TAG, "task_receiveMessage 3, ourHeader->receiver == TOS_NODE_ID, status=%d l=%u ln=%u\n", status, m_receiveBuffer[m_recNextToProcess].len, decLen); 
                 
                 m_receiveBuffer[m_recNextToProcess].len = decLen + sizeof(SPHeader_t);
 
@@ -181,7 +181,7 @@ implementation {
                 if (ourHeader->msgType == MSG_APP)
                 {
 
-                	pl_printf("Privacy: task_receiveMessage 4, ourHeader->msgType == MSG_APP\n"); 
+                	pl_log_d(TAG, "Privacy: task_receiveMessage 4, ourHeader->msgType == MSG_APP\n"); 
 
                     //copy msg and pass to IDS
                     passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
@@ -190,8 +190,8 @@ implementation {
                 }
                 else
                 {
-
-                        pl_printf("Privacy: task_receiveMessage 4, ourHeader->msgType != MSG_APP\n"); 
+                	
+                    pl_log_d(TAG, "Privacy: task_receiveMessage 4, ourHeader->msgType != MSG_APP\n"); 
 
                     // other type of msg, remove protections if any,
                     //TODO
@@ -206,7 +206,7 @@ implementation {
                     //reputation = call IntrusionDetect.getNodeReputation(1);
                     //dbg("NodeState", "Reputation is: %d.\n", reputation);
 
-                    pl_printf("Privacy: PrivacyP.LowerReceive.receive, MSG type %x.\n", ourHeader->msgType); 
+                    pl_log_d(TAG, "LowerReceive.receive, MSG type %x.\n", ourHeader->msgType); 
 
                     //TODO: test if our message
                     retMsg = signal MessageReceive.receive[ourHeader->msgType](msg, payload, len);
@@ -215,7 +215,7 @@ implementation {
             else
             {
 
-                    pl_printf("Privacy: task_receiveMessage 3, ourHeader->receiver != TOS_NODE_ID\n"); 
+                pl_log_d(TAG, "task_receiveMessage 3, ourHeader->receiver != TOS_NODE_ID\n"); 
 
                 // It is not for me, pass copy to IDS
                 passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
@@ -267,7 +267,7 @@ implementation {
             m_recNextToStore = (m_recNextToStore+1)%RECEIVE_BUFFER_LEN; // update pointer to next position to which next msg will be stored
             }
             
-            pl_printf("Privacy: PrivacyP 1 LowerREceive.receive, buffer #%u,p=%p\n", m_recNextToStore, msg);//  
+            pl_log_d(TAG, " 1 LowerREceive.receive, buffer #%u,p=%p\n", m_recNextToStore, msg);//  
         }
         else
         {
@@ -339,7 +339,7 @@ implementation {
             return; //no message to send, buffer is empty
         }
         if (m_buffer[m_nextId].msg==NULL){
-        	pl_printf("PrivacyP: ERR, nullMsg\n");
+        	pl_log_e(TAG, "sendMsgTask ERR, nullMsg\n");
         }
         
         atomic {
@@ -388,10 +388,7 @@ implementation {
             // add myself as a sender
             spHeader->sender = TOS_NODE_ID;
         }
-        
-        //pl_printf("PrivacyP: task_messageSend, offset %d .\n", sizeof(SPHeader_t)); 
-        
-        
+                
         //encryption
         encLen=sReq.len - sizeof(SPHeader_t);
         //key = call KeyDistrib.getKeyToNodeB(spHeader->receiver);
@@ -420,7 +417,6 @@ implementation {
             // do nothing special
         }
         }
-        dbg("Privacy","Privacy: PrivacyP.task_messageSend, sending MSG type %d\n",m_nextId);
         
         rval = call LowerAMSend.send(sReq.addr,sReq.msg,sReq.len);
         if(rval == SUCCESS) {
@@ -433,14 +429,14 @@ implementation {
             m_radioBusy=TRUE;
             }
             
-            pl_printf("privacyP: sendtask, lowSend=%p c=%d ln=%d\n", sReq.msg, m_lastMsgSender, sReq.len);
+            pl_log_d(TAG, "sendtask, lowSend=%p c=%d ln=%d\n", sReq.msg, m_lastMsgSender, sReq.len);
             
         } else {
         	if (!call RetxmitTimer.isRunning()) {
         		startRetxmitTimer(SENDDONE_FAIL_WINDOW, SENDDONE_FAIL_OFFSET);
         	}
         	
-        	pl_printf("privacyP: sendtask, lowSend fail=%p, code=%d\n", sReq.msg, rval);
+        	pl_log_d(TAG, "sendtask, lowSend fail=%p, code=%d\n", sReq.msg, rval);
         }
         
         return;
@@ -536,7 +532,7 @@ implementation {
     m_radioBusy = FALSE;
     startRetxmitTimer(SENDDONE_OK_WINDOW, SENDDONE_OK_OFFSET);
     
-    pl_printf("privacyP: sendtask, lowSendDone, p=%p c=%d code=%d\n", msg, m_lastMsgSender, error);
+    pl_log_d(TAG, "sendtask, lowSendDone, p=%p c=%d code=%d\n", msg, m_lastMsgSender, error);
     dbg("Privacy","Privacy: PrivacyP.LowerAMSend.sendDone, radio not busy from now\n");
     
     // Signal to particular interface 
@@ -560,7 +556,7 @@ implementation {
     }
     
     task void radioStarted(){
-    	pl_printf("PrivacyP: radio started.");
+    	pl_log_i(TAG, "radio started.");
     	call Dispatcher.serveState();
     }
     
@@ -581,7 +577,7 @@ implementation {
     
     command void Privacy.startApp(error_t err) {
         // Dispatcher has everything initialized right now.
-		pl_printf("PrivacyP: Going to signal message AMControl.startDone()\n");
+		pl_log_d(TAG, "Going to signal message AMControl.startDone()\n");
 		signal MessageAMControl.startDone(err);
     }
     
@@ -600,7 +596,7 @@ implementation {
     // MessageAMControl (aka SplitPhase) interface
     //	
     command error_t MessageAMControl.start() {
-    pl_printf("NodeState: <MessageAMControl>\n"); 
+    pl_log_i(TAG, "NodeState: <MessageAMControl>\n"); 
 	
 	// For real operation, radio has to be started at first
 	// due to routing, key establishment, etc...
