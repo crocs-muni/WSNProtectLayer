@@ -12,8 +12,10 @@
 #include "message.h"
 
 // Define to supress warning from printf function
-#define DEBUG_PRINTF 
+#define DEBUG_PRINTF
+#ifndef PL_LOG_MAX_LEVEL 
 #define PL_LOG_MAX_LEVEL 4
+#endif
 
 // define for printf, writes to output only if TOS_NODE_ID is equal to this DEBUG_ID
 #define PRINTF_DEBUG_ID 19
