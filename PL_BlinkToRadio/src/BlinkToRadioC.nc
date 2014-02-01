@@ -134,7 +134,7 @@ implementation {
     printfflush();
 	
     counter++;
-    if (0 && !busy) {
+    if (!busy) {
       BlinkToRadioMsg* btrpkt = 
 	(BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
       if (btrpkt == NULL) {
