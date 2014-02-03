@@ -15,6 +15,14 @@ interface Route{
 	command node_id_t getParentID();
 	
 	/**
+	 * Returns random neighbor. Blocking variant.
+	 * 
+	 * 
+	 * @param neigh		random neighbor is provided via this parameter.
+	 */
+	command error_t getRandomNeighborIDB(node_id_t * neigh);
+	
+	/**
 	 * Command that requests the ID of randomly chosen parent node. 
 	 * If the command returns SUCCESS, then the component will signal the randomParentIDprovided event in the future;
 	 * if send returns an error, it will not signal the randomParentIDProvided. 

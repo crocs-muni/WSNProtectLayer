@@ -131,6 +131,36 @@ implementation {
         }
     }
     
+    /**
+     * Returns whether given message type is 
+     * subject to protect layer.
+     */
+    bool isSubjectToPL(uint8_t id){
+        // Behavior switch based on interface parameter (id) 
+        switch (m_nextId) {
+        case (MSG_APP): {
+        	// Apply protect layer, (mac/enc/phantom)	
+        	return TRUE;
+        }        
+        case (MSG_IDS): {	// IDS forwarded as APP messages - Martin discussion 3.2.2014.
+		    // Apply protect layer, (mac/enc/phantom)
+            return TRUE;
+        }
+        case (MSG_FORWARD):{
+            // Apply protect layer, (mac/enc/phantom). FWD is subject to PL (hop-by-hop protection).	
+        	return TRUE;
+        }
+        case (MSG_PLEVEL):{
+            // Protect level change is not subject to protection, simple re-broadcast.
+            return FALSE;
+            break;
+        }
+        default: {
+            // By default, other messages are not subject to PL - simple send.
+            return FALSE;
+        }
+        }
+    }
     
     //
     // Receive interface - LowerReceive
@@ -182,6 +212,12 @@ implementation {
             
             // Nothing to do, free buffer taken by this message.
             goto recv_finish;
+        }
+        
+        // TODO: test current privacy level vs. in message.
+        // TODO: pick which privacy level act on. 
+        if (ourHeader->privacyLevel != m_privData->priv_level){
+        	pl_log_w(TAG, "MSG privLevel mismatch, msg=%u vs. current %u\n", ourHeader->privacyLevel, m_privData->priv_level);
         }
         
         // Message handling w.r.t. privacy level.
@@ -319,16 +355,17 @@ recv_finish:
         return SUCCESS;
     }
     
-    task void task_sendMessage(){	
-        
+    task void task_sendMessage(){
         SPHeader_t* spHeader = NULL;
         error_t rval=SUCCESS;
+        error_t status=SUCCESS;
         SendRequest_t sReq; 
         uint8_t count=0;
-        //PL_key_t* key; encrypt has parameter nodeID, key it not required
         uint8_t encLen;
+        bool applyPL=TRUE;
         
-        // check if radio is busy or not
+        // Check if radio is busy or not.
+        // If busy, trigger retransmit timer and exit.
         if (m_radioBusy){
         	if (!call RetxmitTimer.isRunning()) {
         		// If retransmit timer is not running, start it with
@@ -339,7 +376,7 @@ recv_finish:
             return;
         }
         
-        // find next message to send in buffer
+        // Find next message to send in buffer.
         while(m_buffer[m_nextId].msg==NULL && count<MSG_COUNT){
             m_nextId=(m_nextId+1)%MSG_COUNT;
             count++;
@@ -347,11 +384,6 @@ recv_finish:
         
         if (count==MSG_COUNT) {
             return; // No message to send, buffer is empty
-        }
-        
-        if (m_buffer[m_nextId].msg==NULL){
-        	pl_log_e(TAG, "sendMsgTask ERR, nullMsg\n");
-        	return;	// Nothing to send, message is empty.
         }
         
         atomic {
@@ -365,31 +397,31 @@ recv_finish:
         m_lastMsgSender = m_nextId;
         }
         
+        // Determine whether Protect layer should be applied
+        // to this type of the message. 
+        applyPL = isSubjectToPL(m_nextId);
+        
+        // SPHeader basic setup & check.
         // Check who is sending msg, if forwarding only, treat it differently.
         if (m_nextId == MSG_FORWARD)
         {
             // Message is sent by forwarder, (should forward packet).
             // SPHeader already present, just change receiver and sender field.
             spHeader =  (SPHeader_t *) call Packet.getPayload(sReq.msg, sReq.len);
-            // process sender and receiver and msg type based on privacy level
-            if (spHeader->privacyLevel==PLEVEL_0)
-            {
-                // find out who is next hop
-                spHeader->receiver = call Route.getParentID(); //TODO take care of a case if ID is not valid
-                // add myself as a sender
-                spHeader->sender = TOS_NODE_ID;
-                // leave privacy type and msg type as is
-            }
-            else
-            {
-                //TODO
-            }
+            // Default routing is to the parent node
+            spHeader->receiver = call Route.getParentID(); //TODO take care of a case if ID is not valid
+            // add myself as a sender
+            spHeader->sender = TOS_NODE_ID;
+            // leave privacy type and msg type as is
         }
         else
         {
             // Initialize SP header to the message being sent.
             // Assumption: only MSG_FORWARD already has SP header set.
             // Payload is placed after SPHeader (getPayload in PL).
+            //
+            // If type = privacyLevelChange, broadcast to others, receiver is 
+            // ignored in that case, MAC computation as well.
             
             //TODO add payload len check
             sReq.len += sizeof(SPHeader_t);
@@ -402,34 +434,75 @@ recv_finish:
             spHeader->receiver = call Route.getParentID(); //TODO take care of a case if ID is not valid
             // add myself as a sender
             spHeader->sender = TOS_NODE_ID;
-        }
-                
-        //encryption
-        encLen=sReq.len - sizeof(SPHeader_t);
-        rval = call Crypto.protectBufferForNodeB(spHeader->receiver, (uint8_t *)spHeader, sizeof(SPHeader_t), &encLen);
-        sReq.len = encLen + sizeof(SPHeader_t);
+            
+            // Init phantom routing if PL is applied and privacy level >= 3.
+            if (applyPL && m_privData->priv_level == PLEVEL_3){
+            	spHeader->phantomJumps = PHANTOM_JUMPS;
+            } else {
+            	spHeader->phantomJumps = 0;
+            }
+        }        
         
-        
-        //behavior switch based on interface parameter (id) 
+        // Behavior switch based on interface parameter (id) 
+        // Changes destination in SPheader w.r.t. ID.
+        // Apply end-to-end encryption for BaseStation if message is from application layer.
         switch (m_nextId) {
         case (MSG_APP): {
-            
+        	sendMsgApp(&sReq);
+        	
+        	// TODO: apply end-to-end encryption here, encrypt for basestation.
+        	// TODO: verify correctness of use the parameters.
+        	call Crypto.protectBufferForBSB((uint8_t *)spHeader, sizeof(SPHeader_t), &(sReq.len));
+			break;
+        }        
+        case (MSG_IDS): {	// IDS forwarded as APP messages - Martin discussion 3.2.2014.
             sendMsgApp(&sReq);
             break;
         }
-        case (MSG_PLEVEL):{
-            // do nothing special, no matter the actual privacy level 
-            
-            break;
-        }
-        case (MSG_FORWARD):{
-            // do nothing special, no matter the actual privacy level 
-            
-            break;
-        }
         default: {
-            // do nothing special
         }
+        }
+        
+        // If protect layer should be applied to this type of a message, take an action.
+        if (applyPL){
+        	// TODO: which privacy level to use? in message or current?
+        	if (m_privData->priv_level == PLEVEL_3 && spHeader->phantomJumps > 0){
+        		// TODO: If phantom routing, pick random neighbor and decrement
+        		// phantom routing number in SPheader.
+        		// If there are still some jumps to take, change destination in SP header.
+        		// Otherwise the current parent is default destination.
+        		// Should set destination before encryption & mac happens.
+        		node_id_t randomNeighbor;
+        		error_t hasRandomNeighbor = call Route.getRandomNeighborIDB(&randomNeighbor);
+        		if (hasRandomNeighbor == SUCCESS){
+        			spHeader->phantomJumps -= 1;
+        			spHeader->receiver = randomNeighbor;
+        			
+        			pl_log_d(TAG, "task_sendMessage: phantomJumps=%u, newDestination=%u.\n", spHeader->phantomJumps, spHeader->receiver);
+        		} else {
+        			pl_log_w(TAG, "Cannot determine random neighbor for phantom routing.\n");
+        		}
+        	}
+        	
+        	// Message handling w.r.t. privacy level.
+	        // MAC verification and decryption.
+	        if (m_privData->priv_level == PLEVEL_1) { 
+	        	// MAC.
+	        	// Verify MAC, result is stored to status
+	        	// The whole message is MACed (including SPHeader), so offset is zero.
+	        	status = call Crypto.macBufferForNodeB(spHeader->receiver, (uint8_t *)spHeader, 0, &(sReq.len));
+	        	pl_log_d(TAG, "task_sendMessage, pl1, status=%d l=%u\n", status, sReq.len); 
+	            
+	        } else if (m_privData->priv_level == PLEVEL_2 || m_privData->priv_level == PLEVEL_3){
+	        	// MAC + ENC.
+	        	// MAC + ENC + Phantom.
+				
+	        	// TODO: finish with new interface, verify len parameter correctness (right usage?)
+	        	rval = call Crypto.protectBufferForNodeB(spHeader->receiver, (uint8_t *)spHeader, sizeof(SPHeader_t), &(sReq.len));
+	            
+	            pl_log_d(TAG, "task_sendMessage, pl23, status=%d l=%u\n", status, sReq.len); 
+	        	
+	        }
         }
         
         // Pass prepared message to the lower layer for sending.
@@ -452,7 +525,7 @@ recv_finish:
     }
     
     /**
-     * AMSend entrypoint for privacy level. 
+     * AMSend entrypoint for privacy layer. 
      */
     command error_t MessageSend.send[uint8_t id](am_addr_t addr, message_t* msg, uint8_t len) {        
         // check if Id is within bounds
@@ -485,13 +558,17 @@ recv_finish:
         return SUCCESS;
     }
     
+    /**
+     * Starts retransmit timer, time is random within a given window
+     * plus given constant offset.  
+     */
     static void startRetxmitTimer(uint16_t window, uint16_t offset) {                                                                                                      
 	    uint16_t r = call Random.rand16();
 	    r %= window;
 	    r += offset;
 	    call RetxmitTimer.startOneShot(r);
     }
-    
+	
     event void RetxmitTimer.fired() {                                                                                                                                      
 	    post task_sendMessage();
     }

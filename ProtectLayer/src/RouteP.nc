@@ -104,6 +104,10 @@ implementation{
 			post task_getRandomNeighborID();
 			return SUCCESS;
 	}
+	command error_t Route.getRandomNeighborIDB(node_id_t * neigh){
+		// TODO: not implemented yet.
+		return FAIL;
+	}
 	/*
 	command error_t getParentIDs(node_id_t* ids, uint8_t maxCount);
 	
