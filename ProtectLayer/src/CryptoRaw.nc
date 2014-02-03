@@ -8,6 +8,8 @@
 #include "ProtectLayerGlobals.h"
 interface CryptoRaw {
 
+
+	//TODO block size required
 	/**
 			Command: Blocking version. Used by other components to start encryption of supplied buffer by supplied key.
 			Enough additional space in buffer to fit encrypted content is assumed.
@@ -19,17 +21,6 @@ interface CryptoRaw {
 			@return error_t status
 	*/
 	command error_t encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen);
-
-	/**
-			Command: Blocking version. Used by other components to start decryption of supplied buffer by supplied key.
-			@param[in] key handle to the key that should be used for decryption
-			@param[in out] counter counter value before, updated to new value after decryption
-			@param[in] buffer buffer to be decrypted
-			@param[in] len length of buffer to be decrypted
-			@return error_t status
-	*/
-	command error_t decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen);
-		
 		
 	/**
 		Command: Used by other components to derive new key from master key and derivation data. 
@@ -42,14 +33,6 @@ interface CryptoRaw {
 	*/	 
 	command error_t deriveKeyB(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey);
 		
-		
-	/**
-		Command: Used by other components to generate random new key
-		@param[in/out] newKey handle to free slot where new key should be generated
-		@return error_t status
-	*/	
-	// IS USED???
-	command error_t generateKeyB(PL_key_t* newKey);
 	
 	/**	
 		Command: function to calculate AES based hash of data in buffer.

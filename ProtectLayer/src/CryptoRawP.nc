@@ -18,28 +18,16 @@ module CryptoRawP {
     }
 }
 implementation {
-    //uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
+    
     PL_key_t* 	m_key1;		/**< handle to the key used as first (or only) one in cryptographic operations. Value is set before task is posted. */
     PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
-    //uint8_t* 	m_buffer;	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-    //uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
-    //uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-    //uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-    //uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
-    uint8_t         exp[240]; //expanded key
+    uint8_t         m_exp[240]; //expanded key
     
     //
     //	Init interface
     //
     command error_t Init.init() {
-        //error_t status = SUCCESS;
-        
-        // TODO: do other initialization
-        //m_state = 0;
-        //m_dbgKeyID = 0;
-        
-        //status = call CryptoRaw.selfTest();        
-        
+       
         return SUCCESS;
     }
     
@@ -49,34 +37,30 @@ implementation {
     command error_t CryptoRaw.encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen) {
         uint8_t i;
         uint8_t j;
-        uint8_t plainCounter[16];			
-        uint8_t encCounter[16];
+        uint8_t plainCounter[BLOCK_SIZE];			
+        uint8_t encCounter[BLOCK_SIZE];
         
-        // BUGBUG: wrong arguments 
+        // TODO wrong arguments 
         
         pl_printf("CryptoRawP: KeyDistrib.encryptBufferB(buffer = '0x%x', 1 = '0x%x', 2 = '0x%x'.\n", buffer[0],buffer[1],buffer[2]); 
         
         
-        //#ifdef AES
-        
-        
-        
-        
         //set rest of counter to zeros to fit AES block
-        memset(plainCounter, 0, 16);	
+        memset(plainCounter, 0, BLOCK_SIZE);	
         
-        call AES.keyExpansion( exp, (uint8_t*) key->keyValue);
+        call AES.keyExpansion( m_exp, (uint8_t*) key->keyValue);
         
         //process buffer by blocks 
-        for(i = 0; i < (pLen / BLOCK_SIZE); i++){
-            
+        for(i = 0; i < (pLen / BLOCK_SIZE) + 1; i++){
+           
             plainCounter[0] =  key->counter;
             plainCounter[1] =  (key->counter) >> 8;
             plainCounter[2] =  (key->counter) >> 16;
             plainCounter[3] =  (key->counter) >> 24;
-            call AES.encrypt( plainCounter, exp, encCounter);
+            call AES.encrypt( plainCounter, m_exp, encCounter);
+            //TODO last block
             for (j = 0; j < BLOCK_SIZE; j++){
-                buffer[offset + j*BLOCK_SIZE] = buffer[offset + j*BLOCK_SIZE] ^ encCounter[j];
+                buffer[offset + i*BLOCK_SIZE + j] ^= encCounter[j];
             }
             (key->counter)++;
             if((key->counter) == 0){
@@ -86,38 +70,11 @@ implementation {
                 //deal with new key and counter value reset
             }
         }
-        
-        //#else /* No AES, FAKE encryption*/
-        /*
-        //uint8_t         i = 0;
-       // pl_printf("CryptoRawP: KeyDistrib.encryptBufferB(keyID = '%d', keyValue = '0x%x 0x%x') called.\n", key->dbgKeyID, key->keyValue[0], key->keyValue[1]); 
        
-       
-        buffer += offset;
-        // TODO: na define prepinani mezi AES vs. FAKE
-        
-        // BUGBUG: no real encryption is performed, only transformation from DATA into form ENC|keyID|DATA (without |) is performed
-        #define FAKEHEADERLEN 5
-        // Backup first 5 bytes (needed for ENC|keyID)
-        for (i = 0; i < FAKEHEADERLEN; i++) m_bufferTmp[i] = buffer[i];
-        // Insert encryption header
-        buffer[0] = 'E'; buffer[1] = 'N'; buffer[2] = 'C';
-        buffer[3] = key->keyValue[0]; buffer[4] = key->keyValue[1];
-        // Move data in buffer
-        for (i = *pLen - 1; i >= FAKEHEADERLEN; i--) buffer[i + FAKEHEADERLEN] = buffer[i];
-        // Insert data overwriten by fake header
-        for (i = 0; i < FAKEHEADERLEN; i++) buffer[i+FAKEHEADERLEN] = m_bufferTmp[i];
-        
-        // Increase length of encrypted data by header
-        *pLen = *pLen + FAKEHEADERLEN;
-        */
-        //#endif /* AES */
-        
-        
         return SUCCESS;
     }
     
-    
+    /*
     command error_t CryptoRaw.decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen) {
         
         error_t status = SUCCESS;
@@ -130,7 +87,7 @@ implementation {
         
         //#ifdef AES
         
-        
+        //TODO tests
         
         //set rest of counter to zeros to fit AES block
         memset(plainCounter, 0, 16);	
@@ -157,11 +114,11 @@ implementation {
             }
         }
         
-        //#else /* No AES, FAKE encryption*/
+        //#else  No AES, FAKE encryption
         //uint8_t i = 0;
         
         
-        /*
+       
         buffer += offset;
         
         // TODO: na define prepinani mezi AES vs. FAKE
@@ -192,28 +149,26 @@ implementation {
         }
         
         //m_len = Decrypt(m_key1, m_buffer + m_offset, m_len);
-        
-        #endif */ /* AES */
+       
         
         return status;
         
     }
-    
+    */
     
     
     command error_t CryptoRaw.deriveKeyB(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
         
         pl_printf("CryptoRawP: KeyDistrib.task_deriveKey(masterKey = '%x') called.\n", m_key1->dbgKeyID); 
         
-        //TODO: predelat na blocking verzi
         
-        // TODO: Mod derivace s vyuzitim AESem
+        //TODO check arguments pLen == BLOCK_SIZE
         // derivedKey = E_masterKey(derivationData)
         
         //#ifdef AES
         
-        call AES.keyExpansion( exp, (uint8_t*)(masterKey->keyValue));
-        call AES.encrypt( derivationData + offset, exp, (uint8_t*)(derivedKey->keyValue));		
+        call AES.keyExpansion( m_exp, (uint8_t*)(masterKey->keyValue));
+        call AES.encrypt( derivationData + offset, m_exp, (uint8_t*)(derivedKey->keyValue));		
         
         return SUCCESS;
         
@@ -246,22 +201,24 @@ implementation {
         //m_state &= ~FLAG_STATE_CRYPTO_DERIV;
         
     }
-    
+    /*
     command error_t CryptoRaw.generateKeyB(PL_key_t* newKey) {
         
         //TODO pokud potřeba
         return SUCCESS;
     }
-    
+    */
     command error_t CryptoRaw.hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key, uint8_t* hash){
         error_t status = SUCCESS;		
         uint8_t i;
         
+        //TODO arguments check 
+        //TODO check m_exp use
         pl_printf("CryptoRawP:  hashDataBlockB called.\n"); 
         
         
-        call AES.keyExpansion( exp, (uint8_t*) key->keyValue);		
-        call AES.encrypt( hash, exp, buffer + offset);
+        call AES.keyExpansion( m_exp, (uint8_t*) key->keyValue);		
+        call AES.encrypt( hash, m_exp, buffer + offset);
         for(i = 0; i < BLOCK_SIZE; i++){
             hash[i] = buffer[i + offset] ^ hash[i];
         }		
@@ -293,29 +250,6 @@ implementation {
             return  EINVALIDDECRYPTION;
         } else {
             m_key1->counter = 0;
-        }
-        
-        pl_printf("CryptoRawP:  self test decrypt.\n"); 
-        
-        if((status = call CryptoRaw.decryptBufferB( m_key1, data, 0, BLOCK_SIZE)) != SUCCESS){
-            
-            pl_printf("CryptoRawP:  self test decrypt return failed.\n"); 
-            
-            return status;
-        }
-        if(m_key1->counter != 1){
-            
-            pl_printf("CryptoRawP:  self test decrypt counter not incremented.\n"); 
-            
-            return EINVALIDDECRYPTION;
-        }
-        for(i = 0; i < BLOCK_SIZE; i++){
-            if(data[i] != 0){
-                
-                pl_printf("CryptoRawP:  self test decrypt not same result after decryption.\n"); 
-                
-                return  EINVALIDDECRYPTION;
-            }
         }
         
         pl_printf("CryptoRawP:  self test derive key.\n"); 

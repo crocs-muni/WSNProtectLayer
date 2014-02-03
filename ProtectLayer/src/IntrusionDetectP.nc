@@ -175,7 +175,7 @@ implementation {
         //        pl_printf("IDS: ReceiveMsgCopy.receive\n");
         
         //		uint8_t msgType;
-        uint64_t hashedPacket;
+        uint32_t hashedPacket;
         
         SPHeader_t* spHeader;        
         spHeader = (SPHeader_t*) payload;
@@ -192,7 +192,7 @@ implementation {
         
         //        msgType = spHeader->msgType;
         
-        call Crypto.hashDataHalfB( (uint8_t*) payload, 0, len, &hashedPacket);
+        call Crypto.hashDataShortB( (uint8_t*) payload, 0, len, &hashedPacket);
         
         // AES (or another cryptographic function) of the payload should be computed in order
         // to identify content of the messages
@@ -292,7 +292,7 @@ implementation {
      * Event: Some IDS alert was received from Dispatcher - IDS alert
      */
     event message_t * ReceiveIDSMsgCopy.receive(message_t *msg, void *payload, uint8_t len){
-        uint64_t hashedPacket;
+        uint32_t hashedPacket;
         uint16_t sender = call AMPacket.source(msg);
         uint16_t receiver = call AMPacket.destination(msg);
 
@@ -310,7 +310,7 @@ implementation {
 
         }
         
-        call Crypto.hashDataHalfB( (uint8_t*) payload, 0, len, &hashedPacket);
+        call Crypto.hashDataShortB( (uint8_t*) payload, 0, len, &hashedPacket);
         
         // AES (or another cryptographic function) of the payload should be computed in order
         // to identify content of the messages

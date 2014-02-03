@@ -29,7 +29,7 @@ implementation {
     //uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
     //uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
     //uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
-    uint8_t         exp[240]; //expanded key
+    uint8_t         m_exp[240]; //expanded key
     //
     //	Init interface
     //
@@ -40,25 +40,42 @@ implementation {
         return SUCCESS;
     }
     
-    command error_t Crypto.macBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+    command error_t Crypto.macBufferForNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         uint8_t i;
         uint8_t j;
         uint8_t xor[BLOCK_SIZE];
         error_t status = SUCCESS;
         
         pl_printf("CryptoP:  macBufferForNodeB called.\n"); 
+        //TODO invalid arguments testing
+        //null buffer
+        //pLen null or *pLen 0
+        //node ID < 50 >0
+        //offset < 20
         
-        memcpy(xor, buffer + offset, BLOCK_SIZE);
+        //TODO for new function separate mac Array and data array
+        
+        //temp array of zeros to padd last block of data
+        
         if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1)) == SUCCESS){	
             
-            call AES.keyExpansion( exp, (uint8_t*) m_key1->keyValue);
+            call AES.keyExpansion( m_exp, (uint8_t*) m_key1->keyValue);
             
+            //if pLen is < BLOCK_SIZE then copy just pLen otherwise copy first block of data
+            memset(xor, 0, BLOCK_SIZE);
+            if(*pLen < BLOCK_SIZE){
+                memcpy(xor, buffer + offset, *pLen);
+            } else {
+                memcpy(xor, buffer + offset, BLOCK_SIZE);
+            }
             //process buffer by blocks 
-            for(i = 0; i < (*pLen / BLOCK_SIZE); i++){
+            for(i = 0; i < (*pLen / BLOCK_SIZE) + 1; i++){
                 
-                call AES.encrypt( xor, exp, xor);
-                for (j = 0; i < BLOCK_SIZE; j++){
-                    xor[j] = (*pLen < (i*BLOCK_SIZE+j)) ? xor[j] : buffer[offset + i*BLOCK_SIZE + j] ^ xor[j];
+                call AES.encrypt( xor, m_exp, xor);
+                for (j = 0; j < BLOCK_SIZE; j++){
+                
+		    if((*pLen <= (i*BLOCK_SIZE+j))) break;
+                    xor[j] =  buffer[offset + i*BLOCK_SIZE + j] ^ xor[j];
                 }			
             }
             
@@ -74,6 +91,8 @@ implementation {
     }	
     
     command error_t Crypto.macBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){		
+        //TODO merge with previous
+        /*
         uint8_t i;
         uint8_t j;
         uint8_t xor[BLOCK_SIZE];
@@ -106,26 +125,28 @@ implementation {
             
         }
         return status;
+        */
     }
     
-    command error_t Crypto.verifyMacFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
-        uint8_t mac[BLOCK_SIZE];
+    command error_t Crypto.verifyMacFromNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+        uint8_t mac[MAC_LENGTH];
         error_t status = SUCCESS;
-        uint8_t newPlen = (*pLen) - BLOCK_SIZE;
+        uint8_t newPlen = (*pLen) - MAC_LENGTH;
         
         pl_printf("CryptoP:  verifyMacFromNodeB called.\n"); 
         
         // TODO: verify this condition, may be buggy
         // Check sanity of the input parameters
-        if (*pLen < BLOCK_SIZE){
+        if (*pLen < MAC_LENGTH){
         	pl_printf("CryptoP; ERROR; Insane input par. %u %u\n", offset, *pLen);
         	return FAIL;
         }
         
-        memcpy(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
+        memcpy(mac, buffer + offset + *pLen - MAC_LENGTH, MAC_LENGTH); //copy received mac to temp location
         status = call Crypto.macBufferForNodeB(nodeID, buffer, offset, &newPlen); //calculate new mac
 	
-        if((memcmp(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE))){ //compare new with received
+	//TODO revert memcpm condition
+        if((memcmp(mac, buffer + offset + *pLen - MAC_LENGTH, MAC_LENGTH))){ //compare new with received
             status = EWRONGMAC;
             
             
@@ -138,13 +159,15 @@ implementation {
     }	
     
     command error_t Crypto.verifyMacFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+        //TODO: merge with previous
+        /*
         uint8_t mac[BLOCK_SIZE];
         error_t status = SUCCESS;
         uint8_t newPlen = (*pLen) - BLOCK_SIZE;
 
         pl_printf("CryptoP:  verifyMacFromBSB called.\n"); 
         
-        // TODO: verify this condition, may be buggy
+        //TODO: verify this condition, may be buggy
         // Check sanity of the input parameters
         if (*pLen < BLOCK_SIZE){
         	pl_printf("CryptoP; ERROR; Insane input par. %u %u\n", offset, *pLen);
@@ -162,14 +185,15 @@ implementation {
             return status;		
         }
         return status;
+        */
     }	
     
-    command error_t Crypto.protectBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+    command error_t Crypto.protectBufferForNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         error_t status = SUCCESS;	
         
         pl_printf("CryptoP:  protectBufferForNodeB called.\n"); 
         
-        
+        //TODO tests and merge with BS version
         
         if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1))!= SUCCESS){
             
@@ -178,7 +202,7 @@ implementation {
             return status;
         }
         if((status = call CryptoRaw.encryptBufferB( m_key1, buffer, offset, *pLen))!= SUCCESS){
-            
+            //TODO replace messages
             pl_printf("CryptoP:  protectBufferForNodeB key not retrieved.\n"); 
             
             return status;
@@ -193,7 +217,7 @@ implementation {
         return status;
     }	
     
-    command error_t Crypto.unprotectBufferFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){		
+    command error_t Crypto.unprotectBufferFromNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){		
         error_t status = SUCCESS;		
         
         pl_printf("CryptoP:  unprotectBufferFromNodeB called.\n"); 
@@ -213,7 +237,7 @@ implementation {
             
             return status;
         }
-        if((status = call CryptoRaw.decryptBufferB( m_key1, buffer, offset, *pLen))!= SUCCESS){	
+        if((status = call CryptoRaw.encryptBufferB( m_key1, buffer, offset, *pLen))!= SUCCESS){	
             
             pl_printf("CryptoP:  unprotectBufferFromNodeB decryption failed.\n"); 
             
@@ -269,7 +293,7 @@ implementation {
             
             return status;
         }
-        if((status = call CryptoRaw.decryptBufferB( m_key1, buffer, offset, *pLen)) != SUCCESS){
+        if((status = call CryptoRaw.encryptBufferB( m_key1, buffer, offset, *pLen)) != SUCCESS){
             
             pl_printf("CryptoP:  unprotectBufferFromBSB decrypt buffer failed.\n"); 
             
@@ -283,9 +307,10 @@ implementation {
     command error_t Crypto.initCryptoIIB(){
         error_t status = SUCCESS;
         uint16_t copyId;
+        uint8_t i;
         SavedData_t* SavedData = NULL;
         KDCPrivData_t* KDCPrivData = NULL;
-        SavedData_t* SavedDataEnd = NULL;
+        //SavedData_t* SavedDataEnd = NULL;
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
 #endif
@@ -300,22 +325,25 @@ implementation {
         SavedData = call SharedData.getSavedData();
         if(SavedData == NULL || KDCPrivData == NULL){
             status = EDATANOTFOUND;
+            //TODO printf()
             return status;
         }
-        SavedDataEnd = SavedData + sizeof(SavedData) / sizeof(SavedData[0]);
+        //SavedDataEnd = SavedData + sizeof(SavedData) / sizeof(SavedData_t);
         //process all saved data items
-        while ( SavedData < SavedDataEnd ){
-            m_key1 = &(KDCPrivData->preKeys[SavedData->nodeId]); //predistributed key
-            
+        //while ( SavedData < SavedDataEnd ){ TODO for cycle
+        {
+        //TODO function to return prekeys in shared data
+            //m_key1 = &(KDCPrivData->preKeys[SavedData->nodeId]); //predistributed key
+            //TODO: m_key1 = call savedData.get pre key ...
             //get derivation data 
             /*
             calculates derivation data by appending node ID's first lower on, then higher one
             these are appended to array by memcpy and pointer arithmetics ()
             */
             memset(m_buffer, 0, BLOCK_SIZE); //pad whole block with zeros
-            copyId = min(SavedData->nodeId, TOS_NODE_ID);	
+            copyId = min(SavedData[i].nodeId, TOS_NODE_ID);	
             memcpy(m_buffer, &copyId, sizeof(copyId)); 
-            copyId = max(SavedData->nodeId, TOS_NODE_ID);
+            copyId = max(SavedData[i].nodeId, TOS_NODE_ID);
             memcpy(m_buffer + sizeof(copyId), &copyId, sizeof(copyId)); 
             
             //derive key from data and predistributed key
@@ -327,14 +355,14 @@ implementation {
             }
             m_key2->counter = 0;
             //save key to KDCData shared key		
-            memcpy( &((SavedData->kdcData).shared_key), m_key2, sizeof(PL_key_t));
+            memcpy( &((SavedData[i].kdcData).shared_key), m_key2, sizeof(PL_key_t));
             
-            SavedData++;
+            //SavedData++;
         }
         
         return status;
     }
-    
+    //TODO merge hash with mac
     command error_t Crypto.hashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash){
         error_t status = SUCCESS;
         uint8_t i;
@@ -342,17 +370,21 @@ implementation {
         uint8_t tempHash[BLOCK_SIZE];
         
         pl_printf("CryptoP:  hashDataB called.\n"); 
+        //TODO arguments tests
         
+        //TODO add function to set default hash key
         memset(m_key1->keyValue, 0, KEY_SIZE); //init default key value
         for(i = 0; i < pLen/BLOCK_SIZE; i++){
+        //TODO check for incomplete block
             if((status = call CryptoRaw.hashDataBlockB(buffer, offset + i * BLOCK_SIZE, m_key1, tempHash)) != SUCCESS){
                 
                 pl_printf("CryptoP:  hashDataB calculation failed.\n"); 
                 
                 return status;
             }
+            //TODO hash size constant
             for(j = 0; j < BLOCK_SIZE; j++){
-                m_key1->keyValue[j] = tempHash[j] ^ buffer[offset + i * BLOCK_SIZE];
+                m_key1->keyValue[j] = tempHash[j];
             }
         }
         //pad and calculate last block
@@ -374,11 +406,13 @@ implementation {
         return status;
     }
     
-    command error_t Crypto.hashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t* hash){
+    //TODO change header and define short hash as constant
+    command error_t Crypto.hashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint32_t* hash){
         uint8_t tempHash[BLOCK_SIZE];
         uint8_t status;
         uint8_t i;
         
+        //TODO checks
         pl_printf("CryptoP: hashDataHalfB called.\n"); 
         
         if((status = call Crypto.hashDataB(buffer, offset, pLen, tempHash)) != SUCCESS){
@@ -387,10 +421,10 @@ implementation {
             
             return status;
         }
-        for (i = 0; i < BLOCK_SIZE/2; i++){
+        for (i = 0; i < BLOCK_SIZE/4; i++){
             tempHash[i] = tempHash[i]^tempHash[i + BLOCK_SIZE/2];
         }
-        memcpy(hash, tempHash, sizeof(hash));
+        memcpy(hash, tempHash, sizeof(*hash));
         return SUCCESS;
     }
     
@@ -414,13 +448,13 @@ implementation {
         return status;
     }
     
-    command error_t Crypto.verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t hash){
+    command error_t Crypto.verifyHashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint32_t hash){
         error_t status = SUCCESS;
-        uint64_t tempHash;
+        uint32_t tempHash;
         
         pl_printf("CryptoP:  verifyHashDataB called.\n"); 
         
-        if((status = call Crypto.hashDataHalfB(buffer, offset, pLen, &tempHash)) != SUCCESS){
+        if((status = call Crypto.hashDataShortB(buffer, offset, pLen, &tempHash)) != SUCCESS){
             
             pl_printf("CryptoP:  verifyHashDataB failed to calculate hash.\n"); 
             
@@ -434,27 +468,36 @@ implementation {
         return status;		
     }
     
-    command bool Crypto.verifySignature( uint8_t* buffer, uint8_t offset, uint8_t pLen, PRIVACY_LEVEL level, uint8_t counter){
-        uint8_t i;
-        uint8_t signature[BLOCK_SIZE];
+    //TODO add function for update signature value
+    
+    //TODO uint16_t counter
+    command bool Crypto.verifySignature( uint8_t* buffer, uint8_t offset, uint8_t pLen, PRIVACY_LEVEL level, uint16_t counter, uint8_t* signature){
+    //TODO add optional rparameter for signature return
+        uint16_t i;
+        uint8_t tmpSignature[HASH_LENGTH];
         
         pl_printf("CryptoP:  verifySignature called.\n"); 
         
         for(i = 0; i < counter; i++){			
             call Crypto.hashDataB( buffer, offset, pLen, buffer + offset);			
         }
-        //call shared data to fill signature
-        if(memcmp(buffer + offset, signature, BLOCK_SIZE)){
+        //TODO call shared data to fill signature
+        //TODO memcmp change condition
+        if(memcmp(buffer + offset, tmpSignature, BLOCK_SIZE)){
             return FALSE;
         } else {
             return TRUE;
         }
     }
     
+    command void Crypto.updateSignature( uint8_t signature){
+        //TODO implementation
+    }
+    
     command error_t Crypto.selfTest(){
         uint8_t status = SUCCESS;
         uint8_t hash[BLOCK_SIZE];
-        uint64_t halfHash = 0;
+        uint32_t halfHash = 0;
         uint8_t macLength = BLOCK_SIZE;
         
         pl_printf("CryptoP:  Self test started.\n"); 
@@ -478,13 +521,13 @@ implementation {
         
         pl_printf("CryptoP:  hashDataHalfB started.\n"); 
         
-        if((status = call Crypto.hashDataHalfB(m_buffer, 0, BLOCK_SIZE, &halfHash)) != SUCCESS){
+        if((status = call Crypto.hashDataShortB(m_buffer, 0, BLOCK_SIZE, &halfHash)) != SUCCESS){
             
             pl_printf("CryptoP:  hashDataHalfB failed.\n"); 
             
             return status;		 
         }		
-        if((status = call Crypto.verifyHashDataHalfB(m_buffer, 0, BLOCK_SIZE, halfHash)) != SUCCESS){
+        if((status = call Crypto.verifyHashDataShortB(m_buffer, 0, BLOCK_SIZE, halfHash)) != SUCCESS){
             
             pl_printf("CryptoP:  verifyHashDataB failed.\n"); 
             

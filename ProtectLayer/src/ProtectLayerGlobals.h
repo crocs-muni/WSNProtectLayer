@@ -69,6 +69,12 @@ enum {
   STATE_READY_FOR_APP = 3,
   STATE_WORKING = 4
 }; 
+
+//crypto array lengths
+#define MAC_LENGTH 16
+#define HASH_LENGTH 16
+#define BLOCK_SIZE 16
+
 // NOTE: constants should be defined as item in enum above (to save space) #define MAX_NEIGHBOR_COUNT 	20 /**< Maximum number of neighbors - used to allocate static arrays */
 
 #define FLAG_STATE_KDP_DISCOVERKEYS 0x0001	/**< neighbor keys discovery in progress */
@@ -253,6 +259,7 @@ typedef struct SavedData {
  */
 typedef struct PPCPrivData {
 	uint16_t priv_level; /**< current privacy level on this node */
+	uint8_t signature[HASH_LENGTH];
 } PPCPrivData_t;
 
 /**
