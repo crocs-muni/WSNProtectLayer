@@ -300,7 +300,7 @@ implementation {
 
             pl_printf("IDSState: A copy of an IDSAlert from IDSForwarder received. Sender: %d, receiver: %d.\n", sender, receiver); 
 
-		savedData = call SharedData.getNodeState(receiver)); 
+		savedData = call SharedData.getNodeState(receiver); 
         
         if (call SharedData.getNodeState(sender) == NULL && savedData == NULL ) {
             return msg;
@@ -308,7 +308,7 @@ implementation {
         
         if ( savedData != NULL) {
         	// If nb of received packets is higher than size of its type, assign 0 to both received and forwardwed packets
-        	if (savedData->idsData.nb_received >= 4294967295) {
+        	if (savedData->idsData.nb_received >= 4294967295u) {
         		savedData->idsData.nb_received = 0;
         		savedData->idsData.nb_forwarded = 0;
         		pl_printf("IDSState: counters of received and forwarded packets were reset.\n");
