@@ -17,9 +17,6 @@
 #define PL_LOG_MAX_LEVEL 4
 #endif
 
-// define for printf, writes to output only if TOS_NODE_ID is equal to this DEBUG_ID
-#define PRINTF_DEBUG_ID 19
-
 // Returns maximal value the given variable can have.
 #define MAX_VALUE(var) ( (1<<(sizeof(var)*8-1)) | ((1<<(sizeof(var)*8-1))-1) )
 
@@ -122,6 +119,7 @@ typedef struct SPHeader {
 /*@{*/
   uint8_t msgType;	/**< type of message */
   uint8_t privacyLevel;	/**< privacy level applied */
+  uint8_t phantomJumps;	/**< number of jumps remaining in phantom routing */
   uint16_t sender;	/**< sender ID */
   uint16_t receiver; /**< receiver ID */
 /*@}*/
@@ -142,16 +140,20 @@ typedef enum _MSG_TYPE {
 	MSG_COUNT = 8   /**< number of message types */
 } MSG_TYPE;
 
-
 /**
-	The enumeration of possible privacy levels
-*/
+ * The enumeration of possible privacy levels:
+ * 
+ * 	0: No protection.
+ *  1: MAC of the whole packet (SPHeader + payload).
+ *  2: MAC + ENC (of the payload - excluding SPHeader).
+ *  3: MAC + ENC + Phantom Routing.
+ */
 typedef enum _PRIVACY_LEVEL {
-	PLEVEL_0 = 0, /**< privacy level with no security */
-	PLEVEL_1 = 1, /**< privacy level targeting attacker 1 */
-	PLEVEL_2 = 2, /**< privacy level targeting attacker 2  */
-	PLEVEL_3 = 3, /**< privacy level targeting attacker 3  */
-	PLEVEL_4 = 4  /**< privacy level targeting attacker 4  */
+	PLEVEL_0 = 0,   /**< privacy level with no security       */
+	PLEVEL_1 = 1,   /**< privacy level targeting attacker 1   */
+	PLEVEL_2 = 2,   /**< privacy level targeting attacker 2   */
+	PLEVEL_3 = 3,   /**< privacy level targeting attacker 3   */
+	PLEVEL_MAX = 4  /**< synthetic value, maximum bound on PL */
 } PRIVACY_LEVEL;
 /**
 	A structure representing a message that changes privacy level

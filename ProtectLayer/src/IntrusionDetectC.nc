@@ -15,8 +15,7 @@ configuration IntrusionDetectC{
 		interface Init as PLInit;
 	}
 }
-//TODO: IDS component will be decomposed at least into statistics manager, reputation system,
-// detection module and connected with add-on when Dusan comes back. 
+
 implementation{
 	components IntrusionDetectP;
 	components PrivacyC;

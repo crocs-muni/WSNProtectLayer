@@ -90,7 +90,7 @@ implementation {
     //	Privacy interface
     //
     command PRIVACY_LEVEL Privacy.getCurrentPrivacyLevel(){	
-        pl_log_d(TAG, "PrivacyP.Privacy.getCurerentPrivacyLevel, %d\n",m_privData->priv_level);
+        pl_log_i(TAG, "Privacy.getCurerentPrivacyLevel, %d\n",m_privData->priv_level);
         return m_privData->priv_level;
     }
     
@@ -101,8 +101,8 @@ implementation {
     event void PrivacyLevel.privacyLevelChanged(error_t status, PRIVACY_LEVEL newPrivacyLevel){
         //TODO: check for allowed priv levels
         if (status == SUCCESS) {
-            m_privData->priv_level = newPrivacyLevel;	
-            dbg("Privacy","Privacy: PrivacyP.PrivacyLevel.privacyLevelChanged, %d\n",m_privData->priv_level);
+            m_privData->priv_level = newPrivacyLevel;
+            pl_log_i(TAG, "Privacy.privacyLevelChanged, %d\n",m_privData->priv_level);		
         }
     }
     
@@ -124,12 +124,11 @@ implementation {
         	return;
         }
         
-        // Passing message directly to the IDS, sync.
-        // TODO: uncomment, waiting for finishing Crypto bug fixes. 
-        //newMsg = signal MessageReceive.receive[MSG_IDSCOPY](msg, payload, len);
-        //if (newMsg != msg){
-        //	pl_log_e(TAG, "IDS returned different buffer");
-        //}
+        // Passing message directly to the IDS, sync. 
+        newMsg = signal MessageReceive.receive[MSG_IDSCOPY](msg, payload, len);
+        if (newMsg != msg){
+        	pl_log_e(TAG, "IDS returned different buffer");
+        }
     }
     
     
@@ -137,106 +136,120 @@ implementation {
     // Receive interface - LowerReceive
     //
     task void task_receiveMessage() {
-        
         message_t* retMsg = NULL;
         message_t* msg = NULL;
         uint8_t len = 0;
         void* payload = NULL;
         SPHeader_t* ourHeader = NULL;
-        //PL_key_t * key; encrypt has nodeID parameter, key is not required
         uint8_t decLen = 0;
         error_t status = SUCCESS;
         
-        // Get msg to be processed , TODO we could check if isEmpty, but it never should be emtpy
+        // Get msg to be processed
 		msg = m_receiveBuffer[m_recNextToProcess].msg;
 		
+		// Test for empty message.
 		if (m_receiveBuffer[m_recNextToProcess].isEmpty){
         	pl_log_e(TAG, "task_receiveMessage IS EMPTY!\n");
+        	
+        	// Message is already empty, no further action is needed.
+        	return;
         }
+        
+        // Test for NULL message.
         if (msg==NULL){
-        	pl_log_e(TAG, "task_receiveMessage IS NULL!\n");	
+        	pl_log_e(TAG, "task_receiveMessage IS NULL!\n");
+        	
+        	// Message is already empty, no further action is needed.
+        	return;	
         }
+        
+        retMsg = msg;	// Default option, amy be changed later.
         
         // Get our header from payload
         ourHeader = (SPHeader_t*) m_receiveBuffer[m_recNextToProcess].payload;
-
         pl_log_d(TAG, "task_receiveMessage 2, buffer position %d\n", (int)m_recNextToProcess); 
         
-        switch (ourHeader->privacyLevel) {
-        case PLEVEL_0: {
-            // check if I am receiver of the message
-            if (ourHeader->receiver == TOS_NODE_ID)
-            {
-                //decrypt
-                decLen= m_receiveBuffer[m_recNextToProcess].len - sizeof(SPHeader_t);                                
-                status = call Crypto.unprotectBufferFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
-                
-                pl_log_d(TAG, "task_receiveMessage 3, ourHeader->receiver == TOS_NODE_ID, status=%d l=%u ln=%u\n", status, m_receiveBuffer[m_recNextToProcess].len, decLen); 
-                
-                m_receiveBuffer[m_recNextToProcess].len = decLen + sizeof(SPHeader_t);
+        // SPHeader is not protected at all, data is in plaintext.
+        if (ourHeader->receiver != TOS_NODE_ID){
+        	// Message is not for me -> just report to the IDS and don't care anymore. 
+        	// Even if encrypted, I don't have hop-by-hop keys so I cannot decrypt it for IDS.
+        	// WARNING! Thus in privacy level >= 2 IDS cannot detect dropper since hashes are 
+        	// always different in each hop. 
+        	pl_log_d(TAG, "task_receiveMessage, ourHeader->receiver != TOS_NODE_ID\n"); 
 
-                // msg is for me
-                // check MSG_TYPE
-                if (ourHeader->msgType == MSG_APP)
-                {
-
-                	pl_log_d(TAG, "Privacy: task_receiveMessage 4, ourHeader->msgType == MSG_APP\n"); 
-
-                    //copy msg and pass to IDS
-                    passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
-                    //signal event to forwarder, this is special case since APP messages are forwarded to the BS and not to the app level
-                    retMsg = signal MessageReceive.receive[MSG_FORWARD](msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);	
-                }
-                else
-                {
-                	
-                    pl_log_d(TAG, "Privacy: task_receiveMessage 4, ourHeader->msgType != MSG_APP\n"); 
-
-                    // other type of msg, remove protections if any,
-                    //TODO
-                    //copy msg and pass to IDS
-                    passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
-                    
-                    // Payload is now including our header. Stripe our header and provide offseted pointer and decrease payload length	
-                    len = m_receiveBuffer[m_recNextToProcess].len - sizeof(SPHeader_t);
-                    payload = m_receiveBuffer[m_recNextToProcess].payload + sizeof(SPHeader_t);
-                    
-                    // Simple test of connection IDS providing reputation for TOSSIM
-                    //reputation = call IntrusionDetect.getNodeReputation(1);
-                    //dbg("NodeState", "Reputation is: %d.\n", reputation);
-
-                    pl_log_d(TAG, "LowerReceive.receive, MSG type %x.\n", ourHeader->msgType); 
-
-                    //TODO: test if our message
-                    retMsg = signal MessageReceive.receive[ourHeader->msgType](msg, payload, len);
-                }					
-            }
-            else
-            {
-
-                pl_log_d(TAG, "task_receiveMessage 3, ourHeader->receiver != TOS_NODE_ID\n"); 
-
-                // It is not for me, pass copy to IDS
-                passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
-                retMsg = msg;
-            }
+            // It is not for me, pass copy to IDS
+            passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
             
-            break;
-        }
-        case PLEVEL_1: {
-            
-            break;
-        }
-        case PLEVEL_2: {
-            
-            break;
-        }
-        default: 
-            // privacy level not recognized, TODO pass copy of msg to IDS ?
-            retMsg = msg;
+            // Nothing to do, free buffer taken by this message.
+            goto recv_finish;
         }
         
-        // empty message_t slot, update which slot to process next and end task
+        // Message handling w.r.t. privacy level.
+        // MAC verification and decryption.
+        switch (ourHeader->privacyLevel) {
+        case PLEVEL_0: {	// No protection
+            break;
+        }
+        case PLEVEL_1: {	// MAC
+        	// Verify MAC, result is stored to status
+        	// The whole message is MACed (including SPHeader), so offset is zero.
+        	status = call Crypto.verifyMacFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, 0, &(m_receiveBuffer[m_recNextToProcess].len));
+        	
+        	pl_log_d(TAG, "task_receiveMessage, pl1, status=%d l=%u\n", status, m_receiveBuffer[m_recNextToProcess].len); 
+            break;
+        }
+        case PLEVEL_2:		// MAC + ENC
+        case PLEVEL_3: {	// MAC + ENC + Phantom 
+        	
+        	// Decrypt & verify MAC, result is stored to status.
+            decLen = m_receiveBuffer[m_recNextToProcess].len - sizeof(SPHeader_t);                                
+            status = call Crypto.unprotectBufferFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
+            m_receiveBuffer[m_recNextToProcess].len = decLen + sizeof(SPHeader_t);
+            
+            pl_log_d(TAG, "task_receiveMessage, pl23, status=%d l=%u ln=%u\n", status, m_receiveBuffer[m_recNextToProcess].len, decLen); 
+        	break;
+        }
+        default: 
+        	pl_log_e(TAG, "task_receiveMessage: privacy level not recognized %u", ourHeader->privacyLevel);
+        }
+        
+        // Pass message to the IDS in any case, message is for us,
+        // if pl>=2, it is already decrypted.
+        passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
+        
+        // Check result of the verification operation, if MAC is not correct, drop the message.
+        if (status!=SUCCESS){
+        	pl_log_i(TAG, "MACverification/decryption problem, code=%u, msg=%p", status, m_receiveBuffer[m_recNextToProcess].msg);
+        	goto recv_finish;
+        }
+        
+        // Handling of the message with respect to the message type.
+        // Note: Message here is always for me.
+        if (ourHeader->msgType == MSG_APP || ourHeader->msgType == MSG_IDS) {
+			// Application message = Node sends message to the base station
+			// Using forwarders on the path to the root. Hop by hop.
+			// This message is re-wrapped as MSG_FORWARD.
+        	pl_log_d(TAG, "task_receiveMessage, ourHeader->msgType == MSG_APP\n"); 
+            
+            //signal event to forwarder, this is special case since APP messages are forwarded to the BS and not to the app level
+            retMsg = signal MessageReceive.receive[MSG_FORWARD](msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);	
+        } 
+        else {   	
+            pl_log_d(TAG, "Privacy: task_receiveMessage 4, ourHeader->msgType != MSG_APP, != MSG_IDS\n"); 
+            
+            // Payload is now including SPheader header. 
+            // Stripe SPheader, provide offseted pointer and decrease payload length.
+            len = m_receiveBuffer[m_recNextToProcess].len - sizeof(SPHeader_t);
+            payload = m_receiveBuffer[m_recNextToProcess].payload + sizeof(SPHeader_t);
+
+            pl_log_d(TAG, "LowerReceive.receive, MSG type %x.\n", ourHeader->msgType); 
+
+            //TODO: test if our message, WTF?
+            retMsg = signal MessageReceive.receive[ourHeader->msgType](msg, payload, len);
+        }
+        
+recv_finish:        
+        // Empty message_t slot, update which slot to process next and end task.
         atomic {
         m_receiveBuffer[m_recNextToProcess].msg = retMsg;
         m_receiveBuffer[m_recNextToProcess].isEmpty=1;
@@ -254,7 +267,7 @@ implementation {
         
         message_t * tmpMsg = NULL;
         
-        //get new message_t to be returned
+        // Get new message_t to be returned.
         if (m_receiveBuffer[m_recNextToStore].isEmpty)
         {
         	atomic{
@@ -270,7 +283,7 @@ implementation {
         }
         else
         {
-            //buffer full, return original message without modification
+            // Buffer full, return original message without modification.
             return msg;
         }        
 
@@ -279,26 +292,25 @@ implementation {
     } 
     
     
-    
-    
-    
     //
     //	AMSend[uint8_t id] interface
     //
     error_t sendMsgApp(SendRequest_t* sReq)
     {
         //behavior switch based on current privacy level
+        sReq->addr = AM_BROADCAST_ADDR;
+        
         switch (m_privData->priv_level) {
         case PLEVEL_0: {
-            //do nothing special
             break;
         }
         case PLEVEL_1: {
-            sReq->addr = AM_BROADCAST_ADDR;
             break;
         }
         case PLEVEL_2: {
-            
+            break;
+        }
+        case PLEVEL_3: {
             break;
         }
         default: 
@@ -327,41 +339,42 @@ implementation {
             return;
         }
         
-        //find next message to send in buffer
-        while(m_buffer[m_nextId].msg==NULL && count<MSG_COUNT)
-        {
+        // find next message to send in buffer
+        while(m_buffer[m_nextId].msg==NULL && count<MSG_COUNT){
             m_nextId=(m_nextId+1)%MSG_COUNT;
             count++;
         }
+        
         if (count==MSG_COUNT) {
-            dbg("Privacy","Privacy: PrivacyP.task_sendMessage, nothing in the buffer\n");
-            return; //no message to send, buffer is empty
+            return; // No message to send, buffer is empty
         }
+        
         if (m_buffer[m_nextId].msg==NULL){
         	pl_log_e(TAG, "sendMsgTask ERR, nullMsg\n");
+        	return;	// Nothing to send, message is empty.
         }
         
         atomic {
-        //get info SendRequest from m_buffer
+        // Get info SendRequest from m_buffer.
         sReq.addr = m_buffer[m_nextId].addr;
         sReq.msg = m_buffer[m_nextId].msg;
         sReq.len = m_buffer[m_nextId].len;
         
-        // store msg pointer for further check in sendDone	
+        // Store msg pointer for further check in sendDone.	
         m_lastMsg = sReq.msg;
         m_lastMsgSender = m_nextId;
         }
         
-        //check who is sending msg, if forwarding only, treat it differently
+        // Check who is sending msg, if forwarding only, treat it differently.
         if (m_nextId == MSG_FORWARD)
         {
-            //only forwarding packet, SPHeader already present, just change receiver and sender field
-            //get spHeader
+            // Message is sent by forwarder, (should forward packet).
+            // SPHeader already present, just change receiver and sender field.
             spHeader =  (SPHeader_t *) call Packet.getPayload(sReq.msg, sReq.len);
-            //process sender and receiver and msg type based on privacy level
+            // process sender and receiver and msg type based on privacy level
             if (spHeader->privacyLevel==PLEVEL_0)
             {
-                //find out who is next hop
+                // find out who is next hop
                 spHeader->receiver = call Route.getParentID(); //TODO take care of a case if ID is not valid
                 // add myself as a sender
                 spHeader->sender = TOS_NODE_ID;
@@ -374,11 +387,14 @@ implementation {
         }
         else
         {
-            // Include SP header
+            // Initialize SP header to the message being sent.
+            // Assumption: only MSG_FORWARD already has SP header set.
+            // Payload is placed after SPHeader (getPayload in PL).
+            
             //TODO add payload len check
             sReq.len += sizeof(SPHeader_t);
             
-            spHeader =  (SPHeader_t *) call Packet.getPayload(sReq.msg, sReq.len);
+            spHeader = (SPHeader_t *) call Packet.getPayload(sReq.msg, sReq.len);
             // Setting info into our header
             spHeader->msgType = m_nextId; 
             spHeader->privacyLevel = m_privData->priv_level;
@@ -390,7 +406,6 @@ implementation {
                 
         //encryption
         encLen=sReq.len - sizeof(SPHeader_t);
-        //key = call KeyDistrib.getKeyToNodeB(spHeader->receiver);
         rval = call Crypto.protectBufferForNodeB(spHeader->receiver, (uint8_t *)spHeader, sizeof(SPHeader_t), &encLen);
         sReq.len = encLen + sizeof(SPHeader_t);
         
@@ -417,16 +432,11 @@ implementation {
         }
         }
         
+        // Pass prepared message to the lower layer for sending.
         rval = call LowerAMSend.send(sReq.addr,sReq.msg,sReq.len);
         if(rval == SUCCESS) {
-            // Sent successfully, clear buffer and increase id.
-            atomic {
-            m_buffer[m_nextId].addr = 0;
-            m_buffer[m_nextId].msg = NULL;
-            m_buffer[m_nextId].len = 0;
-            m_nextId = (m_nextId+1)%MSG_COUNT;
-            m_radioBusy=TRUE;
-            }
+            // Message accepted for sending by lower AM layer.
+            m_radioBusy=TRUE; 
             
             pl_log_d(TAG, "sendtask, lowSend=%p c=%d ln=%d\n", sReq.msg, m_lastMsgSender, sReq.len);
             
@@ -441,18 +451,23 @@ implementation {
         return;
     }
     
-    
+    /**
+     * AMSend entrypoint for privacy level. 
+     */
     command error_t MessageSend.send[uint8_t id](am_addr_t addr, message_t* msg, uint8_t len) {        
         // check if Id is within bounds
-        if (id>=MSG_COUNT)
+        if (id>=MSG_COUNT){
+        	pl_log_e(TAG, "send: Unsupported message id %u\n", id);
             return FAIL;
+        }
         
         // check if radio is busy for this id
         if (m_buffer[id].msg!=NULL) {
             //dbg("Privacy","Privacy: PrivacyP.MessageSend.send, buffer for id %d is full\n",id);
+            pl_log_d(TAG, "send: buffer for id %u full\n", id);
             return EBUSY;
         }
-        //dbg("Privacy","Privacy: PrivacyP.MessageSend.send, adding msg of type %d\n",id);
+        
         // put message into buffer
         atomic{
         m_buffer[id].addr = addr;
@@ -481,36 +496,25 @@ implementation {
 	    post task_sendMessage();
     }
     
-    
+    /**
+     * Message cancel is not supported operation.
+     */
     command error_t MessageSend.cancel[uint8_t id](message_t* msg) {
         return FAIL; 
-        
-        /*
-        //if message still in buffer
-        if (m_buffer[id].msg == msg)
-        {
-            m_buffer[id].addr = 0;
-            m_buffer[id].msg = NULL;
-            m_buffer[id].len = 0;
-            m_canceledMsg = msg;
-            post task_sendCanceled()
-            return SUCCESS;		
-        }
-        
-        //otherwise
-        return call LowerAMSend.cancel(msg);
-        */
     }
+    
     command uint8_t MessageSend.maxPayloadLength[uint8_t]() {
         // We will reserve some length for our header
         return (uint8_t) (call LowerAMSend.maxPayloadLength() - sizeof(SPHeader_t));
     }
+    
     command void* MessageSend.getPayload[uint8_t](message_t* msg, uint8_t len) {
         // Get payload
         void* tmp = call LowerAMSend.getPayload(msg, (uint8_t) (len + sizeof(SPHeader_t)));
         // Return payload offset after our header
         return tmp + sizeof(SPHeader_t);
     }
+    
     default event void MessageSend.sendDone[uint8_t](message_t* msg, error_t error) {}
     
     //
@@ -527,12 +531,19 @@ implementation {
     if (m_lastMsg != msg)
     return;
     
-    // radio not busy, schedule sending task.
+    // Send done -> send operation ended, buffer is not needed anymore, can be released
+    // for new incoming messages. Reset buffer, move to next ID, set radio not busy.
+    atomic {
+    m_buffer[m_nextId].addr = 0;
+    m_buffer[m_nextId].msg = NULL;
+    m_buffer[m_nextId].len = 0;
+    m_nextId = (m_nextId+1)%MSG_COUNT;
     m_radioBusy = FALSE;
-    startRetxmitTimer(SENDDONE_OK_WINDOW, SENDDONE_OK_OFFSET);
+    }
     
+    // Schedule sending task, randomize task start (flattens peaks).
+    startRetxmitTimer(SENDDONE_OK_WINDOW, SENDDONE_OK_OFFSET);
     pl_log_d(TAG, "sendtask, lowSendDone, p=%p c=%d code=%d\n", msg, m_lastMsgSender, error);
-    dbg("Privacy","Privacy: PrivacyP.LowerAMSend.sendDone, radio not busy from now\n");
     
     // Signal to particular interface 
     signal MessageSend.sendDone[m_lastMsgSender](msg, error);
@@ -642,7 +653,7 @@ implementation {
     // do nothing
 }
     
-    /*
+/*
     //
     // KeyDistrib
     //
@@ -657,8 +668,10 @@ implementation {
     event void KeyDistrib.getKeyToNodeDone(error_t result, PL_key_t *pNodeKey){
         // TODO Auto-generated method stub
     }
-    */
-    /*
+*/
+
+    
+/*
     //
     // Crypto
     //
@@ -678,13 +691,12 @@ implementation {
         // TODO Auto-generated method stub
     }
 */
+
     //
     // interface Logger
     //
     event void Logger.logToPCDone(message_t *msg, error_t error){
-    // TODO Auto-generated method stub
-}
+    	// TODO Auto-generated method stub
+	}
 } 
-    
-    
     
