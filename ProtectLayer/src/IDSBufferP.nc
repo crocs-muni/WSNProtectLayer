@@ -17,11 +17,11 @@ implementation{
 	// Pointer to the oldest packet in the index
 	uint8_t oldestPacketIndex = 0;
 	uint8_t counter = 0;
-	void insertPacket(uint16_t* sender, uint16_t* receiver, uint64_t* hashedPacket);
-	void removeForwardedPacket(uint16_t* sender, uint16_t* receiver, uint64_t* hashedPacket, uint8_t id);
+	void insertPacket(uint16_t* sender, uint16_t* receiver, uint32_t* hashedPacket);
+	void removeForwardedPacket(uint16_t* sender, uint16_t* receiver, uint32_t* hashedPacket, uint8_t id);
 	void removeOldestPacket();
 
-	command void IDSBuffer.insertOrUpdate(uint16_t* sender, uint16_t* receiver, uint64_t* hashedPacket){
+	command void IDSBuffer.insertOrUpdate(uint16_t* sender, uint16_t* receiver, uint32_t* hashedPacket){
 
 		uint8_t i;
 		
@@ -50,7 +50,7 @@ implementation{
 		
 	}
 	
-	void insertPacket(uint16_t* sender, uint16_t* receiver, uint64_t* hashedPacket) {
+	void insertPacket(uint16_t* sender, uint16_t* receiver, uint32_t* hashedPacket) {
 		packetToBuffer.hashedPacket = *hashedPacket;
 		packetToBuffer.sender = *sender;
 		packetToBuffer.receiver = *receiver;
@@ -58,7 +58,7 @@ implementation{
 		counter++;
 	}
 	
-	void removeForwardedPacket(uint16_t* sender, uint16_t* receiver, uint64_t* hashedPacket, uint8_t id) {
+	void removeForwardedPacket(uint16_t* sender, uint16_t* receiver, uint32_t* hashedPacket, uint8_t id) {
 		uint8_t i;
 		
 		if (counter == 0) {
