@@ -175,6 +175,7 @@ implementation {
         //        pl_printf("IDS: ReceiveMsgCopy.receive\n");
         
         //		uint8_t msgType;
+        // uint64 may cause some problems
         uint64_t hashedPacket;
         
         SPHeader_t* spHeader;        
@@ -182,12 +183,12 @@ implementation {
 
             pl_printf("IDSState: A copy of a message from Privacy component received.\n");
 
+        savedData = call SharedData.getNodeState(spHeader->sender);
         
-        if (call SharedData.getNodeState(spHeader->sender) == NULL && call SharedData.getNodeState(spHeader->receiver) == NULL ) {
+        if (savedData == NULL && call SharedData.getNodeState(spHeader->receiver) == NULL ) {
             return msg;
         }
         
-        savedData = call SharedData.getNodeState(spHeader->sender);
         savedData->idsData.nb_received++;
         
         //        msgType = spHeader->msgType;
@@ -259,11 +260,12 @@ implementation {
         savedData = call SharedData.getNodeState(receiver);
 
             pl_printf("IDSState: Neighbor %d dropped a packet. IDS alert will be sent.\n", receiver); 
-
         
-        
+        // Did we listen enough packets from the node?
         if (savedData->idsData.nb_received > IDS_MIN_PACKET_RECEIVED) {
+        	// Is the dropping ration higher than threshold?
             if ( (savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received) < IDS_DROPPING_THRESHOLD ) {
+            	// Send IDS alert to the BS!
                 if (!m_radioBusy) {
                     idspkt = (IDSMsg_t*)(call Packet.getPayload(&pkt, sizeof(IDSMsg_t)));
                     if (idspkt == NULL) {
@@ -298,13 +300,20 @@ implementation {
 
             pl_printf("IDSState: A copy of an IDSAlert from IDSForwarder received. Sender: %d, receiver: %d.\n", sender, receiver); 
 
+		savedData = call SharedData.getNodeState(receiver)); 
         
-        if (call SharedData.getNodeState(sender) == NULL && call SharedData.getNodeState(receiver) == NULL ) {
+        if (call SharedData.getNodeState(sender) == NULL && savedData == NULL ) {
             return msg;
         }
         
-        if ( (savedData = call SharedData.getNodeState(receiver)) != NULL) {
-            (*savedData).idsData.nb_received++;
+        if ( savedData != NULL) {
+        	// If nb of received packets is higher than size of its type, assign 0 to both received and forwardwed packets
+        	if (savedData->idsData.nb_received >= 4294967295) {
+        		savedData->idsData.nb_received = 0;
+        		savedData->idsData.nb_forwarded = 0;
+        		pl_printf("IDSState: counters of received and forwarded packets were reset.\n");
+        	}
+            savedData->idsData.nb_received++;
 
             pl_printf("IDSState: Receiver %d is our neighbor, PRR incremented.\n", receiver); 
 
