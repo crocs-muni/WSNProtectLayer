@@ -23,7 +23,6 @@
 #define pl_printfflush() {printfflush();}
 #define pl_printf(format, ...) {            \
 	printf (format, ## __VA_ARGS__);		\
-	printfflush();							\
 }
 
 /**
@@ -79,7 +78,7 @@ static const char *ltexts[] = { "F:", "E:", " W:", " I:", "D:", "T:", "C:"};
  	} while (0)
       
 #define PLPrintDbg_int(lvl,tag,format, ...) { 						\
-		printf("%s %s: ", ltexts[lvl], tag);							\
+		printf("%s %s: ", ltexts[lvl], tag);						\
 		printf(format, ## __VA_ARGS__);								\
 	}
 

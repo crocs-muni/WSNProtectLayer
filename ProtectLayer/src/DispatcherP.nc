@@ -33,11 +33,12 @@ implementation{
     
     uint8_t m_state = STATE_INIT;
     
+    // Logging tag for this component
+    static const char *TAG = "DispatcherP";
+    
     
     
     command error_t Init.init() {
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!USE software init and booted interface to signal to dispatcher
-        //self init
         p_msgForIDS = &memoryMsgForIDS;		
         return SUCCESS;
     }
@@ -46,8 +47,12 @@ implementation{
         
     }
     
-    void passToIDS(message_t* msg, void* payload, uint8_t len)
-    {
+    void passToIDS(message_t* msg, void* payload, uint8_t len){
+        if (msg==NULL || payload==NULL){
+        	pl_log_e(TAG, "pass2IDS ERR null\n");
+        	return;
+        }
+        
         // copy message content to IDS msg
         memcpy(p_msgForIDS,msg,sizeof(message_t));
         
