@@ -45,7 +45,13 @@ implementation {
 	}
   
 	event void MovementSensor1.movementDetected() {
+call Leds.led0Toggle();
 		prepareAndSendAppMessage(APPID_POLICE, APPMSG_MOVEMENT, 1);
+	} 
+
+	event void MovementSensor1.movementMSNDetected() {
+call Leds.led1Toggle();
+		prepareAndSendAppMessage(APPID_POLICE, APPMSG_MOVEMENT, 2);
 	} 
 /*
 	event void MovementSensor2.movementDetected() {

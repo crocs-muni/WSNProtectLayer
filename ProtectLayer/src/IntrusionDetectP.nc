@@ -300,7 +300,7 @@ implementation {
 
             pl_printf("IDSState: A copy of an IDSAlert from IDSForwarder received. Sender: %d, receiver: %d.\n", sender, receiver); 
 
-		savedData = call SharedData.getNodeState(receiver)); 
+		savedData = call SharedData.getNodeState(receiver); 
         
         if (call SharedData.getNodeState(sender) == NULL && savedData == NULL ) {
             return msg;

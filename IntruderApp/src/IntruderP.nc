@@ -102,6 +102,8 @@ implementation {
 		}
 		else {
 			call Leds.led0On();
+			call Leds.led1On();
+			call Leds.led2On();
 		}
 	}
 

@@ -128,8 +128,8 @@ implementation {
 
   event void MovementSensor.movementDetected() {
     printf("NodeState, movementDetected.\n");
-    setLeds(1);
-
+    //setLeds(1);
+	call Leds.led0Toggle();
     counter++;
     if (!busy) {
       PoliceAppMsg_MovementDetected* btrpkt = (PoliceAppMsg_MovementDetected*)(call Packet.getPayload(&pkt, sizeof(PoliceAppMsg_MovementDetected)));
@@ -138,6 +138,28 @@ implementation {
       call CC2420Packet.setPower(&pkt, 3);
 
       btrpkt->messageType = MSGTYPE_MOVEMENTDETECTED;
+      btrpkt->nodeid = TOS_NODE_ID;
+      btrpkt->counter = counter;
+      if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PoliceAppMsg_MovementDetected)) == SUCCESS) {
+           busy = TRUE;
+      }
+
+    }
+  }
+  
+  event void MovementSensor.movementMSNDetected() {
+    printf("NodeState, movementMSNDetected.\n");
+    call Leds.led1Toggle();
+//    setLeds(2);
+
+    counter++;
+    if (!busy) {
+      PoliceAppMsg_MovementDetected* btrpkt = (PoliceAppMsg_MovementDetected*)(call Packet.getPayload(&pkt, sizeof(PoliceAppMsg_MovementDetected)));
+      if (btrpkt == NULL) return;
+
+      call CC2420Packet.setPower(&pkt, 3);
+
+      btrpkt->messageType = MSGTYPE_MSNDETECTED;
       btrpkt->nodeid = TOS_NODE_ID;
       btrpkt->counter = counter;
       if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PoliceAppMsg_MovementDetected)) == SUCCESS) {
