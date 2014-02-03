@@ -38,7 +38,7 @@ implementation{
 		// Is this packet sent by monitored neighbor? => update buffer!
 		if (call SharedData.getNodeState(*sender) != NULL) {
 			// Is this packet already stored in the buffer?
-			for (i = 0; i <= counter; i++) {
+			for (i = 0; i < counter; i++) {
 				if (*hashedPacket == idsBuffer[i].hashedPacket && *sender == idsBuffer[i].receiver) {
 					// Mark the packet as forwarded and remove it from the buffer
 					removeForwardedPacket(sender, receiver, hashedPacket, i);
@@ -54,33 +54,37 @@ implementation{
 		packetToBuffer.hashedPacket = *hashedPacket;
 		packetToBuffer.sender = *sender;
 		packetToBuffer.receiver = *receiver;
-		counter++;
 		idsBuffer[counter] = packetToBuffer;
+		counter++;
 	}
 	
 	void removeForwardedPacket(uint16_t* sender, uint16_t* receiver, uint64_t* hashedPacket, uint8_t id) {
 		uint8_t i;
 		
+		if (counter == 0) {
+			return;
+		}
+		
 		signal IDSBuffer.packetForwarded(idsBuffer[id].sender, idsBuffer[id].receiver);
 		
+			
 		// Remove the gap after the forwarded packet!
-		// TODO: improve effectiveness!
-//		for(i = (id - oldestPacketIndex) % IDS_BUFFER_SIZE; i < counter; i++) {
+		// Effectiveness can be improved here:
+        counter--;
 		for(i = id; i < counter; i++) {
         	memcpy(&idsBuffer[i], &idsBuffer[i + 1], sizeof(idsBufferedPacket_t));
         }
-        counter--;
 	}
 	
 	void removeOldestPacket() {
 		uint8_t i;
 		signal IDSBuffer.oldestPacketRemoved(idsBuffer[oldestPacketIndex].sender, idsBuffer[oldestPacketIndex].receiver);
-		// TODO: improve effectiveness!
+		// Chech counter if oldestPacketIndex used
+		counter--;
 		for(i = oldestPacketIndex % IDS_BUFFER_SIZE; i < counter; i++) {
         	memcpy(&idsBuffer[(i + oldestPacketIndex) % IDS_BUFFER_SIZE], &idsBuffer[(i + oldestPacketIndex + 1) % IDS_BUFFER_SIZE], sizeof(idsBufferedPacket_t));
         }
-		counter--;
-		// TODO: improve effectiveness, check following:
+		// To improve effectiveness, check following:
 //		oldestPacketIndex == (oldestPacketIndex + 1) % IDS_BUFFER_SIZE;
 	}
 }

@@ -20,6 +20,9 @@
 // define for printf, writes to output only if TOS_NODE_ID is equal to this DEBUG_ID
 #define PRINTF_DEBUG_ID 19
 
+// Returns maximal value the given variable can have.
+#define MAX_VALUE(var) ( (1<<(sizeof(var)*8-1)) | ((1<<(sizeof(var)*8-1))-1) )
+
 #include <stdarg.h>
 #include "ProtectLayerLog.h"
 
@@ -239,8 +242,8 @@ typedef struct KDCData {
 typedef struct IDSData {
 /*@{*/
 	//uint8_t neighbor_reputation;	/**< reputation of a neighbor */
-	uint16_t nb_received;	/**< number of received messages */
-	uint16_t nb_forwarded;
+	uint32_t nb_received;	/**< number of received messages */
+	uint32_t nb_forwarded;
 	
 /*@}*/
 } IDSData_t;

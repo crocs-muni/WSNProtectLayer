@@ -26,7 +26,6 @@ implementation{
 	// interface Init
 	//
 	command error_t Init.init(){
-		//m_msgIDSAlert = &m_msgMemory;
 		return SUCCESS;
 	}
 	
@@ -37,7 +36,7 @@ implementation{
 		if (m_busy)
 		{
 			// radio busy,
-			dbg("Privacy","Radio in forwarder busy.\n");
+			pl_printf("IDSForwarder: Radio in forwarder busy.\n");
 			return; 	
 		}
 		
@@ -58,7 +57,7 @@ implementation{
 			else
 			{
 				//send failed,
-				dbg("Error","IDSForwarderP task_forward send failed.\n");
+				pl_printf("Error: IDSForwarderP task_forward send failed.\n");
 				m_lastMsgWasIDSAlert = FALSE;
 				signal IDSAlertSend.sendDone(sendMsg, FAIL);
 				post task_forwardMessage();

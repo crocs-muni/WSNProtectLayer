@@ -57,11 +57,9 @@ implementation {
     RecMsg_t m_receiveBuffer[RECEIVE_BUFFER_LEN];
     uint8_t m_recNextToProcess=0;
     uint8_t m_recNextToStore=0;
-    // msgs for  IDS copy
-    message_t m_msgMemoryForIDS;
-    RecMsg_t m_msgForIDS;
-    static const char *TAG = "PrivacyP";
     
+    // Logging tag for this component
+    static const char *TAG = "PrivacyP";
     
     static void startRetxmitTimer(uint16_t mask, uint16_t offset);
     
@@ -69,20 +67,13 @@ implementation {
     //	Init interface
     //
     command error_t Init.init() {
-        
         uint8_t i=0;
         
-        //init receive buffer
-        for(i = 0; i < RECEIVE_BUFFER_LEN; i++)
-        {
+        // Init receive buffer
+        for(i = 0; i < RECEIVE_BUFFER_LEN; i++){
             m_receiveBuffer[i].msg = &m_receiveMemoryBuffer[i];
             m_receiveBuffer[i].isEmpty=1;
         }
-        
-        //init IDS copy msg
-        m_msgForIDS.msg = &m_msgMemoryForIDS;
-        
-        dbg("NodeState", "Privacy component initialization...\n");
         
         return SUCCESS;
     }
@@ -99,7 +90,7 @@ implementation {
     //	Privacy interface
     //
     command PRIVACY_LEVEL Privacy.getCurrentPrivacyLevel(){	
-        dbg("Privacy","Privacy: PrivacyP.Privacy.getCurerentPrivacyLevel, %d\n",m_privData->priv_level);
+        pl_log_d(TAG, "PrivacyP.Privacy.getCurerentPrivacyLevel, %d\n",m_privData->priv_level);
         return m_privData->priv_level;
     }
     
@@ -115,22 +106,30 @@ implementation {
         }
     }
     
-    
+    /**
+     * Passes message to the IDS for inspection.
+     * Message processing in IDS is blocking synchronous thus the direct pointer
+     * to the original message is passed to the IDS.
+     * 
+     * In case IDS implementation changes, this has to be refactored!
+     * @Extension: If IDS operation gets asynchronous (e.g., start using tasks): 
+     * 		Modify IDS to copy this message to internal buffer, use busy locks
+     * 		to avoid overwriting message already in use.
+     */
     void passToIDS(message_t* msg, void* payload, uint8_t len)
     {
-        // copy message content to IDS msg
+    	message_t * newMsg = NULL;
         if (msg==NULL || payload==NULL){
         	pl_log_e(TAG, "pass2IDS ERR null\n");
         	return;
         }
         
-        //memcpy(m_msgForIDS.msg,msg,sizeof(message_t));
-        //m_msgForIDS.payload = call Packet.getPayload(m_msgForIDS.msg, len);
-        //m_msgForIDS.len = len;
-        
-        // signal to IDS and update memory field for next msg
-        //m_msgForIDS.msg = signal MessageReceive.receive[MSG_IDSCOPY](m_msgForIDS.msg, m_msgForIDS.payload, m_msgForIDS.len);
-        
+        // Passing message directly to the IDS, sync.
+        // TODO: uncomment, waiting for finishing Crypto bug fixes. 
+        //newMsg = signal MessageReceive.receive[MSG_IDSCOPY](msg, payload, len);
+        //if (newMsg != msg){
+        //	pl_log_e(TAG, "IDS returned different buffer");
+        //}
     }
     
     
