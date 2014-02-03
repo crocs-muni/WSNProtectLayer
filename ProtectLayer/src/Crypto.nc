@@ -23,6 +23,7 @@ interface Crypto {
 			@param[in out] pLen length of buffer to be encrypted, will contain resulting length with mac
 			@return error_t status
 	*/
+	//TODO change offset to enable partial encryptiona and full mac
 	command error_t protectBufferForNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 
 	/**
@@ -34,6 +35,7 @@ interface Crypto {
 			@param[in] len length of buffer to be decrypted
 			@return error_t status
 	*/
+	//TODO change offset to enable partial encryptiona and full mac
 	command error_t unprotectBufferFromNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 	
 	//BS variants
@@ -47,6 +49,7 @@ interface Crypto {
 			@param[in out] pLen length of buffer to be encrypted, will contain resulting length with mac
 			@return error_t status
 	*/
+	//TODO change offset to enable partial encryptiona and full mac
 	command error_t protectBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 
 	/**
@@ -57,6 +60,7 @@ interface Crypto {
 			@param[in] len length of buffer to be decrypted
 			@return error_t status
 	*/
+	//TODO change offset to enable partial encryptiona and full mac
 	command error_t unprotectBufferFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 	
 	
@@ -174,7 +178,8 @@ interface Crypto {
 	                Command: command to update last verified signature stored in memory
 	                @param[in] signature value to update, length is required to be HASH_LENGTH
 	*/
-	command void updateSignature( uint8_t signature);
+	//TODO signature as structure
+	command void updateSignature( uint8_t* signature, PRIVACY_LEVEL level);
 	
 	/**
 			Command: command to execute self test of Crypto component
