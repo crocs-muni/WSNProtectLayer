@@ -23,6 +23,8 @@ implementation {
     PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
     uint8_t         m_exp[240]; //expanded key
     
+    static const char *TAG = "CryptoRawP";
+    
     //
     //	Init interface
     //
@@ -72,6 +74,37 @@ implementation {
         }
        
         return SUCCESS;
+    }
+    
+    command error_t CryptoRaw.macBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t* mac){
+	uint8_t i;
+        uint8_t j;
+        uint8_t xor[BLOCK_SIZE];
+        error_t status = SUCCESS;
+        
+        call AES.keyExpansion( m_exp, key->keyValue);
+            
+            //if pLen is < BLOCK_SIZE then copy just pLen otherwise copy first block of data
+            memset(xor, 0, BLOCK_SIZE);
+            if(*pLen < BLOCK_SIZE){
+                memcpy(xor, buffer + offset, *pLen);
+            } else {
+                memcpy(xor, buffer + offset, BLOCK_SIZE);
+            }
+            //process buffer by blocks 
+            for(i = 0; i < (*pLen / BLOCK_SIZE) + 1; i++){
+                
+                call AES.encrypt( xor, m_exp, xor);
+                for (j = 0; j < BLOCK_SIZE; j++){
+                
+		    if((*pLen <= (i*BLOCK_SIZE+j))) break;
+                    xor[j] =  buffer[offset + i*BLOCK_SIZE + j] ^ xor[j];
+                }			
+            }
+            //append mac
+            memcpy(mac, xor, BLOCK_SIZE);        
+        
+        return status;
     }
     
     /*

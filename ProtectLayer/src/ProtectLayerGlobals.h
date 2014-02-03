@@ -379,7 +379,7 @@ typedef uint8_t NODE_REPUTATION;
  typedef struct IDSBufferedPacket {
  	uint16_t sender;
  	uint16_t receiver;
- 	uint64_t hashedPacket;
+ 	uint32_t hashedPacket;
  } idsBufferedPacket_t;
 //typedef uint64_t idsBufferedPacket_t;
 

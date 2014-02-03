@@ -21,112 +21,79 @@ module CryptoP {
     }
 }
 implementation {
-    //uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
+    
     PL_key_t* 	m_key1;		/**< handle to the key used as first (or only) one in cryptographic operations. Value is set before task is posted. */
     PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
-    uint8_t 	m_buffer[BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-    //uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
-    //uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-    //uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-    //uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
+    uint8_t 	m_buffer[BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */    
     uint8_t         m_exp[240]; //expanded key
+    
+    // Logging tag for this component
+    static const char *TAG = "CryptoP";
+    
     //
     //	Init interface
     //
     command error_t Init.init() {        
-        // TODO: do other initialization
-        //m_state = 0;
-        //m_dbgKeyID = 0;
+        // do other initialization        
         return SUCCESS;
     }
-    
-    command error_t Crypto.macBufferForNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
-        uint8_t i;
-        uint8_t j;
-        uint8_t xor[BLOCK_SIZE];
+
+    command error_t Crypto.macBufferForNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){        
         error_t status = SUCCESS;
         
-        pl_printf("CryptoP:  macBufferForNodeB called.\n"); 
+        pl_log_i(TAG,"CryptoP:  macBufferForNodeB called.\n"); 
         //TODO invalid arguments testing
-        //null buffer
-        //pLen null or *pLen 0
-        //node ID < 50 >0
-        //offset < 20
+        if(buffer == NULL){
+	    pl_log_e(TAG,"CryptoP: macBufferForNodeB NULL buffer.\n");
+	    return FAIL;
+        }
+        if(pLen == NULL || *pLen == 0){
+	    pl_log_e(TAG,"CryptoP: macBufferForNodeB NULL pLen or *pLen = 0.\n");
+	    return FAIL;	    
+        }
+        if(nodeID > 50 || nodeID < 0){
+	    pl_log_e(TAG,"CryptoP: macBufferForNodeB wrong nodeID.\n");
+	    return FAIL;
+        }
+        if(offset > 20){
+	    pl_log_e(TAG,"CryptoP: macBufferForNodeB offset to large.\n");
+	    return FAIL;
+        }
         
-        //TODO for new function separate mac Array and data array
-        
-        //temp array of zeros to padd last block of data
-        
-        if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1)) == SUCCESS){	
-            
-            call AES.keyExpansion( m_exp, (uint8_t*) m_key1->keyValue);
-            
-            //if pLen is < BLOCK_SIZE then copy just pLen otherwise copy first block of data
-            memset(xor, 0, BLOCK_SIZE);
-            if(*pLen < BLOCK_SIZE){
-                memcpy(xor, buffer + offset, *pLen);
-            } else {
-                memcpy(xor, buffer + offset, BLOCK_SIZE);
-            }
-            //process buffer by blocks 
-            for(i = 0; i < (*pLen / BLOCK_SIZE) + 1; i++){
-                
-                call AES.encrypt( xor, m_exp, xor);
-                for (j = 0; j < BLOCK_SIZE; j++){
-                
-		    if((*pLen <= (i*BLOCK_SIZE+j))) break;
-                    xor[j] =  buffer[offset + i*BLOCK_SIZE + j] ^ xor[j];
-                }			
-            }
-            
-            //append mac
-            memcpy(buffer+offset+*pLen, xor, BLOCK_SIZE);
+        if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1)) == SUCCESS){
+            status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
         } else {
-            
-            pl_printf("CryptoP:  macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID); 
-            
-            
+            pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID); 
         }
         return status;
     }	
     
     command error_t Crypto.macBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){		
-        //TODO merge with previous
-        /*
-        uint8_t i;
-        uint8_t j;
-        uint8_t xor[BLOCK_SIZE];
         error_t status = SUCCESS;
         
-        
-        pl_printf("CryptoP:  macBufferForBSB called.\n"); 
-        
-        
-        memcpy(xor, buffer + offset, BLOCK_SIZE);
-        if((status = call KeyDistrib.getKeyToBSB(m_key1)) == SUCCESS){	
-            
-            call AES.keyExpansion( exp,  (uint8_t*) m_key1->keyValue);
-            
-            //process buffer by blocks 
-            for(i = 0; i < (*pLen / BLOCK_SIZE); i++){
-                
-                call AES.encrypt( xor, exp, xor);
-                for (j = 0; i < BLOCK_SIZE; j++){
-                    xor[j] = (*pLen < (i*BLOCK_SIZE+j)) ? xor[j] : buffer[offset + i*BLOCK_SIZE + j] ^ xor[j];
-                }			
-            }
-            
-            //append mac
-            memcpy(buffer + offset + *pLen, xor, BLOCK_SIZE);
-        } else {			
-            
-            pl_printf("CryptoP:  macBufferForBSB failed, key to BS not found.\n"); 
-            
-            
+        pl_log_i(TAG,"CryptoP:  macBufferForBSB called.\n"); 
+        if(buffer == NULL){
+	    pl_log_e(TAG,"CryptoP: macBufferForNodeB NULL buffer.\n");
+	    return FAIL;
         }
-        return status;
-        */
+        if(pLen == NULL || *pLen == 0){
+	    pl_log_e(TAG,"CryptoP: macBufferForNodeB NULL pLen or *pLen = 0.\n");
+	    return FAIL;	    
+        }        
+        if(offset > 20){
+	    pl_log_e(TAG,"CryptoP: macBufferForNodeB offset to large.\n");
+	    return FAIL;
+        }
+        
+        if((status = call KeyDistrib.getKeyToBSB(m_key1)) == SUCCESS){	
+            status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
+        } else {
+            pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to BS not found.\n"); 
+        }
+        return status;        
     }
+    
+    
     
     command error_t Crypto.verifyMacFromNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         uint8_t mac[MAC_LENGTH];
