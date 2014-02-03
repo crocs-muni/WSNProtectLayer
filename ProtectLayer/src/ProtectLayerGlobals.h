@@ -11,6 +11,11 @@
 
 #include "message.h"
 
+// Defines that first 8 bytes of the payload should be copied
+// to the SPHeader (unencrypted). Helps to demonstrate functionality
+// of the prototype during experiment. TODO: REMOVE THIS
+#define PLAINTEXT_DEMO 1
+
 // Define to supress warning from printf function
 #define DEBUG_PRINTF
 #ifndef PL_LOG_MAX_LEVEL 
@@ -61,6 +66,9 @@ enum {
   IDS_MIN_PACKET_RECEIVED = 50,
   IDS_FORWARDER_SEND_BUFFER_LEN = 4,
   PHANTOM_JUMPS=3
+ #ifdef PLAINTEXT_DEMO
+  , PLAINTEXT_BYTES=8
+ #endif
 };
 
 enum {
@@ -123,6 +131,9 @@ typedef struct SPHeader {
   uint8_t phantomJumps;	/**< number of jumps remaining in phantom routing */
   uint16_t sender;	/**< sender ID */
   uint16_t receiver; /**< receiver ID */
+#ifdef PLAINTEXT_DEMO
+  uint8_t plaintext[PLAINTEXT_BYTES];
+#endif
 /*@}*/
 } SPHeader_t;
 

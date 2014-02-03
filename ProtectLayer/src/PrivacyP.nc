@@ -441,6 +441,17 @@ recv_finish:
             } else {
             	spHeader->phantomJumps = 0;
             }
+            
+            // Debugging, TODO:REMOVE.
+            // Copies first 8 bytes of the payload before encryption to the SPheader.
+            // Facilitates debugging during tests since it SPHeader is not encrypted
+            // and thus visible on sniffers and base station without decryption.
+#ifdef PLAINTEXT_DEMO
+			memcpy(
+				&(spHeader->plaintext), 
+				((uint8_t*)spHeader) + sizeof(SPHeader_t), 
+			(PLAINTEXT_BYTES <= (sReq.len - sizeof(SPHeader_t))) ? PLAINTEXT_BYTES : (sReq.len - sizeof(SPHeader_t)));
+#endif            
         }        
         
         // Behavior switch based on interface parameter (id) 
