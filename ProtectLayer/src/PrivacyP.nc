@@ -142,9 +142,8 @@ implementation {
         	// Apply protect layer, (mac/enc/phantom)	
         	return TRUE;
         }        
-        case (MSG_IDS): {	// IDS forwarded as APP messages - Martin discussion 3.2.2014.
-		    // Apply protect layer, (mac/enc/phantom)
-            return TRUE;
+        case (MSG_IDS): {	// IDS is separated.
+            return FALSE;
         }
         case (MSG_FORWARD):{
             // Apply protect layer, (mac/enc/phantom). FWD is subject to PL (hop-by-hop protection).	
@@ -171,8 +170,10 @@ implementation {
         uint8_t len = 0;
         void* payload = NULL;
         SPHeader_t* ourHeader = NULL;
-        uint8_t decLen = 0;
         error_t status = SUCCESS;
+#ifdef HOP_BY_HOP_ENCRYPTION 
+        uint8_t decLen = 0;
+#endif
         
         // Get msg to be processed
 		msg = m_receiveBuffer[m_recNextToProcess].msg;
@@ -214,15 +215,19 @@ implementation {
             goto recv_finish;
         }
         
-        // TODO: test current privacy level vs. in message.
-        // TODO: pick which privacy level act on. 
+        // Test current privacy level vs. in message. 
         if (ourHeader->privacyLevel != m_privData->priv_level){
         	pl_log_w(TAG, "MSG privLevel mismatch, msg=%u vs. current %u\n", ourHeader->privacyLevel, m_privData->priv_level);
+        	
+        	// Drop message with different privacy level.
+			goto recv_finish;
         }
         
         // Message handling w.r.t. privacy level.
-        // MAC verification and decryption.
-        switch (ourHeader->privacyLevel) {
+        //  - MAC verification and decryption (if applicable).
+        //  - Applies PL in hop-by-hop manner.
+#ifdef HOP_BY_HOP_ENCRYPTION
+        switch (m_privData->priv_level) {
         case PLEVEL_0: {	// No protection
             break;
         }
@@ -248,6 +253,7 @@ implementation {
         default: 
         	pl_log_e(TAG, "task_receiveMessage: privacy level not recognized %u", ourHeader->privacyLevel);
         }
+#endif
         
         // Pass message to the IDS in any case, message is for us,
         // if pl>=2, it is already decrypted.
@@ -261,24 +267,21 @@ implementation {
         
         // Handling of the message with respect to the message type.
         // Note: Message here is always for me.
-        if (ourHeader->msgType == MSG_APP || ourHeader->msgType == MSG_IDS) {
+        if (ourHeader->msgType == MSG_APP) {
 			// Application message = Node sends message to the base station
 			// Using forwarders on the path to the root. Hop by hop.
-			// This message is re-wrapped as MSG_FORWARD.
         	pl_log_d(TAG, "task_receiveMessage, ourHeader->msgType == MSG_APP\n"); 
             
             //signal event to forwarder, this is special case since APP messages are forwarded to the BS and not to the app level
             retMsg = signal MessageReceive.receive[MSG_FORWARD](msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);	
         } 
         else {   	
-            pl_log_d(TAG, "Privacy: task_receiveMessage 4, ourHeader->msgType != MSG_APP, != MSG_IDS\n"); 
+            pl_log_d(TAG, "task_receiveMessage, ourHeader->msgType[%x] != MSG_APP\n", ourHeader->msgType); 
             
             // Payload is now including SPheader header. 
             // Stripe SPheader, provide offseted pointer and decrease payload length.
             len = m_receiveBuffer[m_recNextToProcess].len - sizeof(SPHeader_t);
             payload = m_receiveBuffer[m_recNextToProcess].payload + sizeof(SPHeader_t);
-
-            pl_log_d(TAG, "LowerReceive.receive, MSG type %x.\n", ourHeader->msgType); 
 
             //TODO: test if our message, WTF?
             retMsg = signal MessageReceive.receive[ourHeader->msgType](msg, payload, len);
@@ -361,7 +364,6 @@ recv_finish:
         error_t status=SUCCESS;
         SendRequest_t sReq; 
         uint8_t count=0;
-        uint8_t encLen;
         bool applyPL=TRUE;
         
         // Check if radio is busy or not.
@@ -398,85 +400,117 @@ recv_finish:
         }
         
         // Determine whether Protect layer should be applied
-        // to this type of the message. 
+        // to this type of the interface. 
         applyPL = isSubjectToPL(m_nextId);
         
+        //
         // SPHeader basic setup & check.
-        // Check who is sending msg, if forwarding only, treat it differently.
-        if (m_nextId == MSG_FORWARD)
-        {
-            // Message is sent by forwarder, (should forward packet).
-            // SPHeader already present, just change receiver and sender field.
-            spHeader =  (SPHeader_t *) call Packet.getPayload(sReq.msg, sReq.len);
-            // Default routing is to the parent node
-            spHeader->receiver = call Route.getParentID(); //TODO take care of a case if ID is not valid
-            // add myself as a sender
-            spHeader->sender = TOS_NODE_ID;
-            // leave privacy type and msg type as is
-        }
-        else
-        {
-            // Initialize SP header to the message being sent.
-            // Assumption: only MSG_FORWARD already has SP header set.
-            // Payload is placed after SPHeader (getPayload in PL).
-            //
-            // If type = privacyLevelChange, broadcast to others, receiver is 
-            // ignored in that case, MAC computation as well.
-            
-            //TODO add payload len check
-            sReq.len += sizeof(SPHeader_t);
-            
-            spHeader = (SPHeader_t *) call Packet.getPayload(sReq.msg, sReq.len);
-            // Setting info into our header
-            spHeader->msgType = m_nextId; 
-            spHeader->privacyLevel = m_privData->priv_level;
-            //find out who is next hop
-            spHeader->receiver = call Route.getParentID(); //TODO take care of a case if ID is not valid
-            // add myself as a sender
-            spHeader->sender = TOS_NODE_ID;
-            
-            // Init phantom routing if PL is applied and privacy level >= 3.
-            if (applyPL && m_privData->priv_level == PLEVEL_3){
-            	spHeader->phantomJumps = PHANTOM_JUMPS;
-            } else {
-            	spHeader->phantomJumps = 0;
-            }
-            
-            // Debugging, TODO:REMOVE.
-            // Copies first 8 bytes of the payload before encryption to the SPheader.
-            // Facilitates debugging during tests since it SPHeader is not encrypted
-            // and thus visible on sniffers and base station without decryption.
-#ifdef PLAINTEXT_DEMO
-			memcpy(
-				&(spHeader->plaintext), 
-				((uint8_t*)spHeader) + sizeof(SPHeader_t), 
-			(PLAINTEXT_BYTES <= (sReq.len - sizeof(SPHeader_t))) ? PLAINTEXT_BYTES : (sReq.len - sizeof(SPHeader_t)));
-#endif            
-        }        
+        // Check who is sending msg (which interface), if forwarding only, treat it differently.
+        switch (m_nextId) {
+        	case (MSG_FORWARD): {
+        		// Message is sent by forwarder, (should forward packet).
+	            // SPHeader already present, just change receiver and sender field.
+	            spHeader =  (SPHeader_t *) call Packet.getPayload(sReq.msg, sReq.len);
+	            // Default routing is to the parent node
+	            spHeader->receiver = call Route.getParentID(); //TODO take care of a case if ID is not valid
+	            // add myself as a sender
+	            spHeader->sender = TOS_NODE_ID;
+	            // leave privacy type and msg type as is
+	            pl_log_d(TAG, "sendtask, MSG_FWD recv=%u msg=%p\n", spHeader->receiver, sReq.msg);
+	            break;
+        	}	
+        	
         
+        	case (MSG_APP): {
+        		// Initialize SP header to the message being sent.
+	            // Assumption: only MSG_FORWARD already has SP header set.
+	            // Payload is placed after SPHeader (getPayload in PL).
+	            //
+	            // If type = privacyLevelChange, broadcast to others, receiver is 
+	            // ignored in that case, MAC computation as well.
+	            
+	            //TODO add payload len check
+	            sReq.len += sizeof(SPHeader_t);
+	            
+	            spHeader = (SPHeader_t *) call Packet.getPayload(sReq.msg, sReq.len);
+	            // Setting info into our header
+	            spHeader->msgType = m_nextId; 
+	            spHeader->privacyLevel = m_privData->priv_level;
+	            //find out who is next hop
+	            spHeader->receiver = call Route.getParentID(); //TODO take care of a case if ID is not valid
+	            // add myself as a sender
+	            spHeader->sender = TOS_NODE_ID;
+	            
+	            // Init phantom routing if PL is applied and privacy level >= 3.
+	            if (applyPL && m_privData->priv_level == PLEVEL_3){
+	            	spHeader->phantomJumps = PHANTOM_JUMPS;
+	            } else {
+	            	spHeader->phantomJumps = 0;
+	            }
+	            
+	            // Debugging, TODO:REMOVE.
+	            // Copies first 8 bytes of the payload before encryption to the SPheader.
+	            // Facilitates debugging during tests since it SPHeader is not encrypted
+	            // and thus visible on sniffers and base station without decryption.
+#ifdef PLAINTEXT_DEMO
+				memcpy(
+					&(spHeader->plaintext), 
+					((uint8_t*)spHeader) + sizeof(SPHeader_t), 
+				(PLAINTEXT_BYTES <= (sReq.len - sizeof(SPHeader_t))) ? PLAINTEXT_BYTES : (sReq.len - sizeof(SPHeader_t)));
+#endif            
+				pl_log_d(TAG, "sendtask, MSG_APP recv=%u msg=%p\n", spHeader->receiver, sReq.msg);
+				break;
+        	}
+        	
+        	default: {
+        		// No SPHeader manipulation. In current design only APP and FWD interface should be used.
+        		pl_log_d(TAG, "sendtask, type=%d msg=%p\n", m_nextId, sReq.msg);
+        	}
+        }
+        
+        //
         // Behavior switch based on interface parameter (id) 
-        // Changes destination in SPheader w.r.t. ID.
-        // Apply end-to-end encryption for BaseStation if message is from application layer.
+        //  - Changes destination in SPheader w.r.t. ID.
+        //  - End-to-end PL protection. 
         switch (m_nextId) {
         case (MSG_APP): {
         	sendMsgApp(&sReq);
-        	
-        	// TODO: apply end-to-end encryption here, encrypt for basestation.
-        	// TODO: verify correctness of use the parameters.
+			
+			// Protection of the message sent by application (APP interface).
+#ifdef HOP_BY_HOP_ENCRYPTION
+			// With using hop-by-hop encryption, end-to-end protection is always full (MAC+ENC for BS).
         	call Crypto.protectBufferForBSB((uint8_t *)spHeader, sizeof(SPHeader_t), &(sReq.len));
+        	pl_log_d(TAG, "task_sendMessage, pl123, B, status=%d l=%u\n", status, sReq.len); 
+#else 
+			// If not using hop-by-hop encryption, end-to-end protection is dependent on privacy level,
+			// for messages sent from the application
+			//
+			// Message handling w.r.t. privacy level.
+	        // MAC verification and decryption.
+	        if (m_privData->priv_level == PLEVEL_1) { 
+	        	// MAC.
+	        	// The whole message is MACed (including SPHeader), so offset is zero.
+	        	status = call Crypto.macBufferForBSB((uint8_t *)spHeader, 0, &(sReq.len));
+	        	pl_log_d(TAG, "task_sendMessage, pl1, B, status=%d l=%u\n", status, sReq.len);
+	        	 
+	        } else if (m_privData->priv_level == PLEVEL_2 || m_privData->priv_level == PLEVEL_3){
+	        	// MAC + ENC [ + Phantom ].
+				
+	        	status = call Crypto.protectBufferForBSB((uint8_t *)spHeader, sizeof(SPHeader_t), &(sReq.len));
+	            pl_log_d(TAG, "task_sendMessage, pl23, B, status=%d l=%u\n", status, sReq.len); 
+	        }	
+#endif
 			break;
         }        
-        case (MSG_IDS): {	// IDS forwarded as APP messages - Martin discussion 3.2.2014.
-            sendMsgApp(&sReq);
-            break;
-        }
         default: {
+        	// No PL end-to-end manipulation.
         }
         }
-        
-        // If protect layer should be applied to this type of a message, take an action.
+
+        // If protect layer should be applied to this type of an interface, take an action. 
+        //  - Phantom Routing.
+        //  - Hop-by-hop PL protection (if applicable).
         if (applyPL){
-        	// TODO: which privacy level to use? in message or current?
         	if (m_privData->priv_level == PLEVEL_3 && spHeader->phantomJumps > 0){
         		// TODO: If phantom routing, pick random neighbor and decrement
         		// phantom routing number in SPheader.
@@ -495,6 +529,10 @@ recv_finish:
         		}
         	}
         	
+        	//
+        	// Following code is using hop-by-hop auth/enc
+        	//  
+#ifdef HOP_BY_HOP_ENCRYPTION
         	// Message handling w.r.t. privacy level.
 	        // MAC verification and decryption.
 	        if (m_privData->priv_level == PLEVEL_1) { 
@@ -514,8 +552,9 @@ recv_finish:
 	            pl_log_d(TAG, "task_sendMessage, pl23, status=%d l=%u\n", status, sReq.len); 
 	        	
 	        }
+#endif // HOP_BY_HOP_ENCRYPTION
         }
-        
+		
         // Pass prepared message to the lower layer for sending.
         rval = call LowerAMSend.send(sReq.addr,sReq.msg,sReq.len);
         if(rval == SUCCESS) {
