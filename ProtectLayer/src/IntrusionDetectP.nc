@@ -272,8 +272,10 @@ implementation {
                     if (idspkt == NULL) {
                         return;
                     }
+                    idspkt->source = TOS_NODE_ID;
+                    idspkt->sender = TOS_NODE_ID;
                     idspkt->nodeID = receiver;
-                    idspkt->dropping = savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received;
+                    idspkt->dropping = (uint16_t) savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received;
                     
                     if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(IDSMsg_t)) == SUCCESS) {
                         m_radioBusy = TRUE;

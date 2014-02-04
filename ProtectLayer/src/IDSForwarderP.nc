@@ -12,6 +12,7 @@ module IDSForwarderP
 		interface Pool<message_t> as Pool; 
 		interface Queue<message_t*> as SendQueue;
 		interface Packet;
+		interface Route;
 	}
 }
 implementation{
@@ -48,6 +49,7 @@ implementation{
 			
 			//send packet
 			m_lastMsg = sendMsg;
+			
 			if (call AMSend.send(AM_BROADCAST_ADDR, sendMsg, sizeof(IDSMsg_t)) == SUCCESS)
 			{
 //				pl_printf("task_forwardMessage sent with success\n");
@@ -92,10 +94,22 @@ implementation{
 		}
 			
 	}
+	
 	//
 	// interfrace Receive
 	//
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
+		IDSMsg_t* idsmsg;
+		idsmsg = (IDSMsg_t*)payload;
+		// If the packet was addressed to someone else, do not forward the message to anyone
+		if (idsmsg->receiver != TOS_NODE_ID) {
+			return msg;
+		}
+		
+		// Change the sender for another hop 
+		idsmsg->sender = TOS_NODE_ID;
+		// Change the receiver for another hop
+		idsmsg->receiver = call Route.getParentID();		
 		
 		if (!call Pool.empty()) 
 			{
@@ -183,8 +197,11 @@ implementation{
 		return call Packet.getPayload(msg, len);
 	}
 	
-	
+	event void Route.randomNeighborIDprovided(error_t status, node_id_t id){
+	}
 
+	event void Route.randomParentIDprovided(error_t status, node_id_t id){
+	}
 }
 
 

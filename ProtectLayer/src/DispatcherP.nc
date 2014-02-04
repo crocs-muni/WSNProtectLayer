@@ -82,14 +82,7 @@ implementation{
         //Pass copy of message to IDS
         passToIDS(msg, payload, len);
         
-        //is for us? TODO if (Route.isForUs(Packet.getSource(msg)))
-        if (TRUE)
-        {
-            return signal IDS_Receive.receive(msg, payload, len);
-        } else
-        {
-            return msg;
-        }
+        return signal IDS_Receive.receive(msg, payload, len);
     }
     
     

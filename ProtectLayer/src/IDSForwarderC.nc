@@ -13,6 +13,7 @@ implementation {
 	components new PoolC(message_t, IDS_FORWARDER_SEND_BUFFER_LEN);
 	components new QueueC(message_t*, IDS_FORWARDER_SEND_BUFFER_LEN); 
 	components SharedDataC;
+	components RouteC;
 	 
 	MainC.SoftwareInit -> IDSForwarderP.Init; // auto init phase 1
 	
@@ -23,6 +24,7 @@ implementation {
     IDSForwarderP.SendQueue -> QueueC;
     IDSAlertSend = IDSForwarderP.IDSAlertSend;
     IDSAlertPacket = IDSForwarderP.IDSAlertPacket;
+    IDSForwarderP.Route -> RouteC.Route;
     
     IDSForwarderP.Packet -> AMSenderC;
 }
