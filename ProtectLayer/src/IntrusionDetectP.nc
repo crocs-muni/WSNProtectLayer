@@ -7,6 +7,7 @@
 #include "ProtectLayerGlobals.h"
 
 module IntrusionDetectP {
+#ifndef THIS_IS_BS
     uses {
         //		interface AMSend;
         //		interface Receive;
@@ -21,6 +22,7 @@ module IntrusionDetectP {
         interface AMPacket;
         interface Packet;
     }
+#endif
     provides {
         interface Init;
         interface Init as PLInit;
@@ -29,6 +31,7 @@ module IntrusionDetectP {
 }
 
 implementation {
+#ifndef THIS_IS_BS
     message_t m_msg;
     
     // Logging
@@ -167,7 +170,6 @@ implementation {
     //			    }
     //			}
     //	}
-    
     
     // Messages passed to the IDS from privacy component
     event message_t * ReceiveMsgCopy.receive(message_t *msg, void *payload, uint8_t len){
@@ -338,4 +340,19 @@ implementation {
         m_radioBusy = FALSE;
     }
     
+#else
+ 	
+    command error_t Init.init() {
+        return SUCCESS;
+    }
+    command error_t PLInit.init(){
+        return SUCCESS;
+    }
+    command void IntrusionDetect.switchIDSoff(){
+    }
+    command void IntrusionDetect.switchIDSon(){
+    }
+    command void IntrusionDetect.resetIDS(){
+    }
+#endif
 }

@@ -9,6 +9,7 @@
 #include "StorageVolumes.h"
 #endif
 
+#include "ProtectLayerGlobals.h"
 configuration IntrusionDetectC{
 	provides {
 		interface IntrusionDetect;
@@ -17,43 +18,39 @@ configuration IntrusionDetectC{
 }
 
 implementation{
+	components MainC;
 	components IntrusionDetectP;
+	
+#ifndef THIS_IS_BS
 	components PrivacyC;
 	components SharedDataC;
-	components MainC;
-//	components new TimerMilliC() as TimerIDS; //testing
-//	components new BlockStorageC(VOLUME_LOG) as LogStorage;
-	components IDSBufferC;
-	components DispatcherC;
-	components IDSForwarderC;
+	
 	components CryptoC;
+	components DispatcherC;	
+	components IDSBufferC;
+	components IDSForwarderC;
+	
 	components new AMReceiverC(AM_IDS_ALERT);
-//	components new AMSenderC(AM_IDS_ALERT);
-		
-//	IntrusionDetectP.TimerIDS-> TimerIDS; //testing
+#endif
 	
 	MainC.SoftwareInit -> IntrusionDetectP.Init;	//auto-initialization phase 1
 	
 	PLInit = IntrusionDetectP.PLInit;
 	IntrusionDetect = IntrusionDetectP.IntrusionDetect;
-	
+
+#ifndef THIS_IS_BS	
 	IntrusionDetectP.ReceiveIDSMsgCopy -> DispatcherC.Sniff_Receive;
-//	IntrusionDetectP.IDSAlertSend -> IDSForwarderC.IDSAlertSend;
 	
 	IntrusionDetectP.ReceiveMsgCopy -> PrivacyC.MessageReceive[MSG_IDSCOPY];
-
-//	IntrusionDetectP.AMSend -> PrivacyC.MessageSend[MSG_IDS];
-//	IntrusionDetectP.Receive -> PrivacyC.MessageReceive[MSG_IDS];
 	
 	IntrusionDetectP.SharedData -> SharedDataC.SharedData;
 	
-//	IntrusionDetectP.BlockWrite -> LogStorage.BlockWrite;
-	
-	IntrusionDetectP.IDSBuffer -> IDSBufferC.IDSBuffer;
-	
 	IntrusionDetectP.Crypto -> CryptoC.Crypto;
-	
+
+	IntrusionDetectP.IDSBuffer -> IDSBufferC.IDSBuffer;
+
 	IntrusionDetectP.AMPacket -> AMReceiverC;
 	IntrusionDetectP.Packet -> IDSForwarderC.IDSAlertPacket;
 	IntrusionDetectP.AMSend -> IDSForwarderC.IDSAlertSend;
+#endif
 }

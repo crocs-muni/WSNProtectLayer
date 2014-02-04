@@ -15,22 +15,24 @@ configuration PrivacyLevelC{
 		}
 }
 implementation{
+	components MainC;
+	components PrivacyLevelP;
+#ifndef THIS_IS_BS	
 	components PrivacyC;
 	components CryptoC;
-	components PrivacyLevelP;
     components DispatcherC;
     components SharedDataC;
-    components MainC;
+#endif
 	
 	MainC.SoftwareInit -> PrivacyLevelP.Init; // auto init phase 1
-	
-	PrivacyLevelP.Privacy->PrivacyC.Privacy;
 	PrivacyLevel = PrivacyLevelP.PrivacyLevel;
 	Init = PrivacyLevelP.PLInit;
-		
+	
+#ifndef THIS_IS_BS	
+	PrivacyLevelP.Privacy->PrivacyC.Privacy;	
 	PrivacyLevelP.AMSend -> PrivacyC.MessageSend[MSG_PLEVEL];
 	PrivacyLevelP.Receive -> DispatcherC.ChangePL_Receive;
 	PrivacyLevelP.SharedData -> SharedDataC.SharedData;
-	
-	PrivacyLevelP.Crypto -> CryptoC.Crypto;	
+	PrivacyLevelP.Crypto -> CryptoC.Crypto;
+#endif
 }

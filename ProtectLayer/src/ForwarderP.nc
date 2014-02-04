@@ -11,12 +11,15 @@ module ForwarderP
 	provides {
 		interface Init;
 		}
+#ifndef THIS_IS_BS
 	uses {
 		interface AMSend;
 		interface Receive;
 		}
+#endif
 }
 implementation{
+#ifndef THIS_IS_BS
 	message_t m_msgMemory;
 	message_t* m_msg;
 	message_t* m_lastMsg;
@@ -102,4 +105,9 @@ implementation{
 			}	
 		}
 	}
+#else
+	command error_t Init.init(){
+		return SUCCESS;
+	}
+#endif
 }

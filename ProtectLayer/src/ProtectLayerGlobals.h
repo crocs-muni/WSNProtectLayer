@@ -22,6 +22,21 @@
 // Use CTP in Routing component (used to determine neighbors).
 //#define USE_CTP
 
+// Default base station node ID
+#ifndef TOS_BS_NODE_ID
+#define TOS_BS_BODE_ID 40
+#endif
+
+//#define THIS_IS_BS
+	
+// If BS node
+#if defined(TOS_NODE_ID) && defined(TOS_BS_NODE_ID) && !defined(THIS_IS_BS) && ((TOS_BS_NODE_ID)==(TOS_NODE_ID))
+#define THIS_IS_BS
+#endif
+#ifdef THIS_IS_BS
+#warning " *** THIS IS BASE STATION CODE ***"
+#endif
+
 // Define to supress warning from printf function
 #define DEBUG_PRINTF
 #ifndef PL_LOG_MAX_LEVEL 

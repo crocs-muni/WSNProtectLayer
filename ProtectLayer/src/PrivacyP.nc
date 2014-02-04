@@ -22,7 +22,6 @@ module PrivacyP {
         interface SharedData;
         interface KeyDistrib;
         interface Crypto;
-        interface Logger;
         interface Dispatcher;
         
         interface Timer<TMilli> as RetxmitTimer;
@@ -43,6 +42,10 @@ module PrivacyP {
     }	
 }
 implementation {
+	// Logging tag for this component
+    static const char *TAG = "PrivacyP";
+    
+#ifndef THIS_IS_BS
     PPCPrivData_t * m_privData = NULL;
     uint8_t reputation;
     bool m_radioBusy = FALSE;
@@ -57,9 +60,6 @@ implementation {
     RecMsg_t m_receiveBuffer[RECEIVE_BUFFER_LEN];
     uint8_t m_recNextToProcess=0;
     uint8_t m_recNextToStore=0;
-    
-    // Logging tag for this component
-    static const char *TAG = "PrivacyP";
     
     static void startRetxmitTimer(uint16_t mask, uint16_t offset);
     
@@ -775,16 +775,6 @@ recv_finish:
     return tmp + sizeof(SPHeader_t);
 }
     
-    //
-    // Route
-    //
-    event void Route.randomNeighborIDprovided(error_t status, node_id_t id){
-    // do nothing
-}	
-    event void Route.randomParentIDprovided(error_t status, node_id_t id){
-    // do nothing
-}
-    
 /*
     //
     // KeyDistrib
@@ -802,33 +792,80 @@ recv_finish:
     }
 */
 
-    
-/*
-    //
-    // Crypto
-    //
-    event void Crypto.decryptBufferDone(error_t status, uint8_t *buffer, uint8_t resultLen){
-        // TODO Auto-generated method stub
+#else
+	//
+	// Radio & ProtectLayer initialization
+	//
+    void radioStartDone(error_t err);
+    task void radioStart(){
+    	error_t err = call AMControl.start();
+    	
+    	// The returned value can be also EALREADY in which
+    	// case startDone is not called, so in order to prevent
+    	// being stuck here call it manually.
+    	if (err!=SUCCESS){
+    		radioStartDone(err);
+    	}
     }
     
-    event void Crypto.deriveKeyDone(error_t status, PL_key_t *derivedKey){
-        // TODO Auto-generated method stub
+    task void radioStarted(){
+    	pl_log_i(TAG, "radio started.");
+    	call Dispatcher.serveState();
     }
     
-    event void Crypto.generateKeyDone(error_t status, PL_key_t *newKey){
-        // TODO Auto-generated method stub
+    void radioStartDone(error_t err){
+    	if (err == SUCCESS || err==EALREADY) {
+    		// Radio was started successfully or was already started.
+    		// In both cases proceed to PL initialization in
+    		// a Dispatcher. This is done in a task
+    		// since initialization can take a long time.
+		    post radioStarted();
+		    
+		} else {
+			// Starting the radio was not successful.
+			// Try it again in  
+			post radioStart();
+		}
     }
     
-    event void Crypto.encryptBufferDone(error_t status, uint8_t *buffer, uint8_t resultLen){
-        // TODO Auto-generated method stub
+    command void Privacy.startApp(error_t err) {
+        // Dispatcher has everything initialized right now.
+		pl_log_d(TAG, "Going to signal message AMControl.startDone()\n");
+		signal MessageAMControl.startDone(err);
     }
-*/
-
-    //
-    // interface Logger
-    //
-    event void Logger.logToPCDone(message_t *msg, error_t error){
-    	// TODO Auto-generated method stub
+    
+    event void AMControl.startDone(error_t err) {
+	    radioStartDone(err);
+    }
+    	
+    event void AMControl.stopDone(error_t err) { }	
+	
+    command error_t MessageAMControl.start() {
+    	pl_log_i(TAG, "NodeState: <MessageAMControl>\n"); 
+		post radioStart();
+    	return SUCCESS;	
 	}
+	
+	command error_t Init.init() { return SUCCESS; }
+    command error_t PLInit.init() { return SUCCESS; }
+    command PRIVACY_LEVEL Privacy.getCurrentPrivacyLevel(){ return 0; }
+    event void PrivacyLevel.privacyLevelChanged(error_t status, PRIVACY_LEVEL newPrivacyLevel){ }
+    event message_t* LowerReceive.receive(message_t* msg, void* payload, uint8_t len) { return msg; } 
+    command error_t MessageSend.send[uint8_t id](am_addr_t addr, message_t* msg, uint8_t len) { return SUCCESS; }
+    event void RetxmitTimer.fired() { }
+    command error_t MessageSend.cancel[uint8_t id](message_t* msg) { return FAIL; }
+    command uint8_t MessageSend.maxPayloadLength[uint8_t]() { return 0; }
+    command void* MessageSend.getPayload[uint8_t](message_t* msg, uint8_t len) { return NULL; }
+    default event void MessageSend.sendDone[uint8_t](message_t* msg, error_t error) {}
+    default event message_t* MessageReceive.receive[uint8_t id](message_t* msg, void* payload, uint8_t len) { return msg; } 
+    event void LowerAMSend.sendDone(message_t* msg, error_t error) { }
+    command error_t MessageAMControl.stop() { return SUCCESS;	}
+    default event void MessageAMControl.startDone(error_t err) {} 
+    command void MessagePacket.clear(message_t* msg) { }
+    command uint8_t MessagePacket.payloadLength(message_t* msg) { return 0; }
+    command void MessagePacket.setPayloadLength(message_t* msg, uint8_t len) { }
+    command uint8_t MessagePacket.maxPayloadLength() { return 0; }
+    command void* MessagePacket.getPayload(message_t* msg, uint8_t len) { return NULL; 	}
+#endif
 } 
     

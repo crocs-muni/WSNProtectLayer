@@ -10,6 +10,7 @@
 
 #include "ProtectLayerGlobals.h"
 module PrivacyLevelP{
+#ifndef THIS_IS_BS	
 	uses {
 		interface AMSend;
 		interface Receive;
@@ -17,6 +18,7 @@ module PrivacyLevelP{
 		interface Privacy;
 		interface SharedData;
 	}
+#endif
 	provides {
 		interface Init;
 		interface Init as PLInit;
@@ -24,6 +26,7 @@ module PrivacyLevelP{
 	}
 }
 implementation{
+#ifndef THIS_IS_BS	
 	message_t m_msgMemory;
 	message_t* m_msg;
 	message_t* m_lastMsg;
@@ -163,4 +166,13 @@ implementation{
 			}	
 		}
 	}
+#else
+	
+	command error_t Init.init(){
+		return SUCCESS;
+	}
+	command error_t PLInit.init(){
+        return SUCCESS;		
+	}
+#endif
 }

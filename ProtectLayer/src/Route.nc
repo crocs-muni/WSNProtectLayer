@@ -50,9 +50,7 @@ interface Route{
 	 * @see getRandomParentID()
 	 * 
 	 */
-	
-	
-	event void randomParentIDprovided(error_t status, node_id_t id);
+	//event void randomParentIDprovided(error_t status, node_id_t id);
 	
 	/**
 	 * Command that requests the ID of randomly chosen neighbor node. 
@@ -74,7 +72,7 @@ interface Route{
 	 * @see getRandomNeighborID()
 	 * 
 	 */
-	event void randomNeighborIDprovided(error_t status, node_id_t id);
+	//event void randomNeighborIDprovided(error_t status, node_id_t id);
 	/*
 	command error_t getParentIDs(node_id_t* ids, uint8_t maxCount);
 	event void parentIDsProvided(error_t status, node_id_t* ids, uint8_t resultCount);

@@ -6,6 +6,7 @@ module IDSForwarderP
 		interface Init;
 		interface Packet as IDSAlertPacket;
 		}
+#ifndef THIS_IS_BS
 	uses {
 		interface AMSend;
 		interface Receive;
@@ -14,8 +15,10 @@ module IDSForwarderP
 		interface Packet;
 		interface Route;
 	}
+#endif
 }
 implementation{
+#ifndef THIS_IS_BS
 	message_t* m_msgIDSAlert=NULL;
 	uint8_t m_msgIDSAlertLen=0;	
 	bool m_lastMsgWasIDSAlert = 0;
@@ -29,7 +32,7 @@ implementation{
 	command error_t Init.init(){
 		return SUCCESS;
 	}
-	
+
 	task void task_forwardMessage()
 	{
 		message_t* sendMsg=NULL;
@@ -197,13 +200,34 @@ implementation{
 		return call Packet.getPayload(msg, len);
 	}
 	
-	event void Route.randomNeighborIDprovided(error_t status, node_id_t id){
+#else
+	command error_t Init.init(){
+		return SUCCESS;
 	}
-
-	event void Route.randomParentIDprovided(error_t status, node_id_t id){
+	command error_t IDSAlertSend.cancel(message_t *msg) {
+		return FAIL;
 	}
+	command void * IDSAlertSend.getPayload(message_t *msg, uint8_t len){
+		return NULL;
+	}
+	command uint8_t IDSAlertSend.maxPayloadLength(){
+		return 0;
+	}
+	command error_t IDSAlertSend.send(am_addr_t addr, message_t *msg, uint8_t len){
+	}	
+	command void IDSAlertPacket.clear(message_t* msg) {
+	}
+	command uint8_t IDSAlertPacket.payloadLength(message_t* msg) {
+		return 0;
+	}
+	command void IDSAlertPacket.setPayloadLength(message_t* msg, uint8_t len) {
+	}
+	command uint8_t IDSAlertPacket.maxPayloadLength() {
+		return 0;
+	}
+	command void* IDSAlertPacket.getPayload(message_t* msg, uint8_t len) {
+		return NULL;
+	}
+#endif
 }
-
-
-
 

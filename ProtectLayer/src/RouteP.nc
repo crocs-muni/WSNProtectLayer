@@ -53,6 +53,9 @@ implementation{
 		RoutePrivData_t* pTable = call SharedData.getRPrivData();
 		
 		pTable->isValid = 1;
+		/*
+		 * Is already done in SharedData
+		 * 
 		switch (TOS_NODE_ID) {
 			case 4: { pTable->parentNodeId = 41; break; }
 			case 5: { pTable->parentNodeId = 40; break; }
@@ -85,6 +88,7 @@ implementation{
 			case 50: { pTable->parentNodeId = 31; break; }
 			default: pTable->isValid = 1;
 			} 
+		*/
 		
 		// Start CTP initialization.
 		post initCTP();
@@ -111,10 +115,9 @@ implementation{
 	
 	task void task_getRandomParentID() {
 	  	//dbg("NodeState", "KeyDistrib.task_getKeyToBS called.\n");
-	  	
-		SavedData_t* pTable = call SharedData.getSavedData();
-		node_id_t randIndex = call Random.rand16() % MAX_NEIGHBOR_COUNT;
-		signal Route.randomParentIDprovided(SUCCESS, pTable[randIndex].nodeId);
+		//SavedData_t* pTable = call SharedData.getSavedData();
+		//node_id_t randIndex = call Random.rand16() % MAX_NEIGHBOR_COUNT;
+		
 	}
 	command error_t Route.getRandomParentID(){
 		post task_getRandomParentID();
@@ -124,9 +127,9 @@ implementation{
 	
 	task void task_getRandomNeighborID() {
 	  	//dbg("NodeState", "KeyDistrib.task_getKeyToBS called.\n");
-		SavedData_t* pTable = call SharedData.getSavedData();
-		node_id_t randIndex = call Random.rand16() % MAX_NEIGHBOR_COUNT;
-		signal Route.randomNeighborIDprovided(SUCCESS, pTable[randIndex].nodeId);
+		//SavedData_t* pTable = call SharedData.getSavedData();
+		//node_id_t randIndex = call Random.rand16() % MAX_NEIGHBOR_COUNT;
+		
 	}
 	command error_t Route.getRandomNeighborID(){
 			post task_getRandomNeighborID();
@@ -190,7 +193,9 @@ implementation{
 		call ForwardingControl.start();
 		
 		// Set as a root (on BaseStation)
-		//call RootControl.setRoot();
+#ifdef THIS_IS_BS
+		call RootControl.setRoot();
+#endif
 		
 		// One-shot timer only, add some time for CTP tree stabilization at boot
 		call CtpInitTimer.startOneShot(CTP_TIME_SEND_AFTER_START + (call Random.rand16() % CTP_TIME_SEND_AFTER_START_RND));
@@ -232,7 +237,9 @@ implementation{
 	 * Used after boot to initialize CTP component - real TCP traffic.
 	 */
 	void task sendCtpMsg(){
+#ifndef THIS_IS_BS	
         error_t sendResult = SUCCESS;
+#endif
 		
 		// CTP didn't returned a response
 		if (ctpBusy){
@@ -244,6 +251,14 @@ implementation{
 			return;
 		}
 		
+		// Terminate if CTP is not in use anymore.
+		if (ctp_init_state>=CTP_STATE_TERMINATE){
+			// CTP ended
+			return;
+		}
+		
+		// Only if given node is not a base station.
+#ifndef THIS_IS_BS			
 		// If we are trying to find root...
 		// Helping CTP by triggering route recomputation (if parent was not found till now, something is wrong).
 		if (ctp_init_state==CTP_STATE_FIND_PARENT && parentFound==FALSE){
@@ -277,9 +292,6 @@ implementation{
 				}
 			}		
 			return;
-		} else if (ctp_init_state>=CTP_STATE_TERMINATE){
-			// CTP ended
-			return;
 		}
 		
         sendResult = call CtpSend.send(&ctpPkt, sizeof(CtpResponseMsg));
@@ -294,6 +306,10 @@ implementation{
         	// start re-tx timer
 			call CtpSendTimer.startOneShot(CTP_TIME_SEND_FAIL + (call Random.rand16() % CTP_TIME_SEND_FAIL_RND));
         }
+#else
+	// If a BS, nothing to do.
+	call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
+#endif
 	}
 	
 	event void CtpSendTimer.fired(){
@@ -323,6 +339,7 @@ implementation{
     }
     
 	command error_t Route.getRandomNeighborIDB(node_id_t * neigh){
+#ifndef THIS_IS_BS	
 		uint8_t numNeigh = 0;
 		
 		// Obtain number of neighbors from CTP component.
@@ -358,8 +375,9 @@ implementation{
 			
 			chosenOne = call Random.rand16() % numAboveThreshold;
 			*neigh = call CtpInfo.getNeighborAddr(acceptableNeigh[chosenOne]);
+			return SUCCESS;
 		}
-		
+#endif
 		return FAIL;
 	}
 	
