@@ -167,17 +167,15 @@ implementation {
         SavedData = call SharedData.getSavedData();
         if(SavedData == NULL || KDCPrivData == NULL){
             status = EDATANOTFOUND;
-            //TODO printf()
+            pl_log_f(TAG, "CryptoP initialization cannot acces predistributed data.\n");
             return status;
         }
-        //SavedDataEnd = SavedData + sizeof(SavedData) / sizeof(SavedData_t);
-        //process all saved data items
-        //while ( SavedData < SavedDataEnd ){ TODO for cycle
-        {
-        //TODO function to return prekeys in shared data
-            //m_key1 = &(KDCPrivData->preKeys[SavedData->nodeId]); //predistributed key
-            //TODO: m_key1 = call savedData.get pre key ...
-            //get derivation data 
+        for(i = 0; i < MAX_NEIGHBOR_COUNT; i++){
+            m_key1 = call SharedData.getPredistributedKeyForNode(i);
+	    if(m_key1 == NULL){
+		pl_log_e(TAG, "CryptoP:  predistributed key for node %x not retrieved.\n", i); 
+                continue;
+	    }
             /*
             calculates derivation data by appending node ID's first lower on, then higher one
             these are appended to array by memcpy and pointer arithmetics ()
@@ -190,18 +188,14 @@ implementation {
             
             //derive key from data and predistributed key
             status = call CryptoRaw.deriveKeyB(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
-            if(status != SUCCESS){
-                
-                pl_printf("CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData->nodeId, status); 
-                
+            if(status != SUCCESS){                
+                pl_log_e(TAG, "CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData->nodeId, status); 
+                continue;
             }
             m_key2->counter = 0;
             //save key to KDCData shared key		
             memcpy( &((SavedData[i].kdcData).shared_key), m_key2, sizeof(PL_key_t));
-            
-            //SavedData++;
         }
-        
         return status;
     }
     //TODO merge hash with mac
@@ -239,9 +233,7 @@ implementation {
                 buffer[j + offset] = 0;
             }
             if((status = call CryptoRaw.hashDataBlockB(buffer, offset + pLen - (pLen % BLOCK_SIZE), m_key1, hash)) != SUCCESS){
-                
-                pl_printf("CryptoP:  hashDataB calculation failed.\n"); 
-                
+                pl_printf("CryptoP:  hashDataB calculation failed.\n");
                 return status;
             }
         }
