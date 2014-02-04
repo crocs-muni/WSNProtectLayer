@@ -16,6 +16,9 @@
 // of the prototype during experiment. TODO: REMOVE THIS
 #define PLAINTEXT_DEMO 1
 
+// Conditional compilation for hop by hop encryption.
+#define HOP_BY_HOP_ENCRYPTION 1
+
 // Define to supress warning from printf function
 #define DEBUG_PRINTF
 #ifndef PL_LOG_MAX_LEVEL 
