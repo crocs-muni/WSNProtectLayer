@@ -554,6 +554,11 @@ recv_finish:
 	        }
 #endif // HOP_BY_HOP_ENCRYPTION
         }
+        
+        // IDS wants also messages sent by application (parent should forward them). 
+        if (m_nextId == MSG_APP) {
+        	passToIDS(sReq.msg, spHeader, sReq.len);
+        }
 		
         // Pass prepared message to the lower layer for sending.
         rval = call LowerAMSend.send(sReq.addr,sReq.msg,sReq.len);
