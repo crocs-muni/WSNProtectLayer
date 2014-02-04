@@ -151,6 +151,23 @@ implementation{
         }
     }	
     
+    command error_t KeyDistrib.getHashKeyB(PL_key_t* pBSKey) {
+        KDCPrivData_t* KDCPrivData = NULL;
+        
+        pl_printf("KeyDistribP: getHashKeyB called.\n"); 
+        
+        KDCPrivData = call SharedData.getKDCPrivData();
+        if(KDCPrivData == NULL){
+            
+            pl_printf("KeyDistribP: getHashKeyB key not received\n"); 
+            
+            return EKEYNOTFOUND;
+        } else {		
+            pBSKey = &(KDCPrivData->hashKey);
+            return SUCCESS;
+        }
+    }	
+    
     command error_t KeyDistrib.selfTest(){
         uint8_t status = SUCCESS;
         

@@ -298,6 +298,7 @@ typedef struct RoutePrivData {
 
 typedef struct KDCPrivData {
     PL_key_t	keyToBS;
+    PL_key_t    hashKey;
     PL_key_t	preKeys[MAX_NEIGHBOR_COUNT];
 } KDCPrivData_t;
 /**

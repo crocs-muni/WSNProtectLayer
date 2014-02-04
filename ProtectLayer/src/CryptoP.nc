@@ -198,61 +198,71 @@ implementation {
         }
         return status;
     }
-    //TODO merge hash with mac
+    
     command error_t Crypto.hashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash){
         error_t status = SUCCESS;
         uint8_t i;
         uint8_t j;
-        uint8_t tempHash[BLOCK_SIZE];
+        uint8_t tempHash[HASH_LENGTH];
         
-        pl_printf("CryptoP:  hashDataB called.\n"); 
-        //TODO arguments tests
+        pl_printf("CryptoP:  hashDataB called.\n");
+	//check arguments
+        if(pLen == 0){
+	    pl_log_e(TAG,"CryptoRawP: hashDataB pLen == 0.\n");
+	    return FAIL;	    
+        }
+        if(hash == NULL){
+	    pl_log_e(TAG,"CryptoRawP: hashDataB NULL hash.\n");
+	    return FAIL;	    
+        }
         
-        //TODO add function to set default hash key
-        memset(m_key1->keyValue, 0, KEY_SIZE); //init default key value
-        for(i = 0; i < pLen/BLOCK_SIZE; i++){
-        //TODO check for incomplete block
-            if((status = call CryptoRaw.hashDataBlockB(buffer, offset + i * BLOCK_SIZE, m_key1, tempHash)) != SUCCESS){
+        //get hash key
+        if((status = call KeyDistrib.getHashKeyB( m_key1))!= SUCCESS){
+            pl_printf("CryptoP: hashDataB key not retrieved.\n");
+            return status;
+        }
+
+        for(i = 0; i < (pLen/HASH_LENGTH) + 1; i++){
+            //incoplete block check, if input is in buffer, than copy data to input, otherwise use zeros as padding 
+            for (j = 0; j < HASH_LENGTH; j++){
+                if(i >= (pLen/HASH_LENGTH)){
+		    hash[j] = 0;
+                } else {
+                    hash[j] = buffer[j + i * HASH_LENGTH];
+                }
+            }
+            if((status = call CryptoRaw.hashDataBlockB( hash, offset, m_key1, tempHash)) != SUCCESS){
                 
                 pl_printf("CryptoP:  hashDataB calculation failed.\n"); 
                 
                 return status;
             }
-            //TODO hash size constant
-            for(j = 0; j < BLOCK_SIZE; j++){
+            //copy resutl to key value for next round
+            for(j = 0; j < HASH_LENGTH; j++){
                 m_key1->keyValue[j] = tempHash[j];
             }
         }
-        //pad and calculate last block
-        if((pLen % BLOCK_SIZE) == 0){
-            for(j = 0; j < BLOCK_SIZE; j++){
+        
+        //put hash to output
+        for(j = 0; j < HASH_LENGTH; j++){
                 hash[j] = tempHash[j];
-            }
-        } else {
-            for(j = pLen - (pLen % BLOCK_SIZE); j < BLOCK_SIZE; j++){
-                buffer[j + offset] = 0;
-            }
-            if((status = call CryptoRaw.hashDataBlockB(buffer, offset + pLen - (pLen % BLOCK_SIZE), m_key1, hash)) != SUCCESS){
-                pl_printf("CryptoP:  hashDataB calculation failed.\n");
-                return status;
-            }
         }
         return status;
     }
     
-    //TODO change header and define short hash as constant
+    //TODO define short hash as array of uint8_t
     command error_t Crypto.hashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint32_t* hash){
         uint8_t tempHash[BLOCK_SIZE];
         uint8_t status;
         uint8_t i;
-        
-        //TODO checks
-        pl_printf("CryptoP: hashDataHalfB called.\n"); 
-        
+
+        if(hash == NULL){
+	    pl_log_e(TAG,"CryptoRawP: hashDataB NULL hash.\n");
+	    return FAIL;	    
+        }
+        pl_printf("CryptoP: hashDataShortB called.\n"); 
         if((status = call Crypto.hashDataB(buffer, offset, pLen, tempHash)) != SUCCESS){
-            
-            pl_printf("CryptoP: hashDataHalfB calculation failed.\n"); 
-            
+            pl_printf("CryptoP: hashDataShortB calculation failed.\n"); 
             return status;
         }
         for (i = 0; i < BLOCK_SIZE/4; i++){
@@ -265,18 +275,13 @@ implementation {
     command error_t Crypto.verifyHashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash){
         error_t status = SUCCESS;
         uint8_t tempHash[BLOCK_SIZE];
-        
+
         pl_printf("CryptoP:  verifyHashDataB called.\n"); 
-        
         if((status = call Crypto.hashDataB(buffer, offset, pLen, tempHash)) != SUCCESS){
-            
             pl_printf("CryptoP:  verifyHashDataB failed to calculate hash.\n"); 
-            
         }
         if(memcmp(tempHash, hash, BLOCK_SIZE) != 0){
-            
             pl_printf("CryptoP:  verifyHashDataB hash not verified.\n"); 
-            
             return EWRONGHASH;
         }
         return status;
@@ -285,28 +290,22 @@ implementation {
     command error_t Crypto.verifyHashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint32_t hash){
         error_t status = SUCCESS;
         uint32_t tempHash;
-        
-        pl_printf("CryptoP:  verifyHashDataB called.\n"); 
-        
+
+        pl_printf("CryptoP:  verifyHashDataB called.\n");
         if((status = call Crypto.hashDataShortB(buffer, offset, pLen, &tempHash)) != SUCCESS){
-            
             pl_printf("CryptoP:  verifyHashDataB failed to calculate hash.\n"); 
-            
         }
         if(tempHash != hash){
-            
             pl_printf("CryptoP:  verifyHashDataB hash not verified.\n"); 
-            
             return EWRONGHASH;
         }
-        return status;		
+        return status;
     }
     
     //TODO add function for update signature value
     
-    //TODO uint16_t counter
     command bool Crypto.verifySignature( uint8_t* buffer, uint8_t offset, uint8_t pLen, PRIVACY_LEVEL level, uint16_t counter, uint8_t* signature){
-    //TODO add optional rparameter for signature return
+    //TODO add optional parameter for signature return
         uint16_t i;
         uint8_t tmpSignature[HASH_LENGTH];
         
@@ -357,13 +356,13 @@ implementation {
         
         if((status = call Crypto.hashDataShortB(m_buffer, 0, BLOCK_SIZE, &halfHash)) != SUCCESS){
             
-            pl_printf("CryptoP:  hashDataHalfB failed.\n"); 
+            pl_printf("CryptoP:  hashDataShortB failed.\n"); 
             
             return status;		 
         }		
         if((status = call Crypto.verifyHashDataShortB(m_buffer, 0, BLOCK_SIZE, halfHash)) != SUCCESS){
             
-            pl_printf("CryptoP:  verifyHashDataB failed.\n"); 
+            pl_printf("CryptoP:  verifyHashDataShortB failed.\n"); 
             
             return status;
         }
