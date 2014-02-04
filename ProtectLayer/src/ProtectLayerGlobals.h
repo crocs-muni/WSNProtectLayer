@@ -65,7 +65,12 @@ enum {
   IDS_DROPPING_THRESHOLD = 50,
   IDS_MIN_PACKET_RECEIVED = 50,
   IDS_FORWARDER_SEND_BUFFER_LEN = 4,
-  PHANTOM_JUMPS=3
+  PHANTOM_JUMPS=3,
+  MAC_LENGTH = 16,
+  HASH_LENGTH = 16,
+  BLOCK_SIZE = 16,
+  COUNTER_SYNCHRONIZATION_WINDOW = 5,
+  MAX_OFFSET = 20
  #ifdef PLAINTEXT_DEMO
   , PLAINTEXT_BYTES=8
  #endif
@@ -79,12 +84,7 @@ enum {
   STATE_WORKING = 4
 }; 
 
-//crypto array lengths
-#define MAC_LENGTH 16
-#define HASH_LENGTH 16
-#define BLOCK_SIZE 16
 
-#define MAX_OFFSET 20 //maximum allowed offset, for larger offsets erroe is returned
 
 // NOTE: constants should be defined as item in enum above (to save space) #define MAX_NEIGHBOR_COUNT 	20 /**< Maximum number of neighbors - used to allocate static arrays */
 

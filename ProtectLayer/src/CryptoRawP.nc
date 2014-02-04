@@ -285,15 +285,35 @@ implementation {
 	
     command error_t CryptoRaw.unprotectBufferB( PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         error_t status = SUCCESS;
+        uint8_t i;
+        uint32_t counter = key->counter;
+        pl_log_d( TAG, "CryptoP unprotectBufferB called.\n");
         //offset is used for encryption shift, to verify SPheader, but not to encrypt it
-        
-        //TODO counter synchronization -5 .. +5 + debug printf
+
         if((status = call CryptoRaw.decryptBufferB( key, buffer, offset, *pLen)) != SUCCESS){
-            pl_printf("CryptoP:  unprotectBufferB encrypt failed.\n");
+            pl_log_e( TAG, "CryptoP:  unprotectBufferB encrypt failed.\n");
             return status;		
         }
         if((status = call CryptoRaw.verifyMac( key, buffer, 0, pLen)) != SUCCESS){            
-            pl_printf("CryptoP:  unprotectBufferB mac verification failed.\n"); 
+            pl_log_e( TAG, "CryptoP:  unprotectBufferB mac verification failed, trying to sychronize counter.\n"); 
+            for (i = 1; i <= COUNTER_SYNCHRONIZATION_WINDOW; i++){
+		
+		key->counter = counter - i;
+		call CryptoRaw.decryptBufferB( key, buffer, offset, *pLen);
+		if((status = call CryptoRaw.verifyMac( key, buffer, 0, pLen)) == SUCCESS){
+		    pl_log_i( TAG, "CryptoP counter synchronization succesfull.\n");
+		    return status;
+		}
+		
+                key->counter = counter + i;
+		call CryptoRaw.decryptBufferB( key, buffer, offset, *pLen);
+		if((status = call CryptoRaw.verifyMac( key, buffer, 0, pLen)) == SUCCESS){
+		    pl_log_i( TAG, "CryptoP counter synchronization succesfull.\n");
+		    return status;
+		}
+            }
+            pl_log_e(TAG, "CryptoP counter could not be sychronized, decrypt failed.\n");
+            key->counter = counter;
             return status;
         }
         return status;
