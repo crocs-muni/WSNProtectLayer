@@ -242,7 +242,6 @@ implementation {
                 m_key1->keyValue[j] = tempHash[j];
             }
         }
-        
         //put hash to output
         for(j = 0; j < HASH_LENGTH; j++){
                 hash[j] = tempHash[j];
@@ -301,30 +300,47 @@ implementation {
         }
         return status;
     }
-    
-    //TODO add function for update signature value
-    
-    command bool Crypto.verifySignature( uint8_t* buffer, uint8_t offset, uint8_t pLen, PRIVACY_LEVEL level, uint16_t counter, uint8_t* signature){
-    //TODO add optional parameter for signature return
-        uint16_t i;
+
+    command bool Crypto.verifySignature( uint8_t* buffer, uint8_t offset, PRIVACY_LEVEL level, uint16_t counter, Signature_t* signature){
+        uint8_t i;
         uint8_t tmpSignature[HASH_LENGTH];
-        
-        pl_printf("CryptoP:  verifySignature called.\n"); 
-        
-        for(i = 0; i < counter; i++){			
-            call Crypto.hashDataB( buffer, offset, pLen, buffer + offset);			
+        PPCPrivData_t* ppcPrivData = NULL;
+
+        pl_printf("CryptoP:  verifySignature called.\n");
+        ppcPrivData = call SharedData.getPPCPrivData();
+        if(ppcPrivData == NULL){
+	    pl_log_e(TAG,"CryptoRawP: verifySignature ppcPrivData not retreived.\n");
+	    return FAIL;	    
         }
-        //TODO call shared data to fill signature
-        //TODO memcmp change condition
-        if(memcmp(buffer + offset, tmpSignature, BLOCK_SIZE)){
-            return FALSE;
-        } else {
-            return TRUE;
+        memcpy(tmpSignature, buffer + offset, HASH_LENGTH);
+        //go through all possible values in hash chain, from one hash, to last remembered value (ideally just one hop, in worst case to end of hash chain)
+        for(i = (ppcPrivData->signatures[level]).counter; i > counter; i++){
+            call Crypto.hashDataB( tmpSignature, 0, HASH_LENGTH, tmpSignature);
+            if(memcmp((ppcPrivData->signatures[level]).signature, tmpSignature, HASH_LENGTH) == 0){
+               if (signature != NULL){ //if optional parameter is present, then copy verified signature there
+		  memcpy(signature->signature, buffer, HASH_LENGTH);
+		  signature->counter = counter;
+		  signature->privacyLevel = level;
+	       }
+               return TRUE;
+            }
         }
+        pl_log_e(TAG,"CryptoRawP: verifySignature not succesfull.\n");
+	return FALSE;
     }
     
-    command void Crypto.updateSignature( uint8_t* signature,  PRIVACY_LEVEL level){
-        //TODO implementation
+    command void Crypto.updateSignature( Signature_t* signature){
+        PPCPrivData_t* ppcPrivData = NULL;
+        if(signature == NULL){
+	    pl_log_e(TAG,"CryptoRawP: updateSignature NULL signature.\n");
+	    return;
+        }
+        ppcPrivData = call SharedData.getPPCPrivData();
+        if(ppcPrivData == NULL){
+	    pl_log_e(TAG,"CryptoRawP: updateSignature ppcPrivData not retreived.\n");
+	    return;	    
+        }
+        ppcPrivData->signatures[signature->privacyLevel] = *signature;
     }
     
     command error_t Crypto.selfTest(){

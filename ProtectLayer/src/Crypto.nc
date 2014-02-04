@@ -163,23 +163,22 @@ interface Crypto {
 	
 	/**	
 			Command: Command to calculate hash chain of buffer and verifies result of calculation 
-			according to privacy level specified.
-			@param[in] buffer with data
-			@param[in] offset			
-			@param[in] pLen
+			according to privacy level specified. Input Length is HASH_LENGTH.
+			Optionally returns updated signature, which can be stored using updateSignature function.
+			@param[in] buffer with signature to verify
+			@param[in] offset
 			@param[in] level privacy level
-			@param[in] counter number of iterations
+			@param[in] counter supposed placement in hash chain for verified signature, 0 is for predistributed value
 			@param[out] signature optional, when not NULL, then filled with updated signature, array must have length of HASH_LENGTH
 			@return bool result true if result matches with value
 	*/
-	command bool verifySignature( uint8_t* buffer, uint8_t offset, uint8_t pLen, PRIVACY_LEVEL level, uint16_t counter, uint8_t* signature);
+	command bool verifySignature( uint8_t* buffer, uint8_t offset, PRIVACY_LEVEL level, uint16_t counter, Signature_t* signature);
 	
 	/**
 	                Command: command to update last verified signature stored in memory
 	                @param[in] signature value to update, length is required to be HASH_LENGTH
-	*/
-	//TODO signature as structure
-	command void updateSignature( uint8_t* signature, PRIVACY_LEVEL level);
+	*/	
+	command void updateSignature( Signature_t* signature);
 	
 	/**
 			Command: command to execute self test of Crypto component
