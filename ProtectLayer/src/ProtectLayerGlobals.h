@@ -17,7 +17,10 @@
 #define PLAINTEXT_DEMO 1
 
 // Conditional compilation for hop by hop encryption.
-#define HOP_BY_HOP_ENCRYPTION 1
+//#define HOP_BY_HOP_ENCRYPTION 1
+
+// Use CTP in Routing component (used to determine neighbors).
+//#define USE_CTP
 
 // Define to supress warning from printf function
 #define DEBUG_PRINTF
@@ -412,27 +415,61 @@ typedef uint8_t NODE_REPUTATION;
  } idsBufferedPacket_t;
 //typedef uint64_t idsBufferedPacket_t;
 
+
 enum {
 #if PLATFORM_MICAZ || PLATFORM_TELOSA || PLATFORM_TELOSB || PLATFORM_TMOTE || PLATFORM_INTELMOTE2 || PLATFORM_SHIMMER || PLATFORM_IRIS
-  FORWARD_PACKET_TIME = 7,
+  FORWARD_PACKET_TIME_X = 7,
 #else
-  FORWARD_PACKET_TIME = 32,
+  FORWARD_PACKET_TIME_X = 32,
 #endif
+  SENDDONE_OK_OFFSET_X        = FORWARD_PACKET_TIME_X,
+  SENDDONE_OK_WINDOW_X        = FORWARD_PACKET_TIME_X,
+  SENDDONE_FAIL_OFFSET_X      = FORWARD_PACKET_TIME_X  << 2,
+  SENDDONE_FAIL_WINDOW_X      = SENDDONE_FAIL_OFFSET_X
 };
 
+#ifdef USE_CTP
+/**
+ * Warning!
+ * If you want to generate Java Messages by MIG (genJavaMsgs.sh) you need to
+ * define MIG - local definition will be used
+ * 
+ * MIG has trouble to include some needed header files, so they are included in MIGhlp.h.
+ */
+#ifndef MIG 
+#include "Ctp.h"
+#include "TreeRouting.h"
+#else
+#include "MIGhlp.h"
+#endif
+
+// basic message types
 enum {
-  SENDDONE_OK_OFFSET        = FORWARD_PACKET_TIME,
-  SENDDONE_OK_WINDOW        = FORWARD_PACKET_TIME,
-  SENDDONE_NOACK_OFFSET     = FORWARD_PACKET_TIME,
-  SENDDONE_NOACK_WINDOW     = FORWARD_PACKET_TIME,
-  SENDDONE_FAIL_OFFSET      = FORWARD_PACKET_TIME  << 2,
-  SENDDONE_FAIL_WINDOW      = SENDDONE_FAIL_OFFSET,
-  LOOPY_OFFSET              = FORWARD_PACKET_TIME  << 2,
-  LOOPY_WINDOW              = LOOPY_OFFSET,
-  CONGESTED_WAIT_OFFSET     = FORWARD_PACKET_TIME  << 2,
-  CONGESTED_WAIT_WINDOW     = CONGESTED_WAIT_OFFSET,
-  NO_ROUTE_RETRY            = 10000
+  AM_CTPRESPONSEMSG = 0xef,
+  AM_COLLECTIONDEBUGMSG = 0x72,
+  CTP_TIME_SEND_AFTER_START = 3000,
+  CTP_TIME_SEND_AFTER_START_RND = 300,
+  CTP_TIME_SENDING = 1500,
+  CTP_TIME_SENDING_RND = 500,
+  CTP_TIME_SEND_FAIL = 20,
+  CTP_TIME_SEND_FAIL_RND = 30,
+  CTP_TIME_STOP_AFTER_BOOT = 60000u,
+  CTP_TIME_STOP_NO_PARENT = 60000u,
+  CTP_TIME_NOPARENT = 250u,
+  CTP_TIME_NOPARENT_RND = 20u,
+  CTP_STATE_INIT = 0,
+  CTP_STATE_SENDING = 1,
+  CTP_STATE_FIND_PARENT = 2,
+  CTP_STATE_TERMINATE = 3,
+  CTP_MAX_RAND_NEIGH=12,
+  CTP_MAX_NEIGH=255u
 };
+
+typedef nx_struct CtpResponseMsg {
+    nx_uint8_t dummy;
+} CtpResponseMsg;
+
 
 #endif
 
+#endif

@@ -23,6 +23,14 @@ interface Route{
 	command error_t getRandomNeighborIDB(node_id_t * neigh);
 	
 	/**
+	 * Returns CTP parent. Blocking variant.
+	 * 
+	 * 
+	 * @param neigh		CTP parent.
+	 */
+	command error_t getCTPParentIDB(node_id_t * parent);
+	
+	/**
 	 * Command that requests the ID of randomly chosen parent node. 
 	 * If the command returns SUCCESS, then the component will signal the randomParentIDprovided event in the future;
 	 * if send returns an error, it will not signal the randomParentIDProvided. 

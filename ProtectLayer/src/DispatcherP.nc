@@ -12,6 +12,7 @@ module DispatcherP{
         interface Init as IntrusionDetectCInit;
         interface Init as KeyDistribCInit;
         interface Init as PrivacyLevelCInit;
+        interface Init as RouteCInit;
         //interface Init as ForwarderCInit;
         //interface Init as PrivacyLevelCInit;
         interface Boot;	
@@ -139,6 +140,9 @@ implementation{
         }
         case STATE_MAGIC_RECEIVED:
         {
+        	// Init Routing component
+        	call RouteCInit.init();
+        	
             // init key distribution component
             call KeyDistribCInit.init();
             
@@ -146,7 +150,7 @@ implementation{
             
             m_state = STATE_READY_FOR_APP;
             
-            //BUGBUG no break!!! break;
+            break;
         }
         case STATE_READY_FOR_APP:
         {

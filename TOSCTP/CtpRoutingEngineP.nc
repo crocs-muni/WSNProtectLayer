@@ -872,6 +872,16 @@ implementation {
     }
     
     /**
+     * Sets fixed routing topology.
+     */
+    command error_t FixedTopology.setFixedTopology(){
+    	fixedTopology=TRUE;
+        routeInfo.haveHeard=TRUE;
+        routeInfo.congested=FALSE;	
+    	return SUCCESS;
+    }
+    
+    /**
      * Disables fixed topology, routing is enabled again
      */
     command void FixedTopology.disableFixedTopology(){

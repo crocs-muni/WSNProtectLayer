@@ -16,6 +16,7 @@ implementation{
 	components MainC;
 	components CryptoC;
 	components PrivacyC;
+	components RouteC;
 	components SharedDataC;
 	components ForwarderC;
 	components PrivacyLevelC;
@@ -47,6 +48,7 @@ implementation{
 	DispatcherP.IntrusionDetectCInit -> IntrusionDetectC.PLInit;
 	DispatcherP.KeyDistribCInit -> KeyDistribC.Init;
 	DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
+	DispatcherP.RouteCInit -> RouteC.PLInit;
 	DispatcherP.Privacy -> PrivacyC.Privacy;
 	//DispatcherP.ForwarderCInit -> ForwarderC.Init;
 	//DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;

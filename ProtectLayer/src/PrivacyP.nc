@@ -372,7 +372,7 @@ recv_finish:
         	if (!call RetxmitTimer.isRunning()) {
         		// If retransmit timer is not running, start it with
         		// a randomized value. It will trigger this task again.
-        		startRetxmitTimer(SENDDONE_FAIL_WINDOW, SENDDONE_FAIL_OFFSET);
+        		startRetxmitTimer(SENDDONE_FAIL_WINDOW_X, SENDDONE_FAIL_OFFSET_X);
         	}
         	
             return;
@@ -570,7 +570,7 @@ recv_finish:
             
         } else {
         	if (!call RetxmitTimer.isRunning()) {
-        		startRetxmitTimer(SENDDONE_FAIL_WINDOW, SENDDONE_FAIL_OFFSET);
+        		startRetxmitTimer(SENDDONE_FAIL_WINDOW_X, SENDDONE_FAIL_OFFSET_X);
         	}
         	
         	pl_log_d(TAG, "sendtask, lowSend fail=%p, code=%d\n", sReq.msg, rval);
@@ -607,7 +607,7 @@ recv_finish:
         if (!m_radioBusy){
             post task_sendMessage();
         } else { 
-        	startRetxmitTimer(SENDDONE_FAIL_WINDOW, SENDDONE_FAIL_OFFSET);
+        	startRetxmitTimer(SENDDONE_FAIL_WINDOW_X, SENDDONE_FAIL_OFFSET_X);
         }
         
         return SUCCESS;
@@ -674,7 +674,7 @@ recv_finish:
     }
     
     // Schedule sending task, randomize task start (flattens peaks).
-    startRetxmitTimer(SENDDONE_OK_WINDOW, SENDDONE_OK_OFFSET);
+    startRetxmitTimer(SENDDONE_OK_WINDOW_X, SENDDONE_OK_OFFSET_X);
     pl_log_d(TAG, "sendtask, lowSendDone, p=%p c=%d code=%d\n", msg, m_lastMsgSender, error);
     
     // Signal to particular interface 

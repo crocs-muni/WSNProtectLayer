@@ -15,6 +15,12 @@ interface FixedTopology {
     command void setFixedTopologyParent(am_addr_t parentNode);
     
     /**
+     * Sets current topology as fixed with current parent node.
+     * Engine should disable all routing messages.
+     */
+    command error_t setFixedTopology();
+    
+    /**
      * Disables fixed topology, routing is enabled again, tables are recomputed again
      */
     command void disableFixedTopology();
