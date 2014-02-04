@@ -11,6 +11,7 @@ module DispatcherP{
         interface Init as SharedDataCInit;	
         interface Init as IntrusionDetectCInit;
         interface Init as KeyDistribCInit;
+        interface Init as PrivacyLevelCInit;
         //interface Init as ForwarderCInit;
         //interface Init as PrivacyLevelCInit;
         interface Boot;	
@@ -111,6 +112,9 @@ implementation{
             //init shared data
             call SharedDataCInit.init();
             //crypto init = auto init
+            
+            //init privacy level
+            call PrivacyLevelCInit.init();
             
             //privacy init
             call PrivacyCInit.init();  //mem init

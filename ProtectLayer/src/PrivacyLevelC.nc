@@ -11,6 +11,7 @@
 configuration PrivacyLevelC{
 	provides {
 		interface PrivacyLevel;		
+		interface Init;
 		}
 }
 implementation{
@@ -18,24 +19,18 @@ implementation{
 	components CryptoC;
 	components PrivacyLevelP;
     components DispatcherC;
-    components new TimerMilliC() as TimerPL; //testing
+    components SharedDataC;
     components MainC;
-	
 	
 	MainC.SoftwareInit -> PrivacyLevelP.Init; // auto init phase 1
 	
-	PrivacyLevelP.TimerP-> TimerPL; //testing
-	
 	PrivacyLevelP.Privacy->PrivacyC.Privacy;
 	PrivacyLevel = PrivacyLevelP.PrivacyLevel;
+	Init = PrivacyLevelP.PLInit;
 		
 	PrivacyLevelP.AMSend -> PrivacyC.MessageSend[MSG_PLEVEL];
 	PrivacyLevelP.Receive -> DispatcherC.ChangePL_Receive;
+	PrivacyLevelP.SharedData -> SharedDataC.SharedData;
 	
-	PrivacyLevelP.Crypto -> CryptoC.Crypto;
-	
-
-	
-	
-	
+	PrivacyLevelP.Crypto -> CryptoC.Crypto;	
 }

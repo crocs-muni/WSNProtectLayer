@@ -301,7 +301,7 @@ implementation {
         return status;
     }
 
-    command bool Crypto.verifySignature( uint8_t* buffer, uint8_t offset, PRIVACY_LEVEL level, uint16_t counter, Signature_t* signature){
+    command error_t Crypto.verifySignature( uint8_t* buffer, uint8_t offset, PRIVACY_LEVEL level, uint16_t counter, Signature_t* signature){
         uint8_t i;
         uint8_t tmpSignature[HASH_LENGTH];
         PPCPrivData_t* ppcPrivData = NULL;
@@ -312,21 +312,26 @@ implementation {
 	    pl_log_e(TAG,"CryptoRawP: verifySignature ppcPrivData not retreived.\n");
 	    return FAIL;	    
         }
+        
         memcpy(tmpSignature, buffer + offset, HASH_LENGTH);
+        
         //go through all possible values in hash chain, from one hash, to last remembered value (ideally just one hop, in worst case to end of hash chain)
-        for(i = (ppcPrivData->signatures[level]).counter; i > counter; i++){
+        for(i = (ppcPrivData->signatures[level]).counter; i < counter; i++){
             call Crypto.hashDataB( tmpSignature, 0, HASH_LENGTH, tmpSignature);
-            if(memcmp((ppcPrivData->signatures[level]).signature, tmpSignature, HASH_LENGTH) == 0){
-               if (signature != NULL){ //if optional parameter is present, then copy verified signature there
-		  memcpy(signature->signature, buffer, HASH_LENGTH);
-		  signature->counter = counter;
-		  signature->privacyLevel = level;
-	       }
-               return TRUE;
-            }
         }
+        
+        if(memcmp((ppcPrivData->signatures[level]).signature, tmpSignature, HASH_LENGTH) == 0){
+           if (signature != NULL){ //if optional parameter is present, then copy verified signature there
+			  memcpy(signature->signature, buffer, HASH_LENGTH);
+			  signature->counter = counter;
+			  signature->privacyLevel = level;
+		   }
+		   
+           return SUCCESS;
+        }
+            
         pl_log_e(TAG,"CryptoRawP: verifySignature not succesfull.\n");
-	return FALSE;
+		return FAIL;
     }
     
     command void Crypto.updateSignature( Signature_t* signature){

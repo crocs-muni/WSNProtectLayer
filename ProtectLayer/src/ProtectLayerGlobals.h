@@ -75,7 +75,7 @@ enum {
   COUNTER_SYNCHRONIZATION_WINDOW = 5,
   MAX_OFFSET = 20
  #ifdef PLAINTEXT_DEMO
-  , PLAINTEXT_BYTES=8
+  , PLAINTEXT_BYTES=4
  #endif
 };
 
@@ -170,13 +170,15 @@ typedef enum _PRIVACY_LEVEL {
 	PLEVEL_1 = 1,   /**< privacy level targeting attacker 1   */
 	PLEVEL_2 = 2,   /**< privacy level targeting attacker 2   */
 	PLEVEL_3 = 3,   /**< privacy level targeting attacker 3   */
-	PLEVEL_MAX = 4  /**< synthetic value, maximum bound on PL */
+	PLEVEL_NUM = 4  /**< synthetic value, maximum bound on PL */
 } PRIVACY_LEVEL;
 /**
 	A structure representing a message that changes privacy level
 */
 typedef struct PLevelMsg {
-	uint8_t newPLevel; /**< new privacy level to be set */
+	uint8_t newPLevel; 				/**< new privacy level to be set */
+	uint16_t counter; 				/**< hash count from the signature stored in the node */
+	uint8_t signature[HASH_LENGTH]; /**< signature generated for this message, w.r.t. newPlevel, counter */
 } PLevelMsg_t;
 
 
@@ -287,8 +289,9 @@ typedef struct Signature {
  * Private data structure for the PPC component about this node
  */
 typedef struct PPCPrivData {
-	uint16_t priv_level; /**< current privacy level on this node */
-	Signature_t signatures[5];
+	uint16_t priv_level;     			/**< current privacy level on this node */
+	uint16_t global_counter; 			/**< global counter for privacy level change messages */
+	Signature_t signatures[PLEVEL_NUM]; /**< signatures, separate for each privacy level */
 } PPCPrivData_t;
 
 /**
