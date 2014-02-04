@@ -170,9 +170,9 @@ interface Crypto {
 			@param[in] level privacy level
 			@param[in] counter supposed placement in hash chain for verified signature, 0 is for predistributed value
 			@param[out] signature optional, when not NULL, then filled with updated signature, array must have length of HASH_LENGTH
-			@return bool result true if result matches with value
+			@return error_t return verification result. 
 	*/
-	command bool verifySignature( uint8_t* buffer, uint8_t offset, PRIVACY_LEVEL level, uint16_t counter, Signature_t* signature);
+	command error_t verifySignature( uint8_t* buffer, uint8_t offset, PRIVACY_LEVEL level, uint16_t counter, Signature_t* signature);
 	
 	/**
 	                Command: command to update last verified signature stored in memory
