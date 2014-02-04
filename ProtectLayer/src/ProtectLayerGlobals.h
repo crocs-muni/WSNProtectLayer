@@ -276,12 +276,19 @@ typedef struct SavedData {
 	IDSData_t idsData; /**< information specific to the IDS component about the neighbour */
 } SavedData_t;
 
+//structure for hash chain calculation
+typedef struct Signature {
+        uint8_t signature[HASH_LENGTH]; /**current hash */
+        PRIVACY_LEVEL privacyLevel; /** privacy Level associated with this hash */
+	uint16_t counter; /** distance from start of hash chain */
+} Signature_t;
+
 /**
  * Private data structure for the PPC component about this node
  */
 typedef struct PPCPrivData {
 	uint16_t priv_level; /**< current privacy level on this node */
-	uint8_t signature[HASH_LENGTH];
+	Signature_t signatures[5];
 } PPCPrivData_t;
 
 /**
@@ -301,6 +308,7 @@ typedef struct RoutePrivData {
 
 typedef struct KDCPrivData {
     PL_key_t	keyToBS;
+    PL_key_t    hashKey;
     PL_key_t	preKeys[MAX_NEIGHBOR_COUNT];
 } KDCPrivData_t;
 /**
