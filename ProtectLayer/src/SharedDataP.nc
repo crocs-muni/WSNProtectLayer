@@ -219,6 +219,11 @@ implementation {
         return &(combinedData.kdcPrivData);		
     }	
     
+    command PL_key_t* SharedData.getPredistributedKeyForNode(uint16_t nodeId){
+        KDCPrivData_t* KDCPrivData = call SharedData.getKDCPrivData();
+        return &(KDCPrivData->preKeys[nodeId]);
+    }
+    
 #ifndef TOSSIM
     /**
      * A command to backup the entire combinedData structure to the flash memory

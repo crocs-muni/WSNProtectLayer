@@ -84,6 +84,8 @@ enum {
 #define HASH_LENGTH 16
 #define BLOCK_SIZE 16
 
+#define MAX_OFFSET 20 //maximum allowed offset, for larger offsets erroe is returned
+
 // NOTE: constants should be defined as item in enum above (to save space) #define MAX_NEIGHBOR_COUNT 	20 /**< Maximum number of neighbors - used to allocate static arrays */
 
 #define FLAG_STATE_KDP_DISCOVERKEYS 0x0001	/**< neighbor keys discovery in progress */

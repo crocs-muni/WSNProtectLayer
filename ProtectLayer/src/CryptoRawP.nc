@@ -36,8 +36,8 @@ implementation {
     //
     //	CryptoRaw interface
     //	
-    //TODO offset max constant
-    //TODO decrypt function
+       
+    //TODO signature compute function
     command error_t CryptoRaw.encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len) {
         uint8_t i;
         uint8_t j;
@@ -54,8 +54,8 @@ implementation {
 	    pl_log_e(TAG,"CryptoRawP: encryptBufferB NULL buffer.\n");
 	    return FAIL;	    
         }
-        if(offset > 20){
-	    pl_log_e(TAG,"CryptoRawP: encryptBufferB offset > 20.\n");
+        if(offset > MAX_OFFSET){
+	    pl_log_e(TAG,"CryptoRawP: encryptBufferB offset is larger than max.\n");
 	    return FAIL;	    
         }
         if(len == 0){
@@ -92,6 +92,11 @@ implementation {
         return SUCCESS;
     }
     
+    command error_t CryptoRaw.decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len) {
+        //for counter mode encrypt is same es decrypt
+        return call CryptoRaw.encryptBufferB(key, buffer, offset, len);
+    }
+    
     command error_t CryptoRaw.macBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t* mac){
 	uint8_t i;
         uint8_t j;
@@ -107,8 +112,8 @@ implementation {
 	    pl_log_e(TAG,"CryptoRawP: macBuffer NULL buffer.\n");
 	    return FAIL;	    
         }
-        if(offset > 20){
-	    pl_log_e(TAG,"CryptoRawP: macBuffer offset > 20.\n");
+        if(offset > MAX_OFFSET){
+	    pl_log_e(TAG,"CryptoRawP: macBuffer offset is larger than max.\n");
 	    return FAIL;	    
         }
         if(pLen == NULL || *pLen == 0){
@@ -160,8 +165,8 @@ implementation {
 	    pl_log_e(TAG,"CryptoP: verifyMac NULL buffer.\n");
 	    return FAIL;
         }
-        if(offset > 20){
-	    pl_log_e(TAG,"CryptoP: verifyMac offset > 20.\n");
+        if(offset > MAX_OFFSET){
+	    pl_log_e(TAG,"CryptoP: verifyMac offset is larger than max.\n");
 	    return FAIL;
         }
         if(pLen == NULL){
@@ -196,8 +201,8 @@ implementation {
 	    pl_log_e(TAG,"CryptoRawP: deriveKeyB NULL derivationData.\n");
 	    return FAIL;	    
         }        
-        if(offset > 20){
-	    pl_log_e(TAG,"CryptoRawP: deriveKeyB offset > 20.\n");
+        if(offset > MAX_OFFSET){
+	    pl_log_e(TAG,"CryptoRawP: deriveKeyB offset is larger than max.\n");
 	    return FAIL;	    
         }        
         if(len != BLOCK_SIZE){
@@ -223,8 +228,8 @@ implementation {
 	    pl_log_e(TAG,"CryptoRawP: hashDataBlockB NULL buffer.\n");
 	    return FAIL;	    
         }
-        if(offset > 20){
-	    pl_log_e(TAG,"CryptoRawP: hashDataBlockB offset > 20.\n");
+        if(offset > MAX_OFFSET){
+	    pl_log_e(TAG,"CryptoRawP: hashDataBlockB offset is larger than max.\n");
 	    return FAIL;	    
         }
         if(key == NULL){
@@ -257,8 +262,8 @@ implementation {
 	    pl_log_e(TAG,"CryptoRawP: protectBufferB NULL buffer.\n");
 	    return FAIL;	    
         }
-        if(offset > 20){
-	    pl_log_e(TAG,"CryptoRawP: protectBufferB offset > 20.\n");
+        if(offset > MAX_OFFSET){
+	    pl_log_e(TAG,"CryptoRawP: protectBufferB offset is larger than max.\n");
 	    return FAIL;	    
         }
         if(pLen == NULL || *pLen == 0){
@@ -283,7 +288,7 @@ implementation {
         //offset is used for encryption shift, to verify SPheader, but not to encrypt it
         
         //TODO counter synchronization -5 .. +5 + debug printf
-        if((status = call CryptoRaw.encryptBufferB( key, buffer, offset, *pLen)) != SUCCESS){
+        if((status = call CryptoRaw.decryptBufferB( key, buffer, offset, *pLen)) != SUCCESS){
             pl_printf("CryptoP:  unprotectBufferB encrypt failed.\n");
             return status;		
         }

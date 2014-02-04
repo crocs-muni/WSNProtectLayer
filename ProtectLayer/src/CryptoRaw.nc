@@ -20,6 +20,19 @@ interface CryptoRaw {
 			@return error_t status
 	*/
 	command error_t encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len);
+	
+	/**
+			Command: Blocking version. Used by other components to start decryption of supplied buffer by supplied key.
+			Enough space in buffer to fit decrypted content is assumed.
+			Because of use of counter mode, this function uses encrypt buffer function.
+			@param[in] key handle to the key that should be used for encryption
+			@param[in out] counter counter value before, updated to new value after encryption
+			@param[in out] buffer buffer to be encrypted, wil contain encrypted data
+			@param[in] offset
+			@param[in out] pLen length of buffer to be encrypted, will contain resulting length
+			@return error_t status
+	*/
+	command error_t decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len);
 		
 	/**
 			Command: Used by other components to derive new key from master key and derivation data. 
