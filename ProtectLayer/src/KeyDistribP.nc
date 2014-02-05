@@ -19,6 +19,7 @@ module KeyDistribP{
     /*@}*/
 }
 implementation{
+//TODO clean up and add parameters checks
     //uint8_t m_currentNodeIndex; /**< index of current node processed pointing to m_neighborsID - used in recurrent tasks to identify index of node next to be processed */
     //uint8_t m_lastNodeIndex;    /**< index of last value set in m_neighborsID */
     //uint8_t m_neighborsID[MAX_NEIGHBOR_COUNT]; /**< array of neighbors IDs - use for lookup into shared data structures */

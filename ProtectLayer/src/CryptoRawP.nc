@@ -144,7 +144,7 @@ implementation {
                     xor[j] =  buffer[offset + i*BLOCK_SIZE + j] ^ xor[j];
                 }			
             }
-            //append mac
+            //output mac
             memcpy(mac, xor, BLOCK_SIZE);        
         
         return status;

@@ -13,54 +13,54 @@ interface Crypto {
 	
 	//Node variants
 	/**
-			Command: Blocking version. Used by other components to start encryption of supplied buffer.
-			In addition function appends mac of encrypted buffer.
-			Enough additional space in buffer to fit encrypted content is assumed.
+			Command: Blocking version. Used by other components to calculate mac of buffer and then 
+			encrypt it. Offset can be used to shift encryption, i.e. header is included in mac calculation, but 
+			is not encrypted. Enough additional space in buffer to fit encrypted content is assumed.
 			Function keeps track of couter values for independent nodes.
 			@param[in] nodeID node identification of node
 			@param[in out] buffer buffer to be encrypted, wil contain encrypted data
-			@param[in] offset
+			@param[in] offset of encryption
 			@param[in out] pLen length of buffer to be encrypted, will contain resulting length with mac
 			@return error_t status
-	*/
-	//TODO change offset to enable partial encryptiona and full mac
+	*/	
 	command error_t protectBufferForNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 
 	/**
 			Command: Blocking version. Used by other components to start decryption of supplied buffer.
-			Function verified appended mac. Function keeps track of couter values for independent nodes.
+			Function verifies appended mac. Function keeps track of couter values for independent nodes.
+			Function is capable of counter synchronization. Offset can be used for specificaton of used 
+			encryption shift (i.e. header was included for mac calculation but not encrypted)
 			@param[in] nodeID node identification of node			
 			@param[in] buffer buffer to be decrypted
 			@param[in] offset
 			@param[in] len length of buffer to be decrypted
 			@return error_t status
 	*/
-	//TODO change offset to enable partial encryptiona and full mac
 	command error_t unprotectBufferFromNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 	
 	//BS variants
 	/**
-			Command: Blocking version. Used by other components to start encryption of supplied buffer from BS.
-			In addition function appends mac of encrypted buffer.
-			Enough additional space in buffer to fit encrypted content is assumed.
-			Function keeps track of couter values.
+			Command: Blocking version. Used by other components to calculate mac of buffer and then 
+			encrypt it for communication with BS. Offset can be used to shift encryption, i.e. header 
+			is included in mac calculation, but is not encrypted. Enough additional space in buffer to fit 
+			encrypted content is assumed. Function keeps track of couter values for independent nodes.
 			@param[in out] buffer buffer to be encrypted, wil contain encrypted data
 			@param[in] offset
 			@param[in out] pLen length of buffer to be encrypted, will contain resulting length with mac
 			@return error_t status
 	*/
-	//TODO change offset to enable partial encryptiona and full mac
 	command error_t protectBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 
 	/**
-			Command: Blocking version. Used by other components to start decryption of supplied buffer from BS.
-			Function verified appended mac. Function keeps track of couter values.
+			Command: Blocking version. Used by other components to start decryption of supplied buffer received from BS.
+			Function verifies appended mac. Function keeps track of couter values for independent nodes.
+			Function is capable of counter synchronization. Offset can be used for specificaton of used 
+			encryption shift (i.e. header was included for mac calculation but not encrypted)
 			@param[in] buffer buffer to be decrypted
-			@param[in] offset
+			@param[in] offset shift in 
 			@param[in] len length of buffer to be decrypted
 			@return error_t status
 	*/
-	//TODO change offset to enable partial encryptiona and full mac
 	command error_t unprotectBufferFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen);
 	
 	

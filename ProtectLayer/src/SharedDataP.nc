@@ -219,6 +219,11 @@ implementation {
         return &(combinedData.kdcPrivData);		
     }	
     
+    /**
+      * A shortcut to the predistributed keys.
+      * @param nodeId id of node
+      * @return a handle to predistributed key for node.
+      */
     command PL_key_t* SharedData.getPredistributedKeyForNode(uint16_t nodeId){
         KDCPrivData_t* KDCPrivData = call SharedData.getKDCPrivData();
         return &(KDCPrivData->preKeys[nodeId]);
