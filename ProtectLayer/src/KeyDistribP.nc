@@ -91,7 +91,7 @@ implementation{
             pBSKey = &(KDCPrivData->keyToBS);
             return SUCCESS;
         }
-    }	
+    }
 
     command error_t KeyDistrib.getHashKeyB(PL_key_t* pHashKey) {
         KDCPrivData_t* KDCPrivData = NULL;
@@ -110,7 +110,7 @@ implementation{
             pHashKey = &(KDCPrivData->hashKey);
             return SUCCESS;
         }
-    }	
+    }
 
     command error_t KeyDistrib.selfTest(){
         uint8_t status = SUCCESS;

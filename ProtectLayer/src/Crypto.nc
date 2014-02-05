@@ -181,6 +181,14 @@ interface Crypto {
 	command void updateSignature( Signature_t* signature);
 	
 	/**
+			Command: command to precompute hash chain of signatures. This is intended for BS use only.
+			Privacy level of signatures must be specified in first signature supplied in signatures array.
+			@param[on out] signatures array of signatures, where at first position is initial signature and rest is filled
+			with computed signatures. Must have space for len number of signatures
+			@param len total amount of signatures that will be present in signatures array
+	*/
+	command error_t computeSignatures( Signature_t* signatures, uint8_t len);
+	/**
 			Command: command to execute self test of Crypto component
 			@return error_t status
 	*/

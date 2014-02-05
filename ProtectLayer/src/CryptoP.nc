@@ -348,6 +348,39 @@ implementation {
         ppcPrivData->signatures[signature->privacyLevel] = *signature;
     }
     
+    command error_t Crypto.computeSignatures( Signature_t* signatures, uint8_t len){
+        uint8_t status = SUCCESS;
+	PRIVACY_LEVEL privacyLevel = 0;
+	uint8_t i;
+	uint8_t tmpSignature[HASH_LENGTH];
+	
+        pl_log_i(TAG,"CryptoRawP: computeSignatures started.\n");
+	 if(signatures == NULL){
+	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL signatures.\n");
+	    return FAIL;
+        }
+        if(signatures[0].signature == NULL){
+	    pl_log_e(TAG,"CryptoRawP: computeSignatures first signature invalid.\n");
+	    return FAIL;
+        }
+
+        privacyLevel = signatures[0].privacyLevel;
+        memcpy(tmpSignature, signatures[0]. signature, HASH_LENGTH);
+        for(i = 1; i < len; i++){
+	    status = call Crypto.hashDataB( tmpSignature, 0, HASH_LENGTH, tmpSignature);
+	    if (status != SUCCESS){
+	        pl_log_e(TAG,"CryptoRawP: computeSignatures failed.\n");
+	        return FAIL;
+	    } else {
+	        memcpy(signatures[i].signature, tmpSignature, HASH_LENGTH);
+	        signatures[i].privacyLevel = privacyLevel;
+	        signatures[i].counter = i;
+	    }
+        }
+        pl_log_i(TAG,"CryptoRawP: computeSignatures succesfully finished.\n");
+	return status;
+    }
+
     command error_t Crypto.selfTest(){
         uint8_t status = SUCCESS;
         uint8_t hash[BLOCK_SIZE];
