@@ -17,18 +17,28 @@
 #define PLAINTEXT_DEMO 1
 
 // Conditional compilation for hop by hop encryption.
+// Warning: DO NOT USE THIS OPTION!!!
 //#define HOP_BY_HOP_ENCRYPTION 1
+#ifdef HOP_BY_HOP_ENCRYPTION
+#warning " *** WARNING: Hop-by-hop encryption is enabled! ***"
+#endif
 
 // Use CTP in Routing component (used to determine neighbors).
+// Should be defined in application using this PL.
 //#define USE_CTP
+
+#ifdef USE_CTP
+#warning " *** CTP will be used ***"
+#endif
 
 // Default base station node ID
 #ifndef TOS_BS_NODE_ID
 #define TOS_BS_BODE_ID 40
 #endif
 
-//#define THIS_IS_BS
-	
+// Should be defined in application using this PL.
+//#define THIS_IS_BS	
+
 // If BS node
 #if defined(TOS_NODE_ID) && defined(TOS_BS_NODE_ID) && !defined(THIS_IS_BS) && ((TOS_BS_NODE_ID)==(TOS_NODE_ID))
 #define THIS_IS_BS
@@ -471,8 +481,8 @@ enum {
   CTP_TIME_SENDING_RND = 500,
   CTP_TIME_SEND_FAIL = 20,
   CTP_TIME_SEND_FAIL_RND = 30,
-  CTP_TIME_STOP_AFTER_BOOT = 60000u,
-  CTP_TIME_STOP_NO_PARENT = 60000u,
+  CTP_TIME_STOP_AFTER_BOOT = 5000,//TODO: 60000u,
+  CTP_TIME_STOP_NO_PARENT = 5000,//TODO: 60000u,
   CTP_TIME_NOPARENT = 250u,
   CTP_TIME_NOPARENT_RND = 20u,
   CTP_STATE_INIT = 0,
