@@ -301,11 +301,12 @@ implementation {
         return status;
     }
 
-    command error_t Crypto.computeSignature( Signature_t* root, uint16_t lenFromRoot, Signature_t* signature){
+    command error_t Crypto.computeSignature( PRIVACY_LEVEL privacyLevel, uint16_t lenFromRoot, Signature_t* signature){
         uint8_t status = SUCCESS;
-	PRIVACY_LEVEL privacyLevel = 0;
 	uint8_t i;
 	uint8_t tmpSignature[HASH_LENGTH];
+	Signature_t* root;
+	PPCPrivData_t* ppcPrivData = NULL;
 	
         pl_log_i(TAG,"CryptoRawP: computeSignatures started.\n");
 	 if(root == NULL){
@@ -321,7 +322,13 @@ implementation {
 	    return FAIL;
         }
 
-        privacyLevel = root->privacyLevel;
+        ppcPrivData = call SharedData.getPPCPrivData();
+        if(ppcPrivData == NULL){
+	    pl_log_e(TAG,"CryptoRawP: verifySignature ppcPrivData not retreived.\n");
+	    return FAIL;
+        }
+        root = &(ppcPrivData->signatures[privacyLevel]);
+        
         memcpy(tmpSignature, root->signature, HASH_LENGTH);
         for(i = 0; i < lenFromRoot; i++){
 	    status = call Crypto.hashDataB( tmpSignature, 0, HASH_LENGTH, tmpSignature);
@@ -341,10 +348,9 @@ implementation {
     command error_t Crypto.verifySignature( uint8_t* buffer, uint8_t offset, PRIVACY_LEVEL level, uint16_t counter, Signature_t* signature){
         uint8_t i;
         uint8_t status = SUCCESS;
-        //uint8_t inputSignature[HASH_LENGTH];
         uint8_t tmpSignature[SIGNATURE_LENGTH];
         PPCPrivData_t* ppcPrivData = NULL;
-//TODO param check
+
 	if(buffer == NULL){
 	    pl_log_e(TAG,"CryptoRawP: verifySignatures NULL buffer.\n");
 	    return FAIL;
@@ -370,11 +376,7 @@ implementation {
 	    pl_log_e(TAG,"CryptoRawP: verifySignatures invalid counter value.\n");
 	    return FAIL;
         }
-        //TODO signature length constant
         memcpy(tmpSignature, buffer + offset, SIGNATURE_LENGTH);
-//TODO change compute signature header
-        //computeSignature( inputSignature, counter - ppcPrivData->signatures[level].counter, tmpSignature);
-        
         for(i = 0; i < counter - ppcPrivData->signatures[level].counter; i++){
 	    status = call Crypto.hashDataB( tmpSignature, 0, SIGNATURE_LENGTH, tmpSignature);
 	    if (status != SUCCESS){

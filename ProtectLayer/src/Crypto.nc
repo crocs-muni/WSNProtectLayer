@@ -188,7 +188,7 @@ interface Crypto {
 			with computed signatures. Must have space for len number of signatures
 			@param len total amount of signatures that will be present in signatures array
 	*/
-	command error_t computeSignature( Signature_t* root, uint16_t lenFromRoot, Signature_t* signature);
+	command error_t computeSignature( PRIVACY_LEVEL privacyLevel, uint16_t lenFromRoot, Signature_t* signature);
 	/**
 			Command: command to execute self test of Crypto component
 			@return error_t status
