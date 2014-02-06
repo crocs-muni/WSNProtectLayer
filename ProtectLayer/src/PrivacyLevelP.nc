@@ -90,7 +90,11 @@ implementation{
 			
 			// Verify auth broadcast (w.r.t. BS)
 			// Signature is placed after payload, like MAC.
+#ifdef ACCEPT_ALL_SIGNATURES
+			sigValid = SUCCESS;
+#else
 			sigValid = call Crypto.verifySignature((uint8_t*) (&(pkt->signature)), 0, pkt->newPLevel, pkt->counter, &sig);
+#endif
 			if (sigValid != SUCCESS){
 				pl_log_i(TAG, "plevel sig invalid!\n");
 				return msg;
@@ -104,7 +108,9 @@ implementation{
 			ppcPrivData->global_counter = pkt->counter;
 			}
 			
+#ifndef ACCEPT_ALL_SIGNATURES
 			call Crypto.updateSignature(&sig);
+#endif
 			
 			// Signal to Privacy component new privacy level
 			signal PrivacyLevel.privacyLevelChanged(SUCCESS, pkt->newPLevel);
