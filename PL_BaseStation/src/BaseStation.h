@@ -20,6 +20,11 @@ enum {
   PLEVEL_WAIT = 1000
 };
 
+enum {
+    UART_QUEUE_LEN = 24,
+    RADIO_QUEUE_LEN = 4,
+};
+
 typedef nx_struct BlinkToRadioMsg {
   nx_uint16_t nodeid;
   nx_uint16_t counter;

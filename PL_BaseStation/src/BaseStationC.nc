@@ -35,8 +35,9 @@
  * of the components of the PL. Namely RouteC and CTP. CTP is started on nodes upon
  * receipt of the magic packet. 
  *
- * @author Prabal Dutta
- * @date   Feb 1, 2006
+ * Forwarding code taken form BaseStation.
+ * 
+ * @author Ph4r05
  */
 #include <Timer.h>
 #include "BaseStation.h"
@@ -57,6 +58,18 @@ module BaseStationC {
   uses interface Dispatcher;
   
   uses interface AMSend as PrivChangeSend;
+  
+  // FWDing
+  uses interface AMSend as UartSend[am_id_t id];
+  uses interface Receive as UartReceive[am_id_t id];
+  uses interface Packet as UartPacket;
+  uses interface AMPacket as UartAMPacket;
+    
+  uses interface AMSend as RadioSend[am_id_t id];
+  uses interface Receive as RadioReceive[am_id_t id];
+  uses interface Receive as RadioSnoop[am_id_t id];
+  uses interface Packet as RadioPacket;
+  uses interface AMPacket as RadioAMPacket;
 }
 implementation {
   enum {
@@ -89,6 +102,19 @@ implementation {
   
   message_t pkt;
   bool busy = FALSE;
+  
+  message_t  uartQueueBufs[UART_QUEUE_LEN];
+  message_t  * ONE_NOK uartQueue[UART_QUEUE_LEN];
+  uint8_t    uartIn, uartOut;
+  bool       uartBusy, uartFull;
+
+  message_t  radioQueueBufs[RADIO_QUEUE_LEN];
+  message_t  * ONE_NOK radioQueue[RADIO_QUEUE_LEN];
+  uint8_t    radioIn, radioOut;
+  bool       radioBusy, radioFull;
+  
+  task void uartSendTask();
+  task void radioSendTask();
 
   void setLeds(uint16_t val) {
     if (val & 0x01)
@@ -106,12 +132,28 @@ implementation {
   }
 
   event void Boot.booted() {
-    call Leds.led0On();
-    call Notify.enable();
+    uint8_t i;
+    for (i = 0; i < UART_QUEUE_LEN; i++){
+      uartQueue[i] = &uartQueueBufs[i];
+    }
+    
+    uartIn = uartOut = 0;
+    uartBusy = FALSE;
+    uartFull = FALSE;
 
+    for (i = 0; i < RADIO_QUEUE_LEN; i++){
+      radioQueue[i] = &radioQueueBufs[i];
+    }
+    
+    radioIn = radioOut = 0;
+    radioBusy = FALSE;
+    radioFull = FALSE;
+	call Leds.led0On();
+	
     // Prepare initialization TIMER_START ms after boot.
     // Due to this delay one is able to attach PrintfClient
     // after node reset so no message is missed.
+    call Notify.enable();
 	call InitTimer.startOneShot(TIMER_START);
   }
   
@@ -300,4 +342,156 @@ implementation {
 			}
 		}
   }
+  
+  //
+  // FWDing state
+  //
+  uint8_t count = 0;
+  uint8_t tmpLen;
+  
+  message_t* ONE receive(message_t* ONE msg, void* payload, uint8_t len);
+  event message_t *RadioSnoop.receive[am_id_t id](message_t *msg, void *payload, uint8_t len) {
+    return receive(msg, payload, len);
+  }
+  event message_t *RadioReceive.receive[am_id_t id](message_t *msg, void *payload, uint8_t len) {
+    return receive(msg, payload, len);
+  }
+  
+  message_t* receive(message_t *msg, void *payload, uint8_t len) {
+    message_t *ret = msg;
+    atomic {
+      if (!uartFull){
+		ret = uartQueue[uartIn];
+		uartQueue[uartIn] = msg;
+		
+		uartIn = (uartIn + 1) % UART_QUEUE_LEN;
+		
+		if (uartIn == uartOut)
+		  uartFull = TRUE;
+		
+		if (!uartBusy){
+		  post uartSendTask();
+		  uartBusy = TRUE;
+		}
+	  }
+    }
+    return ret;
+  }
+
+  
+  task void uartSendTask() {
+    uint8_t len;
+    am_id_t id;
+    am_addr_t addr, src;
+    message_t* msg;
+    am_group_t grp;
+    atomic if (uartIn == uartOut && !uartFull) {
+	  uartBusy = FALSE;
+	  return;
+	}
+
+    msg = uartQueue[uartOut];
+    tmpLen = len = call RadioPacket.payloadLength(msg);
+    id = call RadioAMPacket.type(msg);
+    addr = call RadioAMPacket.destination(msg);
+    src = call RadioAMPacket.source(msg);
+    grp = call RadioAMPacket.group(msg);
+    call UartPacket.clear(msg);
+    call UartAMPacket.setSource(msg, src);
+    call UartAMPacket.setGroup(msg, grp);
+
+    if (call UartSend.send[id](addr, uartQueue[uartOut], len) == SUCCESS){
+      //call Leds.led1Toggle();
+    } else {
+		//failBlink();
+		post uartSendTask();
+    }
+  }
+
+  event void UartSend.sendDone[am_id_t id](message_t* msg, error_t error) {
+    if (error != SUCCESS){
+      //failBlink();
+    } else {
+      atomic if (msg == uartQueue[uartOut]){
+	    if (++uartOut >= UART_QUEUE_LEN)
+	      uartOut = 0;
+	    if (uartFull)
+	      uartFull = FALSE;
+	  }
+	}
+    post uartSendTask();
+  }
+
+  event message_t *UartReceive.receive[am_id_t id](message_t *msg, void *payload, uint8_t len) {
+    message_t *ret = msg;
+    bool reflectToken = FALSE;
+
+    atomic if (!radioFull) {
+	  reflectToken = TRUE;
+	  ret = radioQueue[radioIn];
+	  radioQueue[radioIn] = msg;
+	  if (++radioIn >= RADIO_QUEUE_LEN)
+	    radioIn = 0;
+	  if (radioIn == radioOut)
+	    radioFull = TRUE;
+
+	  if (!radioBusy)
+	    {
+	      post radioSendTask();
+	      radioBusy = TRUE;
+	    }
+	} else {
+		//dropBlink();
+	}
+
+    if (reflectToken) {
+      //call UartTokenReceive.ReflectToken(Token);
+    }
+    
+    return ret;
+  }
+
+  task void radioSendTask() {
+    uint8_t len;
+    am_id_t id;
+    am_addr_t addr,source;
+    message_t* msg;
+    
+    atomic if (radioIn == radioOut && !radioFull) {
+	  radioBusy = FALSE;
+	  return;
+	}
+
+    msg = radioQueue[radioOut];
+    len = call UartPacket.payloadLength(msg);
+    addr = call UartAMPacket.destination(msg);
+    source = call UartAMPacket.source(msg);
+    id = call UartAMPacket.type(msg);
+
+    call RadioPacket.clear(msg);
+    call RadioAMPacket.setSource(msg, source);
+    
+    if (call RadioSend.send[id](addr, msg, len) == SUCCESS){
+      //call Leds.led0Toggle();
+    } else {
+		//failBlink();
+		post radioSendTask();
+    }
+  }
+
+  event void RadioSend.sendDone[am_id_t id](message_t* msg, error_t error) {
+    if (error != SUCCESS){
+      //failBlink();
+    } else {
+      atomic if (msg == radioQueue[radioOut]){
+	    if (++radioOut >= RADIO_QUEUE_LEN)
+	      radioOut = 0;
+	    if (radioFull)
+	      radioFull = FALSE;
+	  }
+	}
+    
+    post radioSendTask();
+  }
+  
 } 
