@@ -171,14 +171,14 @@ implementation {
         if(initialized){
             pl_log_d(TAG, "getNodeState called on initialized data for node %u.\n", nodeId);
         } else {
-            pl_log_d(TAG, "getAllData called for node %u.\n", nodeId); 
-            pl_log_e(TAG, "ERROR, data not initialized.\n");
+            pl_log_e(TAG, "ERROR, getNodeState called but data not initialized yet.\n");
         }
         
         for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
             if (combinedData.savedData[i].nodeId == nodeId)
                 return &(combinedData.savedData[i]);
         }				
+        pl_log_d(TAG, "NodeState for node %u not found (not neighbor)\n", nodeId);
         return NULL;
     }
     

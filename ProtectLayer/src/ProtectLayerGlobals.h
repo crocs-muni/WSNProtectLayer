@@ -232,7 +232,7 @@ typedef enum _PRIVACY_LEVEL {
 typedef struct PLevelMsg {
 	uint8_t newPLevel; 				/**< new privacy level to be set */
 	uint16_t counter; 				/**< hash count from the signature stored in the node */
-	uint8_t signature[HASH_LENGTH]; /**< signature generated for this message, w.r.t. newPlevel, counter */
+	uint8_t signature[SIGNATURE_LENGTH]; /**< signature generated for this message, w.r.t. newPlevel, counter */
 } PLevelMsg_t;
 
 

@@ -77,7 +77,7 @@ implementation {
             call AES.encrypt( plainCounter, m_exp, encCounter);
             
             for (j = 0; j < BLOCK_SIZE; j++){
-                if( i*BLOCK_SIZE + j > len) break;
+                if (i*BLOCK_SIZE + j >= len) break;
                 buffer[offset + i*BLOCK_SIZE + j] ^= encCounter[j];
             }
             (key->counter)++;
@@ -246,7 +246,7 @@ implementation {
         call AES.keyExpansion( m_exp, (uint8_t*) key->keyValue);		
         call AES.encrypt( hash, m_exp, buffer + offset);
         for(i = 0; i < BLOCK_SIZE; i++){
-            hash[i] = buffer[i + offset] ^ hash[i];
+            hash[i] ^= buffer[i + offset];
         }		
         return status;
     }

@@ -199,10 +199,11 @@ implementation {
         return status;
     }
     
-    command error_t Crypto.hashDataB( uint8_t* buffer, uint8_t offset, uint8_t len, uint8_t* hash){
+    command error_t Crypto.hashDataB(uint8_t* buffer, uint8_t offset, uint8_t len, uint8_t* hash){
         error_t status = SUCCESS;
         uint8_t i;
         uint8_t j;
+        uint8_t numBlocks;
         uint8_t tempHash[HASH_LENGTH];
         
         pl_printf("CryptoP:  hashDataB called.\n");
@@ -222,13 +223,14 @@ implementation {
             return status;
         }
 
-        for(i = 0; i < (len/HASH_LENGTH) + 1; i++){
-            //incoplete block check, if input is in buffer, than copy data to input, otherwise use zeros as padding 
+        numBlocks = len / HASH_LENGTH;
+        for(i = 0; i < numBlocks + 1; i++) {
+	    //incomplete block check, if input is in buffer, than copy data to input, otherwise use zeros as padding 
             for (j = 0; j < HASH_LENGTH; j++){
-                if(i >= (len/HASH_LENGTH)){
+                if ((i * HASH_LENGTH + j) >= len) {
 		    hash[j] = 0;
                 } else {
-                    hash[j] = buffer[j + i * HASH_LENGTH];
+                    hash[j] = buffer[offset + i * HASH_LENGTH + j];
                 }
             }
             if((status = call CryptoRaw.hashDataBlockB( hash, offset, m_key1, tempHash)) != SUCCESS){
@@ -251,7 +253,7 @@ implementation {
     
     //TODO define short hash as array of uint8_t
     command error_t Crypto.hashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t len, uint32_t* hash){
-        uint8_t tempHash[BLOCK_SIZE];
+        uint8_t tempHash[HASH_LENGTH];
         uint8_t status;
         uint8_t i;
 
@@ -264,9 +266,11 @@ implementation {
             pl_printf("CryptoP: hashDataShortB calculation failed.\n"); 
             return status;
         }
-        for (i = 0; i < BLOCK_SIZE/4; i++){
-            tempHash[i] = tempHash[i]^tempHash[i + BLOCK_SIZE/2];
+/* TODO: remove
+        for (i = 0; i < HASH_LENGTH/4; i++){
+            tempHash[i] = tempHash[i]^tempHash[i + HASH_LENGTH/2];
         }
+*/
         memcpy(hash, tempHash, sizeof(*hash));
         return SUCCESS;
     }
