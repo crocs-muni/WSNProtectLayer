@@ -305,6 +305,15 @@ recv_finish:
     event message_t* LowerReceive.receive(message_t* msg, void* payload, uint8_t len) {
         
         message_t * tmpMsg = NULL;
+
+        // Dropper functionality => if I am specific node, I will drop the packet with some probability
+#ifdef DROPPING
+	if (TOS_NODE_ID == 37 || TOS_NODE_ID == 46) {
+		if (call Random.rand16() % 100 < DROPPING_RATE) {				
+			return msg;
+		}
+	}
+#endif
         
         // Get new message_t to be returned.
         if (m_receiveBuffer[m_recNextToStore].isEmpty)
