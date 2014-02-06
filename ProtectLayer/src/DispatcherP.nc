@@ -148,7 +148,7 @@ implementation{
         }
         case STATE_MAGIC_RECEIVED:
         {
-        	pl_log_d(TAG, "MP received. Going to init CTP\n"); 
+        	pl_log_d(TAG, "MP received. Going to init RouteP\n"); 
         	
         	// Init Routing component
         	call RouteCInit.init();
