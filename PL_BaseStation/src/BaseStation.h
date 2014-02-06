@@ -7,9 +7,17 @@
 #define THIS_IS_BS
 #include "../../ProtectLayer/src/ProtectLayerGlobals.h"
 
+#define BS_PRINTF(x) x
+#define BS_PRINTFFLUSH() pl_printfflush()
+
 enum {
   AM_BLINKTORADIO = 6,
-  TIMER_PERIOD_MILLI = 2000
+  TIMER_PERIOD_MILLI = 2000,
+  TIMER_BLINK_PAUSE = 500,
+  TIMER_BLINK_PAUSE_SHORT = 250,
+  TIMER_BLINK_COUNT = 10,
+  PLEVEL_MSGS = 3,
+  PLEVEL_WAIT = 1000
 };
 
 typedef nx_struct BlinkToRadioMsg {

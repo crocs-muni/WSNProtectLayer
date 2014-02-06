@@ -52,17 +52,20 @@ implementation {
   
   components DispatcherC;
   
+  components new AMSenderC(AM_CHANGEPL);
+  
   App.Boot -> MainC;
   App.Leds -> LedsC;
   App.Timer0 -> Timer0;
   App.InitTimer -> InitTimer;
-
-  App.Packet -> ProtectLayerC.Packet; 
   App.AMControl -> ProtectLayerC.AMControl;
   
   App.Get -> UserButtonC;
   App.Notify -> UserButtonC;
   
   App.Dispatcher -> DispatcherC;
+  
+  App.PrivChangeSend -> AMSenderC;
+  App.Packet -> AMSenderC;
 	
 } 

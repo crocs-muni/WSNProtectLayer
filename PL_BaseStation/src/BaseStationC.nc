@@ -55,12 +55,17 @@ module BaseStationC {
   uses interface Notify<button_state_t>;
   
   uses interface Dispatcher;
+  
+  uses interface AMSend as PrivChangeSend;
 }
 implementation {
   enum {
   		TIMER_START=5000,
   		TIMER_FAIL_START=1000,
   };
+  
+  // Logging tag for this component
+  static const char *TAG = "BS";
   
   // Initialization state of the node;
   // 0 = after reboot -> start radio
@@ -70,11 +75,20 @@ implementation {
   // Current privacy level, is initialized to -1 at the beginning
   // since the network waits for the "magic packet" after deployment.
   int8_t curPrivLvl = -1;
+  // Counter for privacy level change signatures.
+  int8_t plvlCounter = -1;
   
-  uint16_t counter;
+  // Represents current blick status. 
+  int16_t blinkState = 0;
+  
+  // Sending state for privacy level change.
+  uint8_t sendState = 0; 
+  
+  // Number of sent privacy level change messages in one state.
+  uint8_t plevelMsgs = 0;
+  
   message_t pkt;
   bool busy = FALSE;
-  uint32_t received_packets = 0;
 
   void setLeds(uint16_t val) {
     if (val & 0x01)
@@ -101,7 +115,8 @@ implementation {
 	call InitTimer.startOneShot(TIMER_START);
   }
   
-  void task startRadio() {      
+  void task startRadio() {    
+	  BS_PRINTF(pl_log_d(TAG, "<radioStart>\n"));
       call AMControl.start();
       call Leds.led1Toggle();
   }
@@ -110,13 +125,12 @@ implementation {
       call Leds.led1Toggle();
       
       if (initState==0){
-      	// State 0 -> start radio (& underlying PL).
+      	// State 0  -> start radio (& underlying PL).
       	post startRadio();
       } else {
-      	call Timer0.startOneShot(TIMER_PERIOD_MILLI);
-	    dbg("NodeState", "Radio started successfully.\n");
-	    
+      	// State 1+ -> node is prepared.
 	    call Leds.led2On();
+		BS_PRINTF(pl_log_d(TAG, "</radioStart>\n"));
       }
   }
   
@@ -128,51 +142,162 @@ implementation {
     call InitTimer.startOneShot(TIMER_FAIL_START);
   }
 	
-  event void AMControl.stopDone(error_t err) {
-  }
-	
-  event void Timer0.fired() {
-    dbg("NodeState", "Timer fired.\n");  
-    printf("## Timer fired. busy=%d counter=%d\n", busy, counter);
-    
-    call Leds.led2Toggle();
-    printfflush();
-	
-    counter++;
-    if (!busy) {
-      BlinkToRadioMsg* btrpkt = 
-	(BlinkToRadioMsg*)(call Packet.getPayload(&pkt, sizeof(BlinkToRadioMsg)));
-      if (btrpkt == NULL) {
-      	printf("## ERROR\n"); 
-		return;
-      }
-      
-      atomic{
-      btrpkt->nodeid = TOS_NODE_ID;
-      btrpkt->counter = counter;
-      }
-      
-     /* if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(BlinkToRadioMsg)) == SUCCESS) {
-      	call Leds.led1Toggle();
-        busy = TRUE;
-      }*/
-    }
-    
-    //if (busy == FALSE){
-    	call Timer0.startOneShot(TIMER_PERIOD_MILLI);
-    //}    
-  }
+  /**
+   * Sends current privacy level packet
+   */
+  task void sendPlevel(){
+  		if(!busy) {
+			PLevelMsg_t * plvlMsg = (PLevelMsg_t * ) call Packet.getPayload(&pkt, sizeof(PLevelMsg_t));
 
-  
+			if(plvlMsg == NULL) {
+				BS_PRINTF(pl_log_e(TAG, "null msg\n"));
+				BS_PRINTFFLUSH();
+				
+				return;
+			}
+			
+			plvlMsg->newPLevel = curPrivLvl;
+			plvlMsg->counter = plvlCounter;
+			
+			// TODO signature
+			plvlMsg->signature[0] = 0;
+			
+			if(call PrivChangeSend.send(AM_BROADCAST_ADDR, &pkt, (uint8_t) sizeof(PLevelMsg_t)) == SUCCESS) {
+				busy = TRUE;
+				BS_PRINTF(pl_log_d(TAG, "send()==SUCCESS\n"));
+			} else {
+				post sendPlevel();
+				BS_PRINTF(pl_log_w(TAG, "send()!=SUCCESS\n"));
+			}
+		} else {
+			BS_PRINTF(pl_log_w(TAG, "send() busy\n"));
+			post sendPlevel();
+		}
+		
+		BS_PRINTFFLUSH();
+  }
+	
+  event void AMControl.stopDone(error_t err) { }
+  event void Timer0.fired() {
+	BS_PRINTF(pl_log_d(TAG, "fired, sendState=%u, blink=%u lvl=%d ctr=%d\n", sendState, blinkState, curPrivLvl, plvlCounter));
+  	if (sendState==0){
+  		// Blicking state.
+  		if (blinkState >= 2*TIMER_BLINK_COUNT){
+			// Transition to sending state
+			sendState = 1; 
+			setLeds(curPrivLvl+1);
+			call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+			return;
+  		}
+  		
+  		if ((blinkState % 2) == 0){
+  			setLeds(curPrivLvl+1);
+  			call Timer0.startOneShot(TIMER_BLINK_PAUSE);
+  			
+  		} else {
+  			setLeds(0);	
+  			call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+  		}
+  		blinkState += 1;
+  	} else if (sendState==1){
+  		// Sending state.
+  		
+  		// Increment counter if triggered
+  		if (blinkState >= 2*TIMER_BLINK_COUNT){
+  			BS_PRINTF(pl_log_d(TAG, "counterInc()\n"));
+  			
+  			plvlCounter += 1;
+  			blinkState = 0;
+  		}
+  		
+  		post sendPlevel();
+  	} else if (sendState==2){
+  		// Privacy level state changed.
+  		// If it was magic packet, init routing.
+  		setLeds(curPrivLvl+1);
+  		if (plvlCounter==0){
+  			BS_PRINTF(pl_log_d(TAG, "serveState(), magicPacket\n"));
+  			call Dispatcher.serveState();
+  			
+  		} else {
+  			blinkState=0;
+  			sendState=3;
+  			call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+  			
+  		}
+  		
+  		BS_PRINTFFLUSH();
+  	} else if (sendState==3){
+  		// finished signalization
+  		if (blinkState >= 4){
+  			sendState=4;
+			setLeds(curPrivLvl+1);
+  		}
+  		
+  		if ((blinkState % 2) == 0){
+  			setLeds(curPrivLvl+1);
+  			call Timer0.startOneShot(TIMER_BLINK_PAUSE);
+  			
+  		} else {
+  			setLeds(0);	
+  			call Timer0.startOneShot(TIMER_BLINK_PAUSE);
+  		}
+  		blinkState += 1;
+  		BS_PRINTFFLUSH();
+  	}
+  }
   
   event void Notify.notify(button_state_t state) {
-		if ( state == BUTTON_PRESSED ) {
+  		// React on button released event. 
+		if (state == BUTTON_RELEASED && sendState!=3 && sendState!=4){		// BUTTON_PRESSED
+			BS_PRINTF(pl_log_d(TAG, "buttonReleased\n"));
+			BS_PRINTFFLUSH();
 			
+			// If radio is not started yet, we have to wait for it.
+			if (initState==0) return;
+			
+			// Increment privacy level modulo NUM.
+			curPrivLvl = (curPrivLvl + 1) % PLEVEL_NUM;
+			
+			// Start timer with blicking.
+			blinkState = 0;
+			sendState  = 0;
+			plevelMsgs = 0;
+			call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
 		}
   }
   
   event void Dispatcher.stateChanged(uint8_t newState){ 
-  	
+  	if (newState==STATE_WORKING){
+  		sendState=3;
+  		blinkState=0;
+  		
+  		BS_PRINTF(pl_log_d(TAG, "Dispatcher.stateChanged %u\n", newState));
+  		BS_PRINTFFLUSH();
+  		
+  		call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+  	}
   }
-	
+  
+  event void PrivChangeSend.sendDone(message_t * msg, error_t error){
+  		if (msg==&pkt){
+			busy = FALSE;
+			BS_PRINTF(pl_log_d(TAG, "sendDone[%u], msgCnt=%u\n", error, plevelMsgs));
+			
+			if(error == SUCCESS) {
+				call Leds.led2Toggle();
+				
+				plevelMsgs += 1;
+				if (plevelMsgs >= PLEVEL_MSGS){
+					// We have enough messages sent, not sneding anymore.
+					sendState = 2;
+				}
+				
+				call Timer0.startOneShot(PLEVEL_WAIT);
+			}
+			else {
+				call Timer0.startOneShot(250);
+			}
+		}
+  }
 } 
