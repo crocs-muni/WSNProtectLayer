@@ -137,10 +137,15 @@ implementation{
             m_state = STATE_MAGIC_RECEIVED;
             signal Dispatcher.stateChanged(m_state);
             
+            pl_log_d(TAG, "<waitingForPacket>\n"); 
+            pl_printfflush();
+            
             break;
         }
         case STATE_MAGIC_RECEIVED:
         {
+        	pl_log_d(TAG, "MP received. Going to init CTP\n"); 
+        	
         	// Init Routing component
         	call RouteCInit.init();
         	
@@ -153,6 +158,7 @@ implementation{
             signal Dispatcher.stateChanged(m_state);
             
             // Route component will signalize we are ready.
+            pl_log_d(TAG, "Waiting to init route\n"); 
             break;
         }
         case STATE_READY_FOR_APP:
@@ -180,7 +186,7 @@ implementation{
         }
         }
 
-        pl_printf("DispatcherP: </serveState(%x)>\n", m_state); 
+        pl_log_d(TAG, "</serveState(%x)>\n", m_state); 
         pl_printfflush();
     }
     

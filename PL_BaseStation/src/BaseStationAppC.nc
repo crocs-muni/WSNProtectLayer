@@ -37,22 +37,18 @@ implementation {
   components new TimerMilliC() as InitTimer; // init timer (radio init)
   components UserButtonC;
   
-/*  
-  ---> Original Components
-  components ActiveMessageC;
-  components new AMSenderC(AM_BLINKTORADIO);
-  components new AMReceiverC(AM_BLINKTORADIO);
-  
-  ---> Replaced by new ProtectLayerC	
-*/
   components ProtectLayerC;
   
   components PrintfC;
   components SerialStartC;
   
   components DispatcherC;
-  
+  components CryptoP;
   components new AMSenderC(AM_CHANGEPL);
+  
+  // FWDing
+  components ActiveMessageC as Radio;
+  components SerialActiveMessageC as Serial;
   
   App.Boot -> MainC;
   App.Leds -> LedsC;
@@ -64,8 +60,23 @@ implementation {
   App.Notify -> UserButtonC;
   
   App.Dispatcher -> DispatcherC;
+  App.Crypto -> CryptoP;
   
   App.PrivChangeSend -> AMSenderC;
   App.Packet -> AMSenderC;
-	
+  
+  // FWDing
+  //App.RadioControl -> Radio;
+  //App.SerialControl -> Serial;
+  
+  App.UartSend -> Serial;
+  App.UartReceive -> Serial.Receive;
+  App.UartPacket -> Serial;
+  App.UartAMPacket -> Serial;
+  
+  App.RadioSend -> Radio;
+  App.RadioReceive -> Radio.Receive;
+  App.RadioSnoop -> Radio.Snoop;
+  App.RadioPacket -> Radio;
+  App.RadioAMPacket -> Radio;	
 } 

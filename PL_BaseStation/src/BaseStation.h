@@ -5,10 +5,14 @@
 
 // This is basestation definition fro protect layer
 #define THIS_IS_BS
+#define USE_CTP
+
 #include "../../ProtectLayer/src/ProtectLayerGlobals.h"
 
 #define BS_PRINTF(x) x
 #define BS_PRINTFFLUSH() pl_printfflush()
+
+#define HASH_KEYS 10
 
 enum {
   AM_BLINKTORADIO = 6,
@@ -18,6 +22,11 @@ enum {
   TIMER_BLINK_COUNT = 10,
   PLEVEL_MSGS = 3,
   PLEVEL_WAIT = 1000
+};
+
+enum {
+    UART_QUEUE_LEN = 24,
+    RADIO_QUEUE_LEN = 4,
 };
 
 typedef nx_struct BlinkToRadioMsg {
