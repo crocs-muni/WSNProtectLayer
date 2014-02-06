@@ -223,6 +223,8 @@ implementation {
         error_t status = SUCCESS;		
         uint8_t i;
         
+        pl_log_d(TAG,"CryptoRawP:  hashDataBlockB called.\n");
+
         if(buffer == NULL){
 	    pl_log_e(TAG,"CryptoRawP: hashDataBlockB NULL buffer.\n");
 	    return FAIL;	    
@@ -240,8 +242,7 @@ implementation {
 	    return FAIL;	    
         }
        
-        pl_log_d(TAG,"CryptoRawP:  hashDataBlockB called.\n");
-        
+       
         call AES.keyExpansion( m_exp, (uint8_t*) key->keyValue);		
         call AES.encrypt( hash, m_exp, buffer + offset);
         for(i = 0; i < BLOCK_SIZE; i++){

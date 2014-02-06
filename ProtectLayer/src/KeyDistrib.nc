@@ -19,21 +19,21 @@ interface KeyDistrib {
 		@param[out] pNodeKey handle to key shared between node and base station 
 		@return error_t status.
 	*/	
-	command error_t getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey);
+	command error_t getKeyToNodeB(uint8_t nodeID, PL_key_t** pNodeKey);
 	
 	/**
 		Command: Get key to base station
 		@param[out] pBSKey handle to key shared between node and base station 
 		@return error_t status.
 	*/
-	command error_t getKeyToBSB(PL_key_t* pBSKey);	
+	command error_t getKeyToBSB(PL_key_t** pBSKey);	
 	
 	/**
 		Command: Get key for AES based hashing function 
 		@param[out] pBSKey handle to key
 		@return error_t status.
 	*/
-	command error_t getHashKeyB(PL_key_t* pHashKey);	
+	command error_t getHashKeyB(PL_key_t** pHashKey);	
 	
 	/**
 		Command: selftest provides possibility to test functionality of KeyDistrib component

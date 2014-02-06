@@ -50,7 +50,7 @@ implementation{
         return status;
     }
 
-    command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey){
+    command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t** pNodeKey){
         SavedData_t* pSavedData = NULL;
         pl_printf("KeyDistribP: KeyDistrib.getKeyToNodeB called for node '%u'\n", nodeID); 
 
@@ -65,7 +65,7 @@ implementation{
 
         pSavedData = call SharedData.getNodeState(nodeID);
         if (pSavedData != NULL) {
-            pNodeKey =  &((pSavedData->kdcData).shared_key);
+            *pNodeKey =  &((pSavedData->kdcData).shared_key);
             return SUCCESS;
         }
         else {
@@ -74,7 +74,7 @@ implementation{
         }
     }
 
-    command error_t KeyDistrib.getKeyToBSB(PL_key_t* pBSKey) {
+    command error_t KeyDistrib.getKeyToBSB(PL_key_t** pBSKey) {
         KDCPrivData_t* KDCPrivData = NULL;
 
         if(pBSKey == NULL){
@@ -88,12 +88,12 @@ implementation{
             pl_printf("KeyDistribP: getKeyToBSB key not received\n"); 
             return EKEYNOTFOUND;
         } else {		
-            pBSKey = &(KDCPrivData->keyToBS);
+            *pBSKey = &(KDCPrivData->keyToBS);
             return SUCCESS;
         }
     }
 
-    command error_t KeyDistrib.getHashKeyB(PL_key_t* pHashKey) {
+    command error_t KeyDistrib.getHashKeyB(PL_key_t** pHashKey) {
         KDCPrivData_t* KDCPrivData = NULL;
 
         if(pHashKey == NULL){
@@ -107,7 +107,7 @@ implementation{
             pl_printf("KeyDistribP: getHashKeyB key not received\n");
             return EKEYNOTFOUND;
         } else {		
-            pHashKey = &(KDCPrivData->hashKey);
+            *pHashKey = &(KDCPrivData->hashKey);
             return SUCCESS;
         }
     }
@@ -118,12 +118,12 @@ implementation{
         pl_printf("KeyDistribP:  Self test initiated.\n"); 
         m_testKey = NULL;
         pl_printf("KeyDistribP:  Self test getKeyToBS.\n"); 
-        if((status = call KeyDistrib.getKeyToBSB(m_testKey)) != SUCCESS){
+        if((status = call KeyDistrib.getKeyToBSB(&m_testKey)) != SUCCESS){
             pl_printf("KeyDistribP:  Self test getKeyToBS failed.\n"); 
             return status;
         }
         pl_printf("KeyDistribP:  Self test getKeyToNodeB with ID 0.\n"); 
-        if((status = call KeyDistrib.getKeyToNodeB( 0, m_testKey)) != SUCCESS){
+        if((status = call KeyDistrib.getKeyToNodeB(0, &m_testKey)) != SUCCESS){
             pl_printf("KeyDistribP:  Self test getKeyToNodeB failed.\n"); 
             return status;
         }

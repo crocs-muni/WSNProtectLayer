@@ -125,11 +125,11 @@ interface Crypto {
 			Output array can be same as input array.
 			@param[in] buffer with data
 			@param[in] offset
-			@param[in] pLen
+			@param[in] len
 			@param[out] hash calculated hash of data
 			@return error_t status
 	*/
-	command error_t hashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash);
+	command error_t hashDataB( uint8_t* buffer, uint8_t offset, uint8_t len, uint8_t* hash);
 		
 	/**	
 			Command: function to calculate AES based hash of data in buffer.
@@ -140,7 +140,7 @@ interface Crypto {
 			@param[out] hash calculated hash of data
 			@return error_t status
 	*/
-	command error_t hashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint32_t* hash);
+	command error_t hashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t len, uint32_t* hash);
 	
 	/**	
 			Command: function to verify hash of data
