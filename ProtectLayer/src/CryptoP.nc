@@ -309,10 +309,6 @@ implementation {
 	PPCPrivData_t* ppcPrivData = NULL;
 	
         pl_log_i(TAG,"CryptoRawP: computeSignatures started.\n");
-	 if(root == NULL){
-	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL root.\n");
-	    return FAIL;
-        }
         if(lenFromRoot == 0){
 	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL signature.\n");
 	    return FAIL;
