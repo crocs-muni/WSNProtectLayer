@@ -83,7 +83,6 @@ implementation {
         m_privData = call SharedData.getPPCPrivData();
         // TODO PL setting probably here?
         m_privData->priv_level = PLEVEL_0;
-        call KeyDistrib.compute();
         return SUCCESS;
     }
     

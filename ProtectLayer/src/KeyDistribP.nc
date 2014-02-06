@@ -22,56 +22,17 @@ implementation{
 //TODO clean up and add parameters checks
    
     PL_key_t* m_testKey;	/**< handle to key for selfTest */
-    Signature_t signature;
+
     static const char *TAG = "CryptoRawP";
 
     //
     //	Init interface
     //
     command error_t PLInit.init() {
-    
         pl_printf("KeyDistribP: <KeyDistribP.PLInit.init()>\n"); 
         call KeyDistrib.discoverKeys();
         pl_printf("KeyDistribP: </KeyDistribP.PLInit.init()>\n"); 
-        
-        
-        
-        pl_printfflush();
         return SUCCESS;
-    }
-    
-    command void KeyDistrib.compute(){   
-        uint8_t i;
-	call Crypto.computeSignature(0, 10, &signature);
-	    pl_printf("Level 0 computed signature:\n");
-	    for(i = 0; i < SIGNATURE_LENGTH; i++){
-		pl_printf("0x%02x ", signature.signature[i]);
-	}
-        pl_printf("\n");
-        /*
-        pl_printfflush();
-        call Crypto.computeSignature(1, 10, &signature);
-	    pl_printf("Level 1 computed signature:\n");
-	    for(i = 0; i < SIGNATURE_LENGTH; i++){
-		pl_printf("0x%02x ", signature.signature[i]);
-	}
-        pl_printf("\n");
-        pl_printfflush();
-        call Crypto.computeSignature(2, 10, &signature);
-	    pl_printf("Level 2 computed signature:\n");
-	    for(i = 0; i < SIGNATURE_LENGTH; i++){
-		pl_printf("0x%02x ", signature.signature[i]);
-	}
-        pl_printf("\n");
-        pl_printfflush();
-        call Crypto.computeSignature(3, 10, &signature);
-	    pl_printf("Level 3 computed signature:\n");
-	    for(i = 0; i < SIGNATURE_LENGTH; i++){
-		pl_printf("0x%02x ", signature.signature[i]);
-	}
-        pl_printf("\n");
-        pl_printfflush();
-        */
     }
 
     //
@@ -132,8 +93,13 @@ implementation{
         }
     }
 
-    command error_t KeyDistrib.getHashKeyB(PL_key_t** pHashKey) {
+    command error_t KeyDistrib.getHashKeyB(PL_key_t* pHashKey) {
         KDCPrivData_t* KDCPrivData = NULL;
+
+        if(pHashKey == NULL){
+	    pl_log_e(TAG,"KeyDistribP: pHashKey NULL.\n");
+	    return FAIL;
+        }
 
         pl_printf("KeyDistribP: getHashKeyB called.\n");
         KDCPrivData = call SharedData.getKDCPrivData();
@@ -141,7 +107,7 @@ implementation{
             pl_printf("KeyDistribP: getHashKeyB key not received\n");
             return EKEYNOTFOUND;
         } else {		
-            *pHashKey = &(KDCPrivData->hashKey);
+            pHashKey = &(KDCPrivData->hashKey);
             return SUCCESS;
         }
     }

@@ -12,7 +12,7 @@ interface KeyDistrib {
 	*/
 	command error_t discoverKeys();
 	
-	command void compute();
+	
 	/**
 		Command: Get key to node.
 		@param[in] nodeID node identification of node for which the key should be searched for
@@ -33,7 +33,7 @@ interface KeyDistrib {
 		@param[out] pBSKey handle to key
 		@return error_t status.
 	*/
-	command error_t getHashKeyB(PL_key_t** pHashKey);	
+	command error_t getHashKeyB(PL_key_t* pHashKey);	
 	
 	/**
 		Command: selftest provides possibility to test functionality of KeyDistrib component
