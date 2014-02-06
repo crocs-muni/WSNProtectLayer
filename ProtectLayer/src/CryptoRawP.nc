@@ -36,16 +36,15 @@ implementation {
     //
     //	CryptoRaw interface
     //	
-       
-    //TODO signature compute function
+
     command error_t CryptoRaw.encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len) {
         uint8_t i;
         uint8_t j;
         uint8_t plainCounter[BLOCK_SIZE];			
         uint8_t encCounter[BLOCK_SIZE];
-        
+
         pl_log_d(TAG,"CryptoRawP: encryptBufferB(buffer = '0x%x', 1 = '0x%x', 2 = '0x%x'.\n", buffer[0],buffer[1],buffer[2]);
-        
+
         if(key == NULL){
 	    pl_log_e(TAG,"CryptoRawP: encryptBufferB NULL key.\n");
 	    return FAIL;	    
@@ -61,7 +60,7 @@ implementation {
         if(len == 0){
 	    pl_log_e(TAG,"CryptoRawP: encryptBufferB pLen = 0.\n");
 	    return FAIL;	    
-        }       
+        }
         
         //set rest of counter to zeros to fit AES block
         memset(plainCounter, 0, BLOCK_SIZE);	
@@ -88,7 +87,7 @@ implementation {
                 
                 //deal with new key and counter value reset
             }
-        }       
+        }
         return SUCCESS;
     }
     
@@ -144,7 +143,7 @@ implementation {
                     xor[j] =  buffer[offset + i*BLOCK_SIZE + j] ^ xor[j];
                 }			
             }
-            //append mac
+            //output mac
             memcpy(mac, xor, BLOCK_SIZE);        
         
         return status;
@@ -183,9 +182,9 @@ implementation {
         if((memcmp(mac, buffer + offset + *pLen - MAC_LENGTH, MAC_LENGTH)) != 0){ //compare new with received
             status = EWRONGMAC;            
             pl_log_e(TAG,"CryptoP:  verifyMacFromNodeB message MAC does not match.\n"); 
-            return status;		
+            return status;
         }
-        return status;    
+        return status;
     }
     
     
