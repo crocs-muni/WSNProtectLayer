@@ -301,37 +301,99 @@ implementation {
         return status;
     }
 
+    command error_t Crypto.computeSignature( Signature_t* root, uint16_t lenFromRoot, Signature_t* signature){
+        uint8_t status = SUCCESS;
+	PRIVACY_LEVEL privacyLevel = 0;
+	uint8_t i;
+	uint8_t tmpSignature[HASH_LENGTH];
+	
+        pl_log_i(TAG,"CryptoRawP: computeSignatures started.\n");
+	 if(root == NULL){
+	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL root.\n");
+	    return FAIL;
+        }
+        if(lenFromRoot == 0){
+	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL signature.\n");
+	    return FAIL;
+        }
+        if(signature == NULL){
+	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL signature.\n");
+	    return FAIL;
+        }
+
+        privacyLevel = root->privacyLevel;
+        memcpy(tmpSignature, root->signature, HASH_LENGTH);
+        for(i = 0; i < lenFromRoot; i++){
+	    status = call Crypto.hashDataB( tmpSignature, 0, HASH_LENGTH, tmpSignature);
+	    if (status != SUCCESS){
+	        pl_log_e(TAG,"CryptoRawP: computeSignatures failed.\n");
+	        return FAIL;
+	    }
+        }
+        memcpy(signature->signature, tmpSignature, HASH_LENGTH);
+        signature->privacyLevel = privacyLevel;
+        signature->counter = root->counter - lenFromRoot;
+        pl_log_i(TAG,"CryptoRawP: computeSignatures succesfully finished.\n");
+	return status;
+    }
+    
+    //counter udává pozici od konce, předdistribuovaná hodnota má counter 0, původní hodnota na BS má counter MAX
     command error_t Crypto.verifySignature( uint8_t* buffer, uint8_t offset, PRIVACY_LEVEL level, uint16_t counter, Signature_t* signature){
         uint8_t i;
-        uint8_t tmpSignature[HASH_LENGTH];
+        uint8_t status = SUCCESS;
+        //uint8_t inputSignature[HASH_LENGTH];
+        uint8_t tmpSignature[SIGNATURE_LENGTH];
         PPCPrivData_t* ppcPrivData = NULL;
+//TODO param check
+	if(buffer == NULL){
+	    pl_log_e(TAG,"CryptoRawP: verifySignatures NULL buffer.\n");
+	    return FAIL;
+        }
+        if(level < 0 || level >= 5){
+	    pl_log_e(TAG,"CryptoRawP: verifySignatures invalid level.\n");
+	    return FAIL;
+        }
+        if(counter < 1){
+	    pl_log_e(TAG,"CryptoRawP: verifySignatures invalid counter.\n");
+	    return FAIL;
+        }
+
 
         pl_printf("CryptoP:  verifySignature called.\n");
         ppcPrivData = call SharedData.getPPCPrivData();
         if(ppcPrivData == NULL){
 	    pl_log_e(TAG,"CryptoRawP: verifySignature ppcPrivData not retreived.\n");
-	    return FAIL;	    
+	    return FAIL;
         }
         
-        memcpy(tmpSignature, buffer + offset, HASH_LENGTH);
+        if(counter - ppcPrivData->signatures[level].counter < 1){
+	    pl_log_e(TAG,"CryptoRawP: verifySignatures invalid counter value.\n");
+	    return FAIL;
+        }
+        //TODO signature length constant
+        memcpy(tmpSignature, buffer + offset, SIGNATURE_LENGTH);
+//TODO change compute signature header
+        //computeSignature( inputSignature, counter - ppcPrivData->signatures[level].counter, tmpSignature);
         
-        //go through all possible values in hash chain, from one hash, to last remembered value (ideally just one hop, in worst case to end of hash chain)
-        for(i = (ppcPrivData->signatures[level]).counter; i < counter; i++){
-            call Crypto.hashDataB( tmpSignature, 0, HASH_LENGTH, tmpSignature);
+        for(i = 0; i < counter - ppcPrivData->signatures[level].counter; i++){
+	    status = call Crypto.hashDataB( tmpSignature, 0, SIGNATURE_LENGTH, tmpSignature);
+	    if (status != SUCCESS){
+	        pl_log_e(TAG,"CryptoRawP: verifySignatures failed.\n");
+	        return FAIL;
+	    }
         }
         
-        if(memcmp((ppcPrivData->signatures[level]).signature, tmpSignature, HASH_LENGTH) == 0){
+        if(memcmp((ppcPrivData->signatures[level]).signature, tmpSignature, SIGNATURE_LENGTH) == 0){
            if (signature != NULL){ //if optional parameter is present, then copy verified signature there
-			  memcpy(signature->signature, buffer, HASH_LENGTH);
-			  signature->counter = counter;
-			  signature->privacyLevel = level;
-		   }
-		   
+	      memcpy(signature->signature, tmpSignature, SIGNATURE_LENGTH);
+	      signature->counter = counter;
+	      signature->privacyLevel = level;
+	   }
            return SUCCESS;
         }
             
         pl_log_e(TAG,"CryptoRawP: verifySignature not succesfull.\n");
-		return FAIL;
+	return FAIL;
     }
     
     command void Crypto.updateSignature( Signature_t* signature){
@@ -347,40 +409,8 @@ implementation {
         }
         ppcPrivData->signatures[signature->privacyLevel] = *signature;
     }
+    //TODO revert counter
     
-    command error_t Crypto.computeSignatures( Signature_t* signatures, uint8_t len){
-        uint8_t status = SUCCESS;
-	PRIVACY_LEVEL privacyLevel = 0;
-	uint8_t i;
-	uint8_t tmpSignature[HASH_LENGTH];
-	
-        pl_log_i(TAG,"CryptoRawP: computeSignatures started.\n");
-	 if(signatures == NULL){
-	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL signatures.\n");
-	    return FAIL;
-        }
-        if(signatures[0].signature == NULL){
-	    pl_log_e(TAG,"CryptoRawP: computeSignatures first signature invalid.\n");
-	    return FAIL;
-        }
-
-        privacyLevel = signatures[0].privacyLevel;
-        memcpy(tmpSignature, signatures[0]. signature, HASH_LENGTH);
-        for(i = 1; i < len; i++){
-	    status = call Crypto.hashDataB( tmpSignature, 0, HASH_LENGTH, tmpSignature);
-	    if (status != SUCCESS){
-	        pl_log_e(TAG,"CryptoRawP: computeSignatures failed.\n");
-	        return FAIL;
-	    } else {
-	        memcpy(signatures[i].signature, tmpSignature, HASH_LENGTH);
-	        signatures[i].privacyLevel = privacyLevel;
-	        signatures[i].counter = i;
-	    }
-        }
-        pl_log_i(TAG,"CryptoRawP: computeSignatures succesfully finished.\n");
-	return status;
-    }
-
     command error_t Crypto.selfTest(){
         uint8_t status = SUCCESS;
         uint8_t hash[BLOCK_SIZE];

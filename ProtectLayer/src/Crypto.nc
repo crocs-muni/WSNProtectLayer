@@ -122,6 +122,7 @@ interface Crypto {
 	/**	
 			Command: function to calculate AES based hash of data in buffer.
 			Resulting hash has AES BLOCK_LENGTH
+			Output array can be same as input array.
 			@param[in] buffer with data
 			@param[in] offset
 			@param[in] pLen
@@ -187,7 +188,7 @@ interface Crypto {
 			with computed signatures. Must have space for len number of signatures
 			@param len total amount of signatures that will be present in signatures array
 	*/
-	command error_t computeSignatures( Signature_t* signatures, uint8_t len);
+	command error_t computeSignature( Signature_t* root, uint16_t lenFromRoot, Signature_t* signature);
 	/**
 			Command: command to execute self test of Crypto component
 			@return error_t status
