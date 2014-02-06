@@ -136,6 +136,8 @@ implementation{
 			return SUCCESS;
 	}
 	
+	event void Dispatcher.stateChanged(uint8_t newState){ }
+	
 #ifndef USE_CTP
 	task void initCTP(){
 		// Signalize dispatcher routing is done.

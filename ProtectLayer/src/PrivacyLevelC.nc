@@ -10,7 +10,8 @@
 #include "ProtectLayerGlobals.h"
 configuration PrivacyLevelC{
 	provides {
-		interface PrivacyLevel;		
+		interface PrivacyLevel;
+		interface MagicPacket;		
 		interface Init;
 		}
 }
@@ -27,6 +28,7 @@ implementation{
 	MainC.SoftwareInit -> PrivacyLevelP.Init; // auto init phase 1
 	PrivacyLevel = PrivacyLevelP.PrivacyLevel;
 	Init = PrivacyLevelP.PLInit;
+	MagicPacket = PrivacyLevelP.MagicPacket;
 	
 #ifndef THIS_IS_BS	
 	PrivacyLevelP.Privacy->PrivacyC.Privacy;	
