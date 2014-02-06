@@ -20,18 +20,18 @@ module KeyDistribP{
 }
 implementation{
 //TODO clean up and add parameters checks
-   
+    
     PL_key_t* m_testKey;	/**< handle to key for selfTest */
 
-    static const char *TAG = "CryptoRawP";
+    static const char *TAG = "KeyDistP";
 
     //
     //	Init interface
     //
     command error_t PLInit.init() {
-        pl_printf("KeyDistribP: <KeyDistribP.PLInit.init()>\n"); 
+        pl_log_d(TAG, "<KeyDistribP.PLInit.init()>\n"); 
         call KeyDistrib.discoverKeys();
-        pl_printf("KeyDistribP: </KeyDistribP.PLInit.init()>\n"); 
+        pl_log_d(TAG, "</KeyDistribP.PLInit.init()>\n"); 
         return SUCCESS;
     }
 
@@ -41,26 +41,26 @@ implementation{
     command error_t KeyDistrib.discoverKeys() {
         error_t status = SUCCESS;
 
-        pl_printf("KeyDistribP: <KeyDistrib.discoverKeys>.\n");
+        pl_log_d(TAG, "<discoverKeys>.\n");
         if((status = call Crypto.initCryptoIIB()) != SUCCESS){
-            pl_printf("KeyDistribP: KeyDistrib.discoverKeys failed.\n"); 
+            pl_log_e(TAG, "discoverKeys failed.\n"); 
             return status;
         }
-        pl_printf("KeyDistribP: </KeyDistrib.discoverKeys>.\n"); 
+        pl_log_d(TAG, "</discoverKeys>.\n"); 
         return status;
     }
 
     command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey){
         SavedData_t* pSavedData = NULL;
-        pl_printf("KeyDistribP: KeyDistrib.getKeyToNodeB called for node '%u'\n", nodeID); 
+        pl_log_d(TAG, "getKeyToNodeB called for node '%u'\n", nodeID); 
 
         if(nodeID > NODE_MAX_ID || nodeID <= 0){
-	    pl_log_e(TAG,"KeyDistribP: invalid node ID.\n");
-	    return FAIL;
+	    	pl_log_e(TAG,"KeyDistribP: invalid node ID.\n");
+	    	return FAIL;
         }
         if(pNodeKey == NULL){
-	    pl_log_e(TAG,"KeyDistribP: pNodeKey NULL.\n");
-	    return FAIL;
+	    	pl_log_e(TAG, "pNodeKey NULL.\n");
+	    	return FAIL;
         }
 
         pSavedData = call SharedData.getNodeState(nodeID);
@@ -69,7 +69,7 @@ implementation{
             return SUCCESS;
         }
         else {
-            pl_printf("KeyDistribP: Failed to obtain SharedData.getNodeState.\n"); 
+            pl_log_e(TAG, "Failed to obtain SharedData.getNodeState.\n"); 
             return EKEYNOTFOUND;
         }
     }
@@ -78,14 +78,14 @@ implementation{
         KDCPrivData_t* KDCPrivData = NULL;
 
         if(pBSKey == NULL){
-	    pl_log_e(TAG,"KeyDistribP: pBSKey NULL.\n");
+	    pl_log_e(TAG, "pBSKey NULL.\n");
 	    return FAIL;
         }
 
-        pl_printf("KeyDistribP: getKeyToBSB called.\n"); 
+        pl_log_d(TAG, "getKeyToBSB called.\n"); 
         KDCPrivData = call SharedData.getKDCPrivData();
         if(KDCPrivData == NULL){
-            pl_printf("KeyDistribP: getKeyToBSB key not received\n"); 
+            pl_log_w(TAG, "getKeyToBSB key not received\n"); 
             return EKEYNOTFOUND;
         } else {		
             pBSKey = &(KDCPrivData->keyToBS);
@@ -97,14 +97,14 @@ implementation{
         KDCPrivData_t* KDCPrivData = NULL;
 
         if(pHashKey == NULL){
-	    pl_log_e(TAG,"KeyDistribP: pHashKey NULL.\n");
+	    pl_log_e(TAG, "pHashKey NULL.\n");
 	    return FAIL;
         }
 
-        pl_printf("KeyDistribP: getHashKeyB called.\n");
+        pl_log_d(TAG, "getHashKeyB called.\n");
         KDCPrivData = call SharedData.getKDCPrivData();
         if(KDCPrivData == NULL){
-            pl_printf("KeyDistribP: getHashKeyB key not received\n");
+            pl_log_w(TAG, "getHashKeyB key not received\n");
             return EKEYNOTFOUND;
         } else {		
             pHashKey = &(KDCPrivData->hashKey);
@@ -115,19 +115,19 @@ implementation{
     command error_t KeyDistrib.selfTest(){
         uint8_t status = SUCCESS;
 
-        pl_printf("KeyDistribP:  Self test initiated.\n"); 
+        pl_log_d(TAG, "<Self test>\n"); 
         m_testKey = NULL;
-        pl_printf("KeyDistribP:  Self test getKeyToBS.\n"); 
+        pl_log_d(TAG, "Self test getKeyToBS.\n"); 
         if((status = call KeyDistrib.getKeyToBSB(m_testKey)) != SUCCESS){
-            pl_printf("KeyDistribP:  Self test getKeyToBS failed.\n"); 
+            pl_log_e(TAG, "Self test getKeyToBS failed.\n"); 
             return status;
         }
-        pl_printf("KeyDistribP:  Self test getKeyToNodeB with ID 0.\n"); 
+        pl_log_d(TAG, "Self test getKeyToNodeB with ID 0.\n"); 
         if((status = call KeyDistrib.getKeyToNodeB( 0, m_testKey)) != SUCCESS){
-            pl_printf("KeyDistribP:  Self test getKeyToNodeB failed.\n"); 
+            pl_log_e(TAG, "Self test getKeyToNodeB failed.\n"); 
             return status;
         }
-        pl_printf("KeyDistribP: Self test finished.\n"); 
+        pl_log_d(TAG, "</Self test>\n"); 
         return status;
     }
 }
