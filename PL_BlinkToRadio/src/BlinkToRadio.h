@@ -13,4 +13,5 @@ typedef nx_struct BlinkToRadioMsg {
   nx_uint16_t counter;
 } BlinkToRadioMsg;
 
+#define DEBUG_PRINTF
 #endif 

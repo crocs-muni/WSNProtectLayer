@@ -47,8 +47,13 @@
 #warning " *** THIS IS BASE STATION CODE ***"
 #endif
 
+// Allows printf outputs. Application should define this
+//#define DEBUG_PRINTF
+#ifndef DEBUG_PRINTF
+#warning "*** PrintF is disabled, define DEBUG_PRINTF to enable it***"
+#endif
+
 // Define to supress warning from printf function
-#define DEBUG_PRINTF
 #ifndef PL_LOG_MAX_LEVEL 
 #define PL_LOG_MAX_LEVEL 4
 #endif

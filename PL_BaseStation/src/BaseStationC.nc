@@ -102,7 +102,6 @@ implementation {
   uint8_t plevelMsgs = 0;
   
   message_t pkt;
-  bool busy = FALSE;
   
   message_t  uartQueueBufs[UART_QUEUE_LEN];
   message_t  * ONE_NOK uartQueue[UART_QUEUE_LEN];
@@ -189,7 +188,7 @@ implementation {
    * Sends current privacy level packet
    */
   task void sendPlevel(){
-  		if(!busy) {
+  		if(!radioBusy) {
 			PLevelMsg_t * plvlMsg = (PLevelMsg_t * ) call Packet.getPayload(&pkt, sizeof(PLevelMsg_t));
 
 			if(plvlMsg == NULL) {
@@ -206,8 +205,12 @@ implementation {
 				plvlMsg->newPLevel = curPrivLvl;
 				plvlMsg->counter = plvlCounter + 1;
 				
+				BS_PRINTF(pl_log_d(TAG, "2computeSig;ctr[%d]\n", plvlCounter));
+				
 				call Crypto.computeSignature(curPrivLvl, HASH_KEYS - plvlCounter - 1, &signature);
 				memcpy((uint8_t*) &(plvlMsg->signature), (uint8_t*) &(signature.signature), SIGNATURE_LENGTH);
+				BS_PRINTFFLUSH();
+				
 				BS_PRINTF(pl_log_d(TAG, "signature generated %x %x %x %x\n", 
 					plvlMsg->signature[0],
 					plvlMsg->signature[1],
@@ -216,7 +219,7 @@ implementation {
 			}
 			
 			if(call PrivChangeSend.send(AM_BROADCAST_ADDR, &pkt, (uint8_t) sizeof(PLevelMsg_t)) == SUCCESS) {
-				busy = TRUE;
+				radioBusy = TRUE;
 				BS_PRINTF(pl_log_d(TAG, "send()==SUCCESS\n"));
 			} else {
 				post sendPlevel();
@@ -302,7 +305,7 @@ implementation {
   
   event void Notify.notify(button_state_t state) {
   		// React on button released event. 
-		if (state == BUTTON_RELEASED && sendState!=3 && sendState!=4){		// BUTTON_PRESSED
+		if (state == BUTTON_RELEASED && sendState!=3){		// BUTTON_PRESSED
 			BS_PRINTF(pl_log_d(TAG, "buttonReleased\n"));
 			BS_PRINTFFLUSH();
 			
@@ -334,7 +337,7 @@ implementation {
   
   event void PrivChangeSend.sendDone(message_t * msg, error_t error){
   		if (msg==&pkt){
-			busy = FALSE;
+			radioBusy = FALSE;
 			BS_PRINTF(pl_log_d(TAG, "sendDone[%u], msgCnt=%u\n", error, plevelMsgs));
 			
 			if(error == SUCCESS) {

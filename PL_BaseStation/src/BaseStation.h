@@ -6,6 +6,7 @@
 // This is basestation definition fro protect layer
 #define THIS_IS_BS
 #define USE_CTP
+#define DEBUG_PRINTF
 
 #include "../../ProtectLayer/src/ProtectLayerGlobals.h"
 
