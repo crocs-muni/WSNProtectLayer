@@ -121,8 +121,10 @@ enum {
   SIGNATURE_LENGTH = 16,
   COUNTER_SYNCHRONIZATION_WINDOW = 5,
   MAX_OFFSET = 20,
-  NODE_MAX_ID = 50
- #ifdef PLAINTEXT_DEMO
+  NODE_MAX_ID = 50,
+  INVALID_NODE_ID = 0xFF,
+  MAX_FIXED_NEIGHBOR_COUNT = 7 /** maximum number of neighbors for pre-defined fixed neighbor table TODO remove */
+#ifdef PLAINTEXT_DEMO
   , PLAINTEXT_BYTES=4
  #endif
 };
@@ -521,5 +523,62 @@ typedef nx_struct CtpResponseMsg {
 
 
 #endif
+
+// node IDs			{4,5,6,7,10,14,15,17,19,22,25,28,29,30,31,32,33,35,36,37,40,41,42,43,44,46,47,48,50},
+uint8_t fixedNeighborsMap[NODE_MAX_ID+1][MAX_FIXED_NEIGHBOR_COUNT] = {
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 0
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 1
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 2
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 3
+    {41,33,48,19,17,37}, 	// TOS_NODE_ID == 4
+    {32,50,31,40,22,42,36},	// TOS_NODE_ID == 5
+    {47,46,48,19,28},           // TOS_NODE_ID == 6
+    {15,17,19,28}, 		// TOS_NODE_ID == 7
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 8
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 9
+    {29,50,25,46,47}, 		// TOS_NODE_ID == 10
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 11
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 12
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 13
+    {30,35,22,37,17,15,43}, 	// TOS_NODE_ID == 14
+    {43,14,17,7}, 		// TOS_NODE_ID == 15
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 16
+    {15,14,37,4,28,7}, 		// TOS_NODE_ID == 17
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 18
+    {28,17,4,48,6}, 		// TOS_NODE_ID == 19
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 20
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 21
+    {42,40,31,41,37,35}, 	// TOS_NODE_ID == 22
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 23
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 24
+    {29,10,47,46,33,44,50}, 	// TOS_NODE_ID == 25
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 26
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 27
+    {7,17,4,19,6}, 		// TOS_NODE_ID == 28
+    {10,25,50,32}, 		// TOS_NODE_ID == 29
+    {36,42,35,14,43}, 		// TOS_NODE_ID == 30
+    {50,25,44,41,22,40}, 	// TOS_NODE_ID == 31
+    {29,50,40,5}, 		// TOS_NODE_ID == 32
+    {25,46,48,4,41,44}, 	// TOS_NODE_ID == 33
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 34
+    {36,42,22,37,14,43,30}, 	// TOS_NODE_ID == 35
+    {5,40,42,35,30}, 		// TOS_NODE_ID == 36
+    {35,22,41,4,17,14}, 	// TOS_NODE_ID == 37
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 38
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 39
+    {32,50,31,22,42,36,5}, 	// TOS_NODE_ID == 40
+    {31,44,33,4,37,22}, 	// TOS_NODE_ID == 41
+    {5,40,22,35,30,36}, 	// TOS_NODE_ID == 42
+    {30,35,14,17,15}, 		// TOS_NODE_ID == 43
+    {50,25,46,33,41,31}, 	// TOS_NODE_ID == 44
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 45
+    {10,47,48,33,25}, 		// TOS_NODE_ID == 46
+    {10,25,46,48,6}, 		// TOS_NODE_ID == 47
+    {47,6,19,4,33,46}, 		// TOS_NODE_ID == 48
+    {INVALID_NODE_ID}, 		// TOS_NODE_ID == 49
+    {32,29,25,44,31,40}   	// TOS_NODE_ID == 50
+};
+
+
 
 #endif

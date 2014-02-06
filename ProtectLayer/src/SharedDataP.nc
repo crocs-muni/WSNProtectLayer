@@ -109,15 +109,20 @@ implementation {
         combinedData.ppcPrivData.priv_level = 0;
         
         //
-        // Fill list of neighbors		
-        // TODO: now fixed, will be obtained from CTP
+        // Set default values to list of all neighbours		
         for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
-            combinedData.savedData[i].nodeId = fixedNeighbors[i];
-            // Clear all remaining information
+            combinedData.savedData[i].nodeId = INVALID_NODE_ID;
             memset(&(combinedData.savedData[i].kdcData), 0, sizeof(combinedData.savedData[i].kdcData));
             memset(&(combinedData.savedData[i].idsData), 0, sizeof(combinedData.savedData[i].idsData));
         }
-            pl_printf("SharedDataP: PLInit.init() finished.\n");
+		
+	// TODO: substitute in final version by CTP
+        for (i = 0; i < MAX_FIXED_NEIGHBOR_COUNT; i++) {
+	    pl_printf("SharedDataP: neigh %d.\n", fixedNeighborsMap[TOS_NODE_ID][i]);
+            if (fixedNeighborsMap[TOS_NODE_ID][i] != 0) combinedData.savedData[i].nodeId = fixedNeighborsMap[TOS_NODE_ID][i];
+        }	
+
+	pl_printf("SharedDataP: PLInit.init() finished.\n");
 
         initialized = TRUE;
         return SUCCESS;
