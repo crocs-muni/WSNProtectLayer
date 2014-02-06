@@ -140,7 +140,11 @@ implementation{
             pl_log_d(TAG, "<waitingForPacket>\n"); 
             pl_printfflush();
             
-            break;
+#ifdef SKIP_MAGIC_PACKET
+            pl_log_d(TAG, "<magicPacketSkipped>\n");
+#else
+            break;            
+#endif
         }
         case STATE_MAGIC_RECEIVED:
         {

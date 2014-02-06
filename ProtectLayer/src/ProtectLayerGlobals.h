@@ -65,6 +65,10 @@
 #warning " *** Warning! All MACs will be accepted !!! ***"
 #endif
 
+#ifdef SKIP_MAGIC_PACKET
+#warning " *** Warning! Magic packet is skipped !!! ***"
+#endif
+
 // Define to supress warning from printf function
 #ifndef PL_LOG_MAX_LEVEL 
 #define PL_LOG_MAX_LEVEL 4
