@@ -8,6 +8,10 @@
 #define USE_CTP
 #define DEBUG_PRINTF
 
+#define ACCEPT_ALL_SIGNATURES
+#define ACCEPT_ALL_MACS
+#define CTP_QUICK_INIT
+
 #include "../../ProtectLayer/src/ProtectLayerGlobals.h"
 
 #define BS_PRINTF(x) x

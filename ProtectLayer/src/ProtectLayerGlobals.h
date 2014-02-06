@@ -31,6 +31,10 @@
 #warning " *** CTP will be used ***"
 #endif
 
+#ifdef CTP_QUICK_INIT
+#warning " *** CTP QUICK INIT is defined, should not be in production! ***"
+#endif
+
 // Default base station node ID
 #ifndef TOS_BS_NODE_ID
 #define TOS_BS_BODE_ID 40
@@ -50,15 +54,15 @@
 // Allows printf outputs. Application should define this
 //#define DEBUG_PRINTF
 #ifndef DEBUG_PRINTF
-#warning "*** PrintF is disabled, define DEBUG_PRINTF to enable it ***"
+#warning " *** PrintF is disabled, define DEBUG_PRINTF to enable it ***"
 #endif
 
 #ifdef ACCEPT_ALL_SIGNATURES
-#warning "*** Warning! All signatures will be accepted !!! ***"
+#warning " *** Warning! All signatures will be accepted !!! ***"
 #endif
 
 #ifdef ACCEPT_ALL_MACS
-#warning "*** Warning! All MACs will be accepted !!! ***"
+#warning " *** Warning! All MACs will be accepted !!! ***"
 #endif
 
 // Define to supress warning from printf function
@@ -494,8 +498,13 @@ enum {
   CTP_TIME_SENDING_RND = 500,
   CTP_TIME_SEND_FAIL = 20,
   CTP_TIME_SEND_FAIL_RND = 30,
+#ifdef CTP_QUICK_INIT  
   CTP_TIME_STOP_AFTER_BOOT = 5000,//TODO: 60000u,
   CTP_TIME_STOP_NO_PARENT = 5000,//TODO: 60000u,
+#else
+  CTP_TIME_STOP_AFTER_BOOT = 60000u,
+  CTP_TIME_STOP_NO_PARENT = 60000u,
+#endif  
   CTP_TIME_NOPARENT = 250u,
   CTP_TIME_NOPARENT_RND = 20u,
   CTP_STATE_INIT = 0,
