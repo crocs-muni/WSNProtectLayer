@@ -61,9 +61,15 @@ implementation {
         }
         // Create key to BS
         combinedData.kdcPrivData.keyToBS.keyType = KEY_TOBS;
-        memset(combinedData.kdcPrivData.keyToBS.keyValue, 0, KEY_LENGTH);
+        memset(combinedData.kdcPrivData.keyToBS.keyValue, 1, KEY_LENGTH);
         combinedData.kdcPrivData.keyToBS.dbgKeyID = 0;
         combinedData.kdcPrivData.keyToBS.counter  = 0;
+        
+        // Create hashKey
+        combinedData.kdcPrivData.hashKey.keyType = KEY_TOSNODEHASH;
+        memset(combinedData.kdcPrivData.hashKey.keyValue, 0, KEY_LENGTH);
+        combinedData.kdcPrivData.hashKey.dbgKeyID = 0;
+        combinedData.kdcPrivData.hashKey.counter  = 0;
         
         //
         //  Init routing table to BS for current node
@@ -117,6 +123,28 @@ implementation {
             memset(&(combinedData.savedData[i].kdcData), 0, sizeof(combinedData.savedData[i].kdcData));
             memset(&(combinedData.savedData[i].idsData), 0, sizeof(combinedData.savedData[i].idsData));
         }
+        
+        //initialize predistributed signatures
+        memset(combinedData.ppcPrivData.signatures[0].signature, 0, SIGNATURE_LENGTH);
+        combinedData.ppcPrivData.signatures[0].signature[15] = 1;
+        combinedData.ppcPrivData.signatures[0].privacyLevel = 0;
+        combinedData.ppcPrivData.signatures[0].counter = 10;
+        
+        memset(combinedData.ppcPrivData.signatures[1].signature, 0, SIGNATURE_LENGTH);
+        combinedData.ppcPrivData.signatures[1].signature[15] = 2;
+        combinedData.ppcPrivData.signatures[1].privacyLevel = 1;
+        combinedData.ppcPrivData.signatures[1].counter = 10;
+        
+        memset(combinedData.ppcPrivData.signatures[2].signature, 0, SIGNATURE_LENGTH);
+        combinedData.ppcPrivData.signatures[2].signature[15] = 3;
+        combinedData.ppcPrivData.signatures[2].privacyLevel = 2;
+        combinedData.ppcPrivData.signatures[2].counter = 10;
+        
+        memset(combinedData.ppcPrivData.signatures[3].signature, 0, SIGNATURE_LENGTH);
+        combinedData.ppcPrivData.signatures[3].signature[15] = 4;
+        combinedData.ppcPrivData.signatures[3].privacyLevel = 3;
+        combinedData.ppcPrivData.signatures[3].counter = 10;
+        
             pl_printf("SharedDataP: PLInit.init() finished.\n");
 
         initialized = TRUE;
