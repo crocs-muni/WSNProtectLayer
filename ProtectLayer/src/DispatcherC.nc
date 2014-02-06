@@ -54,6 +54,7 @@ implementation{
 	DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
 	DispatcherP.RouteCInit -> RouteC.PLInit;
 	DispatcherP.Privacy -> PrivacyC.Privacy;
+	DispatcherP.MagicPacket -> PrivacyLevelC.MagicPacket;
 	//DispatcherP.ForwarderCInit -> ForwarderC.Init;
 	//DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
 	

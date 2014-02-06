@@ -305,6 +305,15 @@ recv_finish:
     event message_t* LowerReceive.receive(message_t* msg, void* payload, uint8_t len) {
         
         message_t * tmpMsg = NULL;
+
+        // Dropper functionality => if I am specific node, I will drop the packet with some probability
+#ifdef DROPPING
+	if (TOS_NODE_ID == 37 || TOS_NODE_ID == 46) {
+		if (call Random.rand16() % 100 < DROPPING_RATE) {				
+			return msg;
+		}
+	}
+#endif
         
         // Get new message_t to be returned.
         if (m_receiveBuffer[m_recNextToStore].isEmpty)
@@ -659,27 +668,27 @@ recv_finish:
     //	LowerAMSend interface
     //
     event void LowerAMSend.sendDone(message_t* msg, error_t error) {
-    //test if our message was sent
-    if (m_lastMsg != msg)
-    return;
-    
-    // Send done -> send operation ended, buffer is not needed anymore, can be released
-    // for new incoming messages. Reset buffer, move to next ID, set radio not busy.
-    atomic {
-    m_buffer[m_nextId].addr = 0;
-    m_buffer[m_nextId].msg = NULL;
-    m_buffer[m_nextId].len = 0;
-    m_nextId = (m_nextId+1)%MSG_COUNT;
-    m_radioBusy = FALSE;
-    }
-    
-    // Schedule sending task, randomize task start (flattens peaks).
-    startRetxmitTimer(SENDDONE_OK_WINDOW_X, SENDDONE_OK_OFFSET_X);
-    pl_log_d(TAG, "sendtask, lowSendDone, p=%p c=%d code=%d\n", msg, m_lastMsgSender, error);
-    
-    // Signal to particular interface 
-    signal MessageSend.sendDone[m_lastMsgSender](msg, error);
-}
+	    //test if our message was sent
+	    if (m_lastMsg != msg)
+	    return;
+	    
+	    // Send done -> send operation ended, buffer is not needed anymore, can be released
+	    // for new incoming messages. Reset buffer, move to next ID, set radio not busy.
+	    atomic {
+	    m_buffer[m_nextId].addr = 0;
+	    m_buffer[m_nextId].msg = NULL;
+	    m_buffer[m_nextId].len = 0;
+	    m_nextId = (m_nextId+1)%MSG_COUNT;
+	    m_radioBusy = FALSE;
+	    }
+	    
+	    // Schedule sending task, randomize task start (flattens peaks).
+	    startRetxmitTimer(SENDDONE_OK_WINDOW_X, SENDDONE_OK_OFFSET_X);
+	    pl_log_d(TAG, "sendtask, lowSendDone, p=%p c=%d code=%d\n", msg, m_lastMsgSender, error);
+	    
+	    // Signal to particular interface 
+	    signal MessageSend.sendDone[m_lastMsgSender](msg, error);
+	}
 
 	//
 	// Radio & ProtectLayer initialization
@@ -738,42 +747,43 @@ recv_finish:
     // MessageAMControl (aka SplitPhase) interface
     //	
     command error_t MessageAMControl.start() {
-    pl_log_i(TAG, "NodeState: <MessageAMControl>\n"); 
-	
-	// For real operation, radio has to be started at first
-	// due to routing, key establishment, etc...
-	// Radio start is done in task, until start is successful.
-	post radioStart();
-    return SUCCESS;	
-}
+	    pl_log_i(TAG, "NodeState: <MessageAMControl>\n"); 
+		
+		// For real operation, radio has to be started at first
+		// due to routing, key establishment, etc...
+		// Radio start is done in task, until start is successful.
+		post radioStart();
+	    return SUCCESS;	
+	}
     command error_t MessageAMControl.stop() {
-    return SUCCESS;	
-}
+	    return SUCCESS;	
+	}
     default event void MessageAMControl.startDone(error_t err) {} 
+    event void Dispatcher.stateChanged(uint8_t newState){ }
     
     //
     //	MessagePacket
     //	
     command void MessagePacket.clear(message_t* msg) {
-    call Packet.clear(msg);
-}
+	    call Packet.clear(msg);
+	}
     command uint8_t MessagePacket.payloadLength(message_t* msg) {
-    //TODO return value depending on privacy level 
-    return (uint8_t) (call Packet.payloadLength(msg) - sizeof(SPHeader_t));
-}
+	    //TODO return value depending on privacy level 
+	    return (uint8_t) (call Packet.payloadLength(msg) - sizeof(SPHeader_t));
+	}
     command void MessagePacket.setPayloadLength(message_t* msg, uint8_t len) {
-    call Packet.setPayloadLength(msg, (uint8_t)(len + sizeof(SPHeader_t)));
-}
+	    call Packet.setPayloadLength(msg, (uint8_t)(len + sizeof(SPHeader_t)));
+	}
     command uint8_t MessagePacket.maxPayloadLength() {
-    //TODO return value depending on privacy level 
-    return (uint8_t)(call Packet.maxPayloadLength() - sizeof(SPHeader_t));
-}
+	    //TODO return value depending on privacy level 
+	    return (uint8_t)(call Packet.maxPayloadLength() - sizeof(SPHeader_t));
+	}
     command void* MessagePacket.getPayload(message_t* msg, uint8_t len) {
-    // Get payload
-    void* tmp = call Packet.getPayload(msg, (uint8_t) (len + sizeof(SPHeader_t)));
-    // Return payload offset after our header
-    return tmp + sizeof(SPHeader_t);
-}
+	    // Get payload
+	    void* tmp = call Packet.getPayload(msg, (uint8_t) (len + sizeof(SPHeader_t)));
+	    // Return payload offset after our header
+	    return tmp + sizeof(SPHeader_t);
+	}
     
 /*
     //
@@ -846,6 +856,7 @@ recv_finish:
     	return SUCCESS;	
 	}
 	
+	event void Dispatcher.stateChanged(uint8_t newState){ }
 	command error_t Init.init() { return SUCCESS; }
     command error_t PLInit.init() { return SUCCESS; }
     command PRIVACY_LEVEL Privacy.getCurrentPrivacyLevel(){ return 0; }

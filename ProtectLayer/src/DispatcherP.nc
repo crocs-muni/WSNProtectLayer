@@ -19,6 +19,7 @@ module DispatcherP{
         //interface Init as PrivacyLevelCInit;
         interface Boot;	
         interface Privacy;
+        interface MagicPacket;
 	
     }
     provides {
@@ -50,6 +51,11 @@ implementation{
     event void Boot.booted() {
         
     }
+    
+    default event void Dispatcher.stateChanged(uint8_t newState){
+    	
+    }
+    
 #ifndef THIS_IS_BS	
     void passToIDS(message_t* msg, void* payload, uint8_t len){
         if (msg==NULL || payload==NULL){
@@ -79,7 +85,7 @@ implementation{
     }
     
     event message_t * Lower_IDS_Receive.receive(message_t *msg, void *payload, uint8_t len){
-        if (m_state<STATE_READY_TO_DEPLOY){
+        if (m_state<STATE_READY_FOR_APP){
         	return msg;
         }
         
@@ -91,7 +97,7 @@ implementation{
     
     
     event message_t * Lower_PL_Receive.receive(message_t *msg, void *payload, uint8_t len){
-        if (m_state<STATE_READY_TO_DEPLOY){
+        if (m_state<STATE_READY_FOR_APP){
         	return msg;
         }
         
@@ -120,22 +126,18 @@ implementation{
             call IntrusionDetectCInit.init();
             //PrivacyLevel init = auto init
             
-            //additional inits?
-            //TODO
-            
             m_state = STATE_READY_TO_DEPLOY;
+            signal Dispatcher.stateChanged(m_state);
             
             //BUGBUG no break!!! break;
         }
         case STATE_READY_TO_DEPLOY:
-        {
-            // TODO: run magic packet forwarder
-            // Wait for MAGIC PAKET
-            
-            // TODO: bugbug: no wait at the moment, proceed to next state directly
+        {            
+            // Wait for MAGIC PAKET - PrivacyLevel will signalize received magic packet.
             m_state = STATE_MAGIC_RECEIVED;
+            signal Dispatcher.stateChanged(m_state);
             
-            //BUGBUG no break!!! break;
+            break;
         }
         case STATE_MAGIC_RECEIVED:
         {
@@ -148,7 +150,9 @@ implementation{
             // TODO: call save state
             
             m_state = STATE_READY_FOR_APP;
+            signal Dispatcher.stateChanged(m_state);
             
+            // Route component will signalize we are ready.
             break;
         }
         case STATE_READY_FOR_APP:
@@ -157,6 +161,7 @@ implementation{
             // call App.init
             
             m_state = STATE_WORKING;
+            signal Dispatcher.stateChanged(m_state);
             
             //BUGBUG no break!!! break;
         }			
@@ -169,13 +174,23 @@ implementation{
             // completed. PL will pass this information to the application.
             // 
             call Privacy.startApp(SUCCESS);
+            signal Dispatcher.stateChanged(m_state);
             
             break;
-        }		
+        }
         }
 
         pl_printf("DispatcherP: </serveState(%x)>\n", m_state); 
         pl_printfflush();
+    }
+    
+    task void serveStateTask(){
+    	call Dispatcher.serveState();
+    }
+    
+    event void MagicPacket.magicPacketReceived(error_t status, PRIVACY_LEVEL newPrivacyLevel){
+    	pl_printf("DispatcherP: magicPacket\n"); 
+    	post serveStateTask();
     }
 #else
 	// Here node is BS!
@@ -203,7 +218,17 @@ implementation{
             call IntrusionDetectCInit.init();
             //PrivacyLevel init = auto init
             
+            // Signalize to the ProtectLayer that initialization is
+            // completed. PL will pass this information to the application.
+            // 
+            // In basestation mode, further initialization is responsibility of the app.
+            // 
+            call Privacy.startApp(SUCCESS);
+            
             m_state = STATE_READY_TO_DEPLOY;
+            signal Dispatcher.stateChanged(m_state);
+            
+            break;
         }
         case STATE_READY_TO_DEPLOY:
         case STATE_MAGIC_RECEIVED:
@@ -214,21 +239,16 @@ implementation{
             // init key distribution component
             call KeyDistribCInit.init();
             
-            // TODO: call save state
-            
             m_state = STATE_READY_FOR_APP;
+            signal Dispatcher.stateChanged(m_state);
             
             break;
         }
         case STATE_READY_FOR_APP:
         case STATE_WORKING:
         {
-            m_state = STATE_WORKING;
-            
-            // Signalize to the ProtectLayer that initialization is
-            // completed. PL will pass this information to the application.
-            // 
-            call Privacy.startApp(SUCCESS);
+            m_state = STATE_WORKING;    
+            signal Dispatcher.stateChanged(m_state);        
             
             break;
         }		
@@ -236,6 +256,10 @@ implementation{
 
         pl_printf("DispatcherP: </serveState(%x)>\n", m_state); 
         pl_printfflush();
+    }
+    
+    event void MagicPacket.magicPacketReceived(error_t status, PRIVACY_LEVEL newPrivacyLevel){
+    	// Magic packet not relevant if BS, we are producing magic packet!
     }
 #endif
 }

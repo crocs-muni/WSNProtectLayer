@@ -23,6 +23,7 @@ module PrivacyLevelP{
 		interface Init;
 		interface Init as PLInit;
 		interface PrivacyLevel;
+		interface MagicPacket;
 	}
 }
 implementation{
@@ -71,6 +72,7 @@ implementation{
     		PLevelMsg_t *pkt = (PLevelMsg_t *) payload;
     		error_t sigValid = FAIL;
     		Signature_t sig;
+    		bool magicPacket = FALSE;
     		
     		//check if new priv level is valid
     		if (pkt->newPLevel >= PLEVEL_NUM) {
@@ -94,12 +96,23 @@ implementation{
 				return msg;
 			}
 			
+			atomic{
+			// Magic packet = first change of the privacy level.
+			magicPacket = ppcPrivData->global_counter == 0;
+			
 			// Signature valid -> update signature & global counter
 			ppcPrivData->global_counter = pkt->counter;
+			}
+			
 			call Crypto.updateSignature(&sig);
 			
 			// Signal to Privacy component new privacy level
 			signal PrivacyLevel.privacyLevelChanged(SUCCESS, pkt->newPLevel);
+			
+			// Signal magic packet
+			if (magicPacket){
+				signal MagicPacket.magicPacketReceived(SUCCESS, pkt->newPLevel);
+			}
 			
 			// Signature valid -> re-broadcast this message
 			if (m_busy)
@@ -166,6 +179,10 @@ implementation{
 			}	
 		}
 	}
+	
+	default event void MagicPacket.magicPacketReceived(error_t status, PRIVACY_LEVEL newPrivacyLevel){
+		
+	}
 #else
 	
 	command error_t Init.init(){
@@ -174,5 +191,9 @@ implementation{
 	command error_t PLInit.init(){
         return SUCCESS;		
 	}
+	
+	default event void MagicPacket.magicPacketReceived(error_t status, PRIVACY_LEVEL newPrivacyLevel){
+		
+	}		
 #endif
 }

@@ -136,6 +136,8 @@ implementation{
 			return SUCCESS;
 	}
 	
+	event void Dispatcher.stateChanged(uint8_t newState){ }
+	
 #ifndef USE_CTP
 	task void initCTP(){
 		// Signalize dispatcher routing is done.
@@ -190,10 +192,12 @@ implementation{
 		//  a) Forwarding engine
 		//  b) Routing engine
 		//  c) Estimator 
+		pl_log_d(TAG, "fwdControl.start()\n");
 		call ForwardingControl.start();
 		
 		// Set as a root (on BaseStation)
 #ifdef THIS_IS_BS
+		pl_log_d(TAG, "setRoot()\n");
 		call RootControl.setRoot();
 #endif
 		
@@ -203,6 +207,8 @@ implementation{
 	
 	task void stopCTP(){
 		pl_log_i(TAG, "CTP termination state...");
+		pl_printfflush();
+		
 		call CtpSendTimer.stop();
 		call FixedTopology.setFixedTopology();
 		
@@ -211,6 +217,9 @@ implementation{
 	}
 
 	event void CtpInitTimer.fired(){
+		pl_log_d(TAG, "CTPtimerState[%u]\n", ctp_init_state);
+		pl_printfflush();
+		
 		if (ctp_init_state==CTP_STATE_INIT){
 			// State = 0 -> start CTP sending timer.
 			call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
@@ -257,8 +266,34 @@ implementation{
 			return;
 		}
 		
+		pl_log_d(TAG, "CTPinitTask()\n");
+
+#ifdef THIS_IS_BS
+		if (ctp_init_state==CTP_STATE_FIND_PARENT){
+			findRootCnt += 1;
+			
+			// Try to help CTP somehow sometimes...
+			if ((findRootCnt % 5) == 0){
+				pl_log_d(TAG, "CTP route update\n");
+				call CtpInfo.triggerImmediateRouteUpdate();
+				call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
+				return;
+				
+			} else if ((findRootCnt % 5) == 2) {
+				pl_log_d(TAG, "CTP recompute\n");
+				call CtpInfo.recomputeRoutes();
+				call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
+				return;
+			}
+					
+			return;
+		}
+		
+		// If a BS, nothing to do.
+		call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
+		
+#else	
 		// Only if given node is not a base station.
-#ifndef THIS_IS_BS			
 		// If we are trying to find root...
 		// Helping CTP by triggering route recomputation (if parent was not found till now, something is wrong).
 		if (ctp_init_state==CTP_STATE_FIND_PARENT && parentFound==FALSE){
@@ -293,7 +328,7 @@ implementation{
 			}		
 			return;
 		}
-		
+
         sendResult = call CtpSend.send(&ctpPkt, sizeof(CtpResponseMsg));
         if (sendResult == SUCCESS) {
             ctpBusy=TRUE;
@@ -306,9 +341,6 @@ implementation{
         	// start re-tx timer
 			call CtpSendTimer.startOneShot(CTP_TIME_SEND_FAIL + (call Random.rand16() % CTP_TIME_SEND_FAIL_RND));
         }
-#else
-	// If a BS, nothing to do.
-	call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
 #endif
 	}
 	

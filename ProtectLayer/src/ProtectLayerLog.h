@@ -48,7 +48,7 @@
  * Internal function for logging messages with severity level and message class.
  */
 void PLPrintDbg(int lvl, const char* messageClass, const char* formatString, ...);
-static const char *ltexts[] = { "F:", "E:", " W:", " I:", "D:", "T:", "C:"};
+static const char *ltexts[] = { "F:", "E:", " W:", "I:", "D:", "T:", "C:"};
 
 /**
  * Returns maximal log level allowed.
