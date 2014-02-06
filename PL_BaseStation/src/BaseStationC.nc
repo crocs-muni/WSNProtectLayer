@@ -56,6 +56,7 @@ module BaseStationC {
   uses interface Notify<button_state_t>;
   
   uses interface Dispatcher;
+  uses interface Crypto;
   
   uses interface AMSend as PrivChangeSend;
   
@@ -198,11 +199,21 @@ implementation {
 				return;
 			}
 			
-			plvlMsg->newPLevel = curPrivLvl;
-			plvlMsg->counter = plvlCounter;
-			
-			// TODO signature
-			plvlMsg->signature[0] = 0;
+			// If this is first message to send from this PL level,
+			// re-compute signature.
+			if (plevelMsgs==0){
+				Signature_t signature;
+				plvlMsg->newPLevel = curPrivLvl;
+				plvlMsg->counter = plvlCounter + 1;
+				
+				call Crypto.computeSignature(curPrivLvl, HASH_KEYS - plvlCounter - 1, &signature);
+				memcpy((uint8_t*) &(plvlMsg->signature), (uint8_t*) &(signature.signature), SIGNATURE_LENGTH);
+				BS_PRINTF(pl_log_d(TAG, "signature generated %x %x %x %x\n", 
+					plvlMsg->signature[0],
+					plvlMsg->signature[1],
+					plvlMsg->signature[2],
+					plvlMsg->signature[3]));
+			}
 			
 			if(call PrivChangeSend.send(AM_BROADCAST_ADDR, &pkt, (uint8_t) sizeof(PLevelMsg_t)) == SUCCESS) {
 				busy = TRUE;

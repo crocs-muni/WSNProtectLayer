@@ -43,6 +43,7 @@ implementation {
   components SerialStartC;
   
   components DispatcherC;
+  components CryptoP;
   components new AMSenderC(AM_CHANGEPL);
   
   // FWDing
@@ -59,6 +60,7 @@ implementation {
   App.Notify -> UserButtonC;
   
   App.Dispatcher -> DispatcherC;
+  App.Crypto -> CryptoP;
   
   App.PrivChangeSend -> AMSenderC;
   App.Packet -> AMSenderC;
