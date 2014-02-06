@@ -137,7 +137,7 @@ implementation{
 				m_len = len;
 				m_busy = TRUE;
 				}
-				pl_printf("PL: re-bcast add; 2send=%p, free=%p\n", m_lastMsg, m_msg);
+				pl_log_d(TAG, "re-bcast add; 2send=%p, free=%p\n", m_lastMsg, m_msg);
 				
 				post sendTask();
 				return m_msg;
@@ -159,7 +159,7 @@ implementation{
 			m_busy = FALSE;
 			}
 			
-			pl_printf("PL: rebcasted msg=%p err=%d\n", msg, error);
+			pl_log_d(TAG, "rebcasted msg=%p err=%d\n", msg, error);
     	}
 	}
 	

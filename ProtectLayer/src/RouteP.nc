@@ -234,7 +234,7 @@ implementation{
 			call CtpInitTimer.startOneShot(CTP_TIME_STOP_NO_PARENT);
 			call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
 			
-		} else if(ctp_init_state==CTP_STATE_FIND_PARENT){
+		} else if(ctp_init_state==CTP_STATE_FIND_PARENT || ctp_init_state==CTP_STATE_TERMINATE){
 			// Stopping CTP - move to fixed topology.
 			ctp_init_state=CTP_STATE_TERMINATE;
 			post stopCTP();
@@ -401,7 +401,7 @@ implementation{
 			pl_log_d(TAG, "getRandNeigh, %u neigh above threshold\n", numAboveThreshold);
 			
 			// If 0 above threshold -> fail
-			if (numAboveThreshold){
+			if (numAboveThreshold==0){
 				return FAIL;
 			}
 			

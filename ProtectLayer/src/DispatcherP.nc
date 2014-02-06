@@ -106,7 +106,7 @@ implementation{
 
     command void Dispatcher.serveState() {
 
-        pl_printf("DispatcherP: <serveState(%x)>\n", m_state); 
+        pl_log_i(TAG, "<serveState(%x)>\n", m_state); 
 
         switch (m_state) {
         case STATE_INIT:
@@ -195,7 +195,7 @@ implementation{
     }
     
     event void MagicPacket.magicPacketReceived(error_t status, PRIVACY_LEVEL newPrivacyLevel){
-    	pl_printf("DispatcherP: magicPacket\n"); 
+    	pl_log_i(TAG, "magicPacket received\n"); 
     	post serveStateTask();
     }
 #else
@@ -204,7 +204,7 @@ implementation{
 	// Initialization routine also differs. 
 	command void Dispatcher.serveState() {
 
-        pl_printf("DispatcherP: <serveState(%x)>\n", m_state); 
+        pl_log_i(TAG, "<serveState(%x)>\n", m_state); 
 
         switch (m_state) {
         case STATE_INIT:
@@ -260,7 +260,7 @@ implementation{
         }		
         }
 
-        pl_printf("DispatcherP: </serveState(%x)>\n", m_state); 
+        pl_log_i(TAG, "</serveState(%x)>\n", m_state); 
         pl_printfflush();
     }
     
