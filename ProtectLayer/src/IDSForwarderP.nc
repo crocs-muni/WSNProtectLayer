@@ -104,6 +104,10 @@ implementation{
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
 		IDSMsg_t* idsmsg;
 		idsmsg = (IDSMsg_t*)payload;
+		
+		pl_printfflush();
+		pl_printf("IDSForwarderP: Sender of the alert is %d and receiver is %d.\n", idsmsg-> sender, idsmsg->receiver);
+		pl_printfflush();
 		// If the packet was addressed to someone else, do not forward the message to anyone
 		if (idsmsg->receiver != TOS_NODE_ID) {
 			return msg;
@@ -112,7 +116,7 @@ implementation{
 		// Change the sender for another hop 
 		idsmsg->sender = TOS_NODE_ID;
 		// Change the receiver for another hop
-		idsmsg->receiver = call Route.getParentID();		
+		idsmsg->receiver = call Route.getParentID();
 		
 		if (!call Pool.empty()) 
 			{

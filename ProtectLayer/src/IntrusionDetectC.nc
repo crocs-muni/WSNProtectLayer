@@ -29,6 +29,7 @@ implementation{
 	components DispatcherC;	
 	components IDSBufferC;
 	components IDSForwarderC;
+	components RouteC;
 	
 	components new AMReceiverC(AM_IDS_ALERT);
 #endif
@@ -52,5 +53,7 @@ implementation{
 	IntrusionDetectP.AMPacket -> AMReceiverC;
 	IntrusionDetectP.Packet -> IDSForwarderC.IDSAlertPacket;
 	IntrusionDetectP.AMSend -> IDSForwarderC.IDSAlertSend;
+	
+	IntrusionDetectP.Route -> RouteC.Route;
 #endif
 }

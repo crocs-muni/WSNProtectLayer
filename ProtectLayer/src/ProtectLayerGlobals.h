@@ -37,7 +37,7 @@
 
 // Default base station node ID
 #ifndef TOS_BS_NODE_ID
-#define TOS_BS_BODE_ID 40
+#define TOS_BS_NODE_ID 41
 #endif
 
 // Should be defined in application using this PL.
@@ -115,9 +115,9 @@ enum {
   IDS_MAX_MONITORED_NEIGHBORS = 5,
   IDS_BUFFER_SIZE = 5,
   IDS_DROPPING_THRESHOLD = 50,
-  IDS_MIN_PACKET_RECEIVED = 50,
+  IDS_MIN_PACKET_RECEIVED = 10,
   IDS_FORWARDER_SEND_BUFFER_LEN = 4,
-  DROPPING_RATE = 100,
+  DROPPING_RATE = 75,
   PHANTOM_JUMPS=3,
   MAC_LENGTH = 16,
   HASH_LENGTH = 16,
