@@ -122,6 +122,7 @@ interface Crypto {
 	/**	
 			Command: function to calculate AES based hash of data in buffer.
 			Resulting hash has AES BLOCK_LENGTH
+			Output array can be same as input array.
 			@param[in] buffer with data
 			@param[in] offset
 			@param[in] pLen
@@ -163,7 +164,7 @@ interface Crypto {
 	
 	/**	
 			Command: Command to calculate hash chain of buffer and verifies result of calculation 
-			according to privacy level specified. Input Length is HASH_LENGTH.
+			according to privacy level specified. Input Length is SIGNATURE_LENGTH.
 			Optionally returns updated signature, which can be stored using updateSignature function.
 			@param[in] buffer with signature to verify
 			@param[in] offset
@@ -183,11 +184,13 @@ interface Crypto {
 	/**
 			Command: command to precompute hash chain of signatures. This is intended for BS use only.
 			Privacy level of signatures must be specified in first signature supplied in signatures array.
-			@param[on out] signatures array of signatures, where at first position is initial signature and rest is filled
+			@param[in] privacyLevel for which will be computed resulting signature
 			with computed signatures. Must have space for len number of signatures
-			@param len total amount of signatures that will be present in signatures array
+			@param[in] lenFromRoot number of iterations for hash function
+			@param[out] signature computed signature
+			@return error_t status
 	*/
-	command error_t computeSignatures( Signature_t* signatures, uint8_t len);
+	command error_t computeSignature( PRIVACY_LEVEL privacyLevel, uint16_t lenFromRoot, Signature_t* signature);
 	/**
 			Command: command to execute self test of Crypto component
 			@return error_t status

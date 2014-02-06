@@ -91,6 +91,7 @@ enum {
   MAC_LENGTH = 16,
   HASH_LENGTH = 16,
   BLOCK_SIZE = 16,
+  SIGNATURE_LENGTH = 16,
   COUNTER_SYNCHRONIZATION_WINDOW = 5,
   MAX_OFFSET = 20,
   NODE_MAX_ID = 50
@@ -301,7 +302,7 @@ typedef struct SavedData {
 
 //structure for hash chain calculation
 typedef struct Signature {
-        uint8_t signature[HASH_LENGTH]; /**current hash */
+        uint8_t signature[SIGNATURE_LENGTH]; /**current hash */
         PRIVACY_LEVEL privacyLevel; /** privacy Level associated with this hash */
 	uint16_t counter; /** distance from start of hash chain */
 } Signature_t;
