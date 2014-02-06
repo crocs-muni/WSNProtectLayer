@@ -196,6 +196,7 @@ implementation {
             //save key to KDCData shared key		
             memcpy( &((SavedData[i].kdcData).shared_key), m_key2, sizeof(PL_key_t));
         }
+        
         return status;
     }
     
@@ -217,9 +218,12 @@ implementation {
         }
         
         //get hash key
-        if((status = call KeyDistrib.getHashKeyB( m_key1))!= SUCCESS){
+        if((status = call KeyDistrib.getHashKeyB( &m_key1))!= SUCCESS){
             pl_printf("CryptoP: hashDataB key not retrieved.\n");
             return status;
+        }
+        if(m_key1 == NULL){
+	    pl_printf("CryptoP: hashDataB key NULL.\n");
         }
 
         for(i = 0; i < (pLen/HASH_LENGTH) + 1; i++){

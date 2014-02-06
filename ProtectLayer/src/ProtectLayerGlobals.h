@@ -276,6 +276,7 @@ enum {
 	KEY_TONODECRYPT = 4,
 	KEY_TOBSMAC = 5,
 	KEY_TONODEMAC = 6,
+	KEY_TOSNODEHASH = 7,
 } KEY_TYPE;
 
 typedef struct _key {
