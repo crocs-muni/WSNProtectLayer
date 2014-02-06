@@ -127,6 +127,8 @@ enum {
   MAX_OFFSET = 20,
   NODE_MAX_ID = 50,
   INVALID_NODE_ID = 0xFF,
+  MAGIC_PACKET_RANDOM_OFFSET = 100,	/** constant offset before re-broadcasting magic packet. */
+  MAGIC_PACKET_RANDOM_WINDOW = 200,	/** random window before re-broadcasting magic packet. */
   MAX_FIXED_NEIGHBOR_COUNT = 7 /** maximum number of neighbors for pre-defined fixed neighbor table TODO remove */
 #ifdef PLAINTEXT_DEMO
   , PLAINTEXT_BYTES=4

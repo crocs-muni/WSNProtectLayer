@@ -17,6 +17,8 @@ module PrivacyLevelP{
 		interface Crypto;
 		interface Privacy;
 		interface SharedData;
+		interface Timer<TMilli> as BackoffTimer;
+		interface Random;
 	}
 #endif
 	provides {
@@ -33,6 +35,7 @@ implementation{
 	message_t* m_lastMsg;
 	uint16_t m_len=0;
  	bool m_busy = TRUE;
+ 	bool r_busy = TRUE;
  	
  	PPCPrivData_t* ppcPrivData = NULL;
 	
@@ -47,6 +50,7 @@ implementation{
 	command error_t Init.init(){
 		m_msg = &m_msgMemory;
 		m_busy=FALSE;
+		r_busy=FALSE;
 		return SUCCESS;
 	}
 	
@@ -62,6 +66,16 @@ implementation{
         
         pl_log_d(TAG, "PLinit, data=%p\n", ppcPrivData);
         return SUCCESS;		
+	}
+	
+	/**
+	 * Starts a timer for posting a re-broadcast task within a randomized window.
+	 */
+	void startTimer(){
+		uint16_t newTime=(call Random.rand16() % MAGIC_PACKET_RANDOM_WINDOW) + MAGIC_PACKET_RANDOM_OFFSET;
+		
+		pl_log_d(TAG, "re-bcas in %u\n", newTime);
+		call BackoffTimer.startOneShot(newTime);
 	}
 	
 	//
@@ -82,7 +96,7 @@ implementation{
     		
 			// Global counter has to be strictly less than given counter in the message.
 	        if (ppcPrivData->global_counter >= pkt->counter){
-	        	pl_log_d(TAG, "global counter[%u] >= counter[%u]\n", ppcPrivData->global_counter, pkt->counter);
+	        	pl_log_d(TAG, "gctr[%u]>=mctr[%u]\n", ppcPrivData->global_counter, pkt->counter);
 	        	return msg;
 	        }
 			
@@ -125,6 +139,7 @@ implementation{
 			{
 				// Radio busy, packet cannot be sent. Return the same buffer
 				// as given.
+				pl_log_w(TAG, "busy\n");
 				return msg; 	
 			}
 			else
@@ -136,10 +151,10 @@ implementation{
 				m_lastMsg = msg;
 				m_len = len;
 				m_busy = TRUE;
+				startTimer();
 				}
-				pl_log_d(TAG, "re-bcast add; 2send=%p, free=%p\n", m_lastMsg, m_msg);
 				
-				post sendTask();
+				pl_log_d(TAG, "re-bcast add; 2send=%p, free=%p\n", m_lastMsg, m_msg);
 				return m_msg;
 			}
 		}
@@ -157,23 +172,36 @@ implementation{
 			atomic{
 			m_msg = msg;
 			m_busy = FALSE;
+			r_busy = FALSE;
 			}
 			
 			pl_log_d(TAG, "rebcasted msg=%p err=%d\n", msg, error);
     	}
 	}
 	
+	event void BackoffTimer.fired(){
+		post sendTask();
+	}
+	
 	task void sendTask(){
 		if (m_busy==FALSE){
 			// If no message is in the buffer this task makes no sense.
+			pl_log_e(TAG, "NotBusy\n");
 			return;
-		}	
+		}
+		
+		if (r_busy==TRUE){
+			// If no message is in the buffer this task makes no sense.
+			pl_log_w(TAG, "r_busy\n");
+			startTimer(); 
+		}
 	
 		if (call AMSend.send(AM_BROADCAST_ADDR, m_lastMsg, m_len) == SUCCESS)
 		{
 			// Send successful, wait for sendDone event.
 			// The buffer m_lastMsg is still in use (busy=true) so it cannot be
 			// recycled.
+			atomic { r_busy = TRUE; }
 		}
 		else
 		{
@@ -182,7 +210,9 @@ implementation{
 			atomic{
 			m_msg = m_lastMsg;
 			m_busy = FALSE;
-			}	
+			}
+			
+			pl_log_e(TAG, "Cannot send\n");
 		}
 	}
 	
