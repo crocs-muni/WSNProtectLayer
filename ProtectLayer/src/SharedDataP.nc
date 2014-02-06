@@ -24,6 +24,9 @@ module SharedDataP {
 }
 
 implementation {
+    // Logging tag for this component
+    static const char *TAG = "SharedP";
+    
     /** storage variable with the entire combinedData structure */
     combinedData_t combinedData;
     
@@ -118,11 +121,11 @@ implementation {
 		
 	// TODO: substitute in final version by CTP
         for (i = 0; i < MAX_FIXED_NEIGHBOR_COUNT; i++) {
-	    pl_printf("SharedDataP: neigh %d.\n", fixedNeighborsMap[TOS_NODE_ID][i]);
+	    pl_log_d(TAG, "neigh %d.\n", fixedNeighborsMap[TOS_NODE_ID][i]);
             if (fixedNeighborsMap[TOS_NODE_ID][i] != 0) combinedData.savedData[i].nodeId = fixedNeighborsMap[TOS_NODE_ID][i];
         }	
 
-	pl_printf("SharedDataP: PLInit.init() finished.\n");
+        pl_log_i(TAG, "PLInit.init() finished.\n");
 
         initialized = TRUE;
         return SUCCESS;
@@ -135,9 +138,9 @@ implementation {
      */
     command combinedData_t * SharedData.getAllData(){
         if(initialized){
-            pl_printf("SharedDataP, getAllData called on initialized data.\n");
+            pl_log_d(TAG, "getAllData called on initialized data.\n");
         } else {
-            pl_printf("SharedDataP, ERROR, data not initialized.\n");
+            pl_log_e(TAG, "ERROR, data not initialized.\n");
         }	
         return &combinedData;
     }
@@ -149,9 +152,9 @@ implementation {
      */
     command SavedData_t * SharedData.getSavedData(){
         if(initialized){
-            pl_printf("SharedDataP, getSavedData called on initialized data.\n");
+            pl_log_d(TAG, "getSavedData called on initialized data.\n");
         } else {
-            pl_printf("SharedDataP, ERROR, data not initialized.\n");
+            pl_log_e(TAG, "ERROR, data not initialized.\n");
         }
         return combinedData.savedData;
     }
@@ -166,10 +169,10 @@ implementation {
         int i;
         
         if(initialized){
-            pl_printf("SharedDataP, getNodeState called on initialized data for node %u.\n", nodeId);
+            pl_log_d(TAG, "getNodeState called on initialized data for node %u.\n", nodeId);
         } else {
-            pl_printf("SharedDataP, getAllData called for node %u.\n", nodeId); 
-            pl_printf("SharedDataP, ERROR, data not initialized.\n");
+            pl_log_d(TAG, "getAllData called for node %u.\n", nodeId); 
+            pl_log_e(TAG, "ERROR, data not initialized.\n");
         }
         
         for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
@@ -186,10 +189,10 @@ implementation {
      */
     command PPCPrivData_t* SharedData.getPPCPrivData() {
         if(initialized){
-            pl_printf("SharedDataP, getPPCPrivData called on initialized data.\n"); 
+            pl_log_d(TAG, "getPPCPrivData called on initialized data.\n"); 
         } else {
-            pl_printf("SharedDataP, getPPCPrivData called.\n"); 
-            pl_printf("SharedDataP, ERROR, data not initialized.\n"); 
+            pl_log_d(TAG, "getPPCPrivData called.\n"); 
+            pl_log_e(TAG, "ERROR, data not initialized.\n"); 
         }
         return &(combinedData.ppcPrivData);		
     }
@@ -201,10 +204,10 @@ implementation {
      */
     command RoutePrivData_t* SharedData.getRPrivData() {
         if(initialized){
-            pl_printf("SharedDataP, getRPrivData called on initialized data.\n");
+            pl_log_d(TAG, "getRPrivData called on initialized data.\n");
         } else {
-            pl_printf("SharedDataP, getRPrivData called.\n");
-            pl_printf("SharedDataP, ERROR, data not initialized.\n");
+            pl_log_d(TAG, "getRPrivData called.\n");
+            pl_log_e(TAG, "ERROR, data not initialized.\n");
         }
         return &(combinedData.routePrivData);		
     }
@@ -216,10 +219,10 @@ implementation {
      */
     command KDCPrivData_t* SharedData.getKDCPrivData() {
         if(initialized){
-            pl_printf("SharedDataP, getKDCPrivData called on initialized data.\n"); 
+            pl_log_d(TAG, "getKDCPrivData called on initialized data.\n"); 
         } else {
-            pl_printf("SharedDataP, getKDCPrivData called.\n"); 
-            pl_printf("SharedDataP, ERROR, data not initialized.\n"); 
+            pl_log_d(TAG, "getKDCPrivData called.\n"); 
+            pl_log_e(TAG, "ERROR, data not initialized.\n"); 
         }
         return &(combinedData.kdcPrivData);		
     }	
@@ -243,7 +246,7 @@ implementation {
      * <li>EBUSY if a request is already being processed.
      */
     command error_t ResourceArbiter.saveCombinedDataToFlash(){
-        pl_printf("SharedDataP, saveCombinedDataToFlash called.\n"); 
+        pl_log_d(TAG, "saveCombinedDataToFlash called.\n"); 
 
         if (!m_busy) {
 			m_busy = TRUE;
@@ -254,7 +257,7 @@ implementation {
     }
     
     default event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result) {
-    	pl_printf("SharedDataP, saveCombinedDataToFlashDone.\n"); 
+    	pl_log_d(TAG, "saveCombinedDataToFlashDone.\n"); 
 
 }
     
