@@ -96,7 +96,9 @@ implementation{
     		
 			// Global counter has to be strictly less than given counter in the message.
 	        if (ppcPrivData->global_counter >= pkt->counter){
-	        	pl_log_d(TAG, "gctr[%u]>=mctr[%u]\n", ppcPrivData->global_counter, pkt->counter);
+	        	// This logging message had to be disabled since during flood there are 
+	        	// many messages of these and printf slows it down.
+	        	//pl_log_d(TAG, "gctr[%u]>=mctr[%u]\n", ppcPrivData->global_counter, pkt->counter);
 	        	return msg;
 	        }
 			
