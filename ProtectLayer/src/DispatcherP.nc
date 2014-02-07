@@ -200,7 +200,9 @@ implementation{
     
     event void MagicPacket.magicPacketReceived(error_t status, PRIVACY_LEVEL newPrivacyLevel){
     	pl_log_i(TAG, "magicPacket received\n"); 
+#ifndef SKIP_MAGIC_PACKET
     	post serveStateTask();
+#endif
     }
 #else
 	// Here node is BS!

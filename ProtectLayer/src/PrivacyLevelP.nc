@@ -84,9 +84,11 @@ implementation{
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
 		if (len == sizeof(PLevelMsg_t)) {
     		PLevelMsg_t *pkt = (PLevelMsg_t *) payload;
-    		error_t sigValid = FAIL;
-    		Signature_t sig;
     		bool magicPacket = FALSE;
+#ifndef ACCEPT_ALL_SIGNATURES
+			error_t sigValid = FAIL;
+			Signature_t sig;
+#endif
     		
     		//check if new priv level is valid
     		if (pkt->newPLevel >= PLEVEL_NUM) {
@@ -106,15 +108,13 @@ implementation{
 			
 			// Verify auth broadcast (w.r.t. BS)
 			// Signature is placed after payload, like MAC.
-#ifdef ACCEPT_ALL_SIGNATURES
-			sigValid = SUCCESS;
-#else
+#ifndef ACCEPT_ALL_SIGNATURES
 			sigValid = call Crypto.verifySignature((uint8_t*) (&(pkt->signature)), 0, pkt->newPLevel, pkt->counter, &sig);
-#endif
 			if (sigValid != SUCCESS){
 				pl_log_i(TAG, "plevel sig invalid!\n");
 				return msg;
 			}
+#endif
 			
 			atomic{
 			// Magic packet = first change of the privacy level.

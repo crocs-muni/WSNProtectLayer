@@ -241,6 +241,10 @@ implementation{
 		}
 	}
 	
+#ifdef CTP_DUMP_NEIGHBORS
+	void dumpNeighbors();
+#endif
+	
 	/**
 	 * Task for sending CTP messages.
 	 * Used after boot to initialize CTP component - real TCP traffic.
@@ -255,8 +259,11 @@ implementation{
 			ctpBusyCount+=1;
 			pl_log_w(TAG, "CTPSendTask, busy[%u]\n", ctpBusyCount);
 			
-			// start re-tx timer, if aperiodic timer is choosen
+			// Start re-tx timer, if aperiodic timer is choosen.
 			call CtpSendTimer.startOneShot(CTP_TIME_SEND_FAIL + (call Random.rand16() % CTP_TIME_SEND_FAIL_RND));
+			
+			// This may also happen if no root is found thus CTP is unable to deliver given message.
+			// If no root is found, program will stay in this busy state.
 			return;
 		}
 		
@@ -266,7 +273,7 @@ implementation{
 			return;
 		}
 		
-		pl_log_d(TAG, "CTPinitTask()\n");
+		pl_log_d(TAG, "CTPsendTask()\n");
 
 #ifdef THIS_IS_BS
 		if (ctp_init_state==CTP_STATE_FIND_PARENT){
@@ -307,6 +314,10 @@ implementation{
 				ctp_init_state=CTP_STATE_TERMINATE;
 				parentFound=TRUE;
 				
+				// Dump neighbors to the log file
+#ifdef CTP_DUMP_NEIGHBORS
+				dumpNeighbors();						
+#endif				
 				return;
 			} else {
 				pl_log_w(TAG, "Parent NOT found. Err [%u]. Try again\n", parentStatus);
@@ -398,7 +409,7 @@ implementation{
 				}
 			}
 			
-			pl_log_d(TAG, "getRandNeigh, %u neigh above threshold\n", numAboveThreshold);
+			pl_log_d(TAG, "getRandNeigh, %u neigh above thr\n", numAboveThreshold);
 			
 			// If 0 above threshold -> fail
 			if (numAboveThreshold==0){
@@ -412,6 +423,28 @@ implementation{
 #endif
 		return FAIL;
 	}
+	
+#ifdef CTP_DUMP_NEIGHBORS
+	void dumpNeighbors(){
+		uint8_t numNeigh = 0;
+		uint8_t i=0;
+		numNeigh = call CtpInfo.numNeighbors();
+		pl_log_d(TAG, "neighbors=%u\n", numNeigh);
+		
+		// If zero -> nothing to do...
+		if (numNeigh == 0){
+			return;
+		} 
+		
+		// Iterate over, neighbors, pick only those with quality above threshold.
+		for(i=0; i<numNeigh; i++){
+			uint16_t linkQuality = call CtpInfo.getNeighborLinkQuality(i);
+			am_addr_t addr = call CtpInfo.getNeighborAddr(i);
+			
+			pl_log_d(TAG, "  N[%u] addr=%u etx=%u\n", i, addr, linkQuality);
+		}
+	}
+#endif
 	
 	command error_t Route.getCTPParentIDB(node_id_t * parent){
 		return call CtpInfo.getParent(parent);
