@@ -224,22 +224,23 @@ implementation {
         }
 
         numBlocks = len / HASH_LENGTH;
+        pl_printf("CryptoP: numBlocks == %d.\n", numBlocks);
+
         for(i = 0; i < numBlocks + 1; i++) {
 	    //incomplete block check, if input is in buffer, than copy data to input, otherwise use zeros as padding 
             for (j = 0; j < HASH_LENGTH; j++){
-                if ((i * HASH_LENGTH + j) >= len) {
-		    hash[j] = 0;
-                } else {
+                if ((i * HASH_LENGTH + j) < len) {
                     hash[j] = buffer[offset + i * HASH_LENGTH + j];
-                }
+                } else {
+		    hash[j] = 0;
+                } 
             }
-            if((status = call CryptoRaw.hashDataBlockB( hash, offset, m_key1, tempHash)) != SUCCESS){
-                
+            if((status = call CryptoRaw.hashDataBlockB(hash, 0, m_key1, tempHash)) != SUCCESS){
                 pl_printf("CryptoP:  hashDataB calculation failed.\n"); 
-                
                 return status;
             }
-            //copy resutl to key value for next round
+
+            //copy result to key value for next round
             for(j = 0; j < HASH_LENGTH; j++){
                 m_key1->keyValue[j] = tempHash[j];
             }
@@ -257,21 +258,17 @@ implementation {
         uint8_t status;
         uint8_t i;
 
+        pl_printf("CryptoP: hashDataShortB called.\n"); 
         if(hash == NULL){
-	    pl_log_e(TAG,"CryptoRawP: hashDataB NULL hash.\n");
+	    pl_log_e(TAG,"CryptoRawP: hashDataShortB NULL hash.\n");
 	    return FAIL;	    
         }
-        pl_printf("CryptoP: hashDataShortB called.\n"); 
         if((status = call Crypto.hashDataB(buffer, offset, len, tempHash)) != SUCCESS){
             pl_printf("CryptoP: hashDataShortB calculation failed.\n"); 
             return status;
         }
-/* TODO: remove
-        for (i = 0; i < HASH_LENGTH/4; i++){
-            tempHash[i] = tempHash[i]^tempHash[i + HASH_LENGTH/2];
-        }
-*/
-        memcpy(hash, tempHash, sizeof(*hash));
+
+        memcpy(hash, tempHash, sizeof(uint32_t));
         return SUCCESS;
     }
     

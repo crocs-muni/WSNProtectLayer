@@ -188,14 +188,6 @@ implementation {
         spHeader = (SPHeader_t*) payload;
 
         pl_printf("IDSState: A copy of a message from Privacy component received. Sender is %d.\n", spHeader->sender);
-		for(i=0;i<len;i++){
-			pl_printf("%x", ((uint8_t*) payload)[i]);
-		}       
-		pl_printf(" nasrat\n");
-		for(i=sizeof(SPHeader_t);i<len;i++){
-			pl_printf("%x", ((uint8_t*) payload)[i]);
-		}       
-		pl_printf(" nasrat bez spheader\n");
 
         savedData = call SharedData.getNodeState(spHeader->sender);
         
@@ -210,18 +202,7 @@ implementation {
         	return msg;
         }
         
-        call Crypto.hashDataShortB( ((uint8_t*) payload) + sizeof(SPHeader_t), 0, len - sizeof(SPHeader_t), &hashedPacket);
-        
-        pl_printf(" nasrat: Hash is %lu \n.", hashedPacket);
-        
-  		for(i=sizeof(SPHeader_t);i<len;i++){
-			pl_printf("%x", ((uint8_t*) payload)[i]);
-		}       
-		pl_printf(" nasrat bez spheader\n");
-        
-        call Crypto.hashDataShortB( ((uint8_t*) payload) + sizeof(SPHeader_t), 0, len - sizeof(SPHeader_t), &hashedPacket);
-        
-        pl_printf(" nasrat: Hash is %lu \n.", hashedPacket);
+        call Crypto.hashDataShortB( ((uint8_t*) payload), sizeof(SPHeader_t), len - sizeof(SPHeader_t), &hashedPacket);
         
         // AES (or another cryptographic function) of the payload should be computed in order
         // to identify content of the messages

@@ -244,9 +244,9 @@ implementation {
        
        
         call AES.keyExpansion( m_exp, (uint8_t*) key->keyValue);		
-        call AES.encrypt( hash, m_exp, buffer + offset);
+        call AES.encrypt(buffer + offset, m_exp, hash);
         for(i = 0; i < BLOCK_SIZE; i++){
-            hash[i] ^= buffer[i + offset];
+            hash[i] = buffer[i + offset] ^ hash[i];
         }		
         return status;
     }
