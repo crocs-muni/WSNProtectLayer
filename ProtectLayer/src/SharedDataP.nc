@@ -94,7 +94,7 @@ implementation {
         case 35: { combinedData.routePrivData.parentNodeId = 22; break; }
         case 36: { combinedData.routePrivData.parentNodeId = 42; break; }
         case 37: { combinedData.routePrivData.parentNodeId = 41; break; }
-        case 40: { combinedData.routePrivData.parentNodeId = 41; break; }
+        case 40: { combinedData.routePrivData.parentNodeId = 22; break; }
         case 41: { combinedData.routePrivData.parentNodeId = 41; break; }
         case 42: { combinedData.routePrivData.parentNodeId = 22; break; }
         case 43: { combinedData.routePrivData.parentNodeId = 14; break; }
