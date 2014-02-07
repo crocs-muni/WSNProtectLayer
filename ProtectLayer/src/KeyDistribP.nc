@@ -107,7 +107,12 @@ implementation{
             pl_log_w(TAG, "getHashKeyB key not received\n");
             return EKEYNOTFOUND;
         } else {		
+	    // set hash value to fixed initial value
+	    memset(KDCPrivData->hashKey.keyValue, 0, sizeof(KDCPrivData->hashKey.keyValue));
+	    KDCPrivData->hashKey.counter = 0;
+	    // return ptr to hash key structure	
             *pHashKey = &(KDCPrivData->hashKey);
+	    
             return SUCCESS;
         }
     }

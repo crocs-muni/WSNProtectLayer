@@ -186,23 +186,23 @@ implementation {
             copyId = max(SavedData[i].nodeId, TOS_NODE_ID);
             memcpy(m_buffer + sizeof(copyId), &copyId, sizeof(copyId)); 
             
+	    m_key2 = &(SavedData[i].kdcData.shared_key);
             //derive key from data and predistributed key
             status = call CryptoRaw.deriveKeyB(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
             if(status != SUCCESS){                
-                pl_log_e(TAG, "CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData->nodeId, status); 
+                pl_log_e(TAG, "CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData[i].nodeId, status); 
                 continue;
             }
             m_key2->counter = 0;
-            //save key to KDCData shared key		
-            memcpy( &((SavedData[i].kdcData).shared_key), m_key2, sizeof(PL_key_t));
         }
         return status;
     }
     
-    command error_t Crypto.hashDataB( uint8_t* buffer, uint8_t offset, uint8_t len, uint8_t* hash){
+    command error_t Crypto.hashDataB(uint8_t* buffer, uint8_t offset, uint8_t len, uint8_t* hash){
         error_t status = SUCCESS;
         uint8_t i;
         uint8_t j;
+        uint8_t numBlocks;
         uint8_t tempHash[HASH_LENGTH];
         
         pl_printf("CryptoP:  hashDataB called.\n");
@@ -222,22 +222,24 @@ implementation {
             return status;
         }
 
-        for(i = 0; i < (len/HASH_LENGTH) + 1; i++){
-            //incoplete block check, if input is in buffer, than copy data to input, otherwise use zeros as padding 
+        numBlocks = len / HASH_LENGTH;
+        pl_printf("CryptoP: numBlocks == %d.\n", numBlocks);
+
+        for(i = 0; i < numBlocks + 1; i++) {
+	    //incomplete block check, if input is in buffer, than copy data to input, otherwise use zeros as padding 
             for (j = 0; j < HASH_LENGTH; j++){
-                if(i >= (len/HASH_LENGTH)){
-		    hash[j] = 0;
+                if ((i * HASH_LENGTH + j) < len) {
+                    hash[j] = buffer[offset + i * HASH_LENGTH + j];
                 } else {
-                    hash[j] = buffer[j + i * HASH_LENGTH];
-                }
+		    hash[j] = 0;
+                } 
             }
-            if((status = call CryptoRaw.hashDataBlockB( hash, offset, m_key1, tempHash)) != SUCCESS){
-                
+            if((status = call CryptoRaw.hashDataBlockB(hash, 0, m_key1, tempHash)) != SUCCESS){
                 pl_printf("CryptoP:  hashDataB calculation failed.\n"); 
-                
                 return status;
             }
-            //copy resutl to key value for next round
+
+            //copy result to key value for next round
             for(j = 0; j < HASH_LENGTH; j++){
                 m_key1->keyValue[j] = tempHash[j];
             }
@@ -251,23 +253,21 @@ implementation {
     
     //TODO define short hash as array of uint8_t
     command error_t Crypto.hashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t len, uint32_t* hash){
-        uint8_t tempHash[BLOCK_SIZE];
+        uint8_t tempHash[HASH_LENGTH];
         uint8_t status;
         uint8_t i;
 
+        pl_printf("CryptoP: hashDataShortB called.\n"); 
         if(hash == NULL){
-	    pl_log_e(TAG,"CryptoRawP: hashDataB NULL hash.\n");
+	    pl_log_e(TAG,"CryptoRawP: hashDataShortB NULL hash.\n");
 	    return FAIL;	    
         }
-        pl_printf("CryptoP: hashDataShortB called.\n"); 
         if((status = call Crypto.hashDataB(buffer, offset, len, tempHash)) != SUCCESS){
             pl_printf("CryptoP: hashDataShortB calculation failed.\n"); 
             return status;
         }
-        for (i = 0; i < BLOCK_SIZE/4; i++){
-            tempHash[i] = tempHash[i]^tempHash[i + BLOCK_SIZE/2];
-        }
-        memcpy(hash, tempHash, sizeof(*hash));
+
+        memcpy(hash, tempHash, sizeof(uint32_t));
         return SUCCESS;
     }
     

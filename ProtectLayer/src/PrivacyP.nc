@@ -308,8 +308,9 @@ recv_finish:
 
         // Dropper functionality => if I am specific node, I will drop the packet with some probability
 #ifdef DROPPING
-	if (TOS_NODE_ID == 37 || TOS_NODE_ID == 46) {
-		if (call Random.rand16() % 100 < DROPPING_RATE) {				
+	if (TOS_NODE_ID == 22 || TOS_NODE_ID == 46) {
+		if (call Random.rand16() % 100 < DROPPING_RATE) {
+			pl_printf("Dropper: I am dropper, packet is dropped!\n");				
 			return msg;
 		}
 	}

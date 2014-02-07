@@ -120,10 +120,14 @@ implementation {
         }
 		
 	// TODO: substitute in final version by CTP
+        pl_log_d(TAG, "Neighbors of node %d are:", TOS_NODE_ID);
         for (i = 0; i < MAX_FIXED_NEIGHBOR_COUNT; i++) {
-	    pl_log_d(TAG, "neigh %d.\n", fixedNeighborsMap[TOS_NODE_ID][i]);
-            if (fixedNeighborsMap[TOS_NODE_ID][i] != 0) combinedData.savedData[i].nodeId = fixedNeighborsMap[TOS_NODE_ID][i];
+            if (fixedNeighborsMap[TOS_NODE_ID][i] != 0) {
+		combinedData.savedData[i].nodeId = fixedNeighborsMap[TOS_NODE_ID][i];
+	        pl_printf("%d,", fixedNeighborsMap[TOS_NODE_ID][i]);
+            }
         }	
+        pl_printf("\n");
 
         pl_log_i(TAG, "PLInit.init() finished.\n");
 
@@ -171,14 +175,14 @@ implementation {
         if(initialized){
             pl_log_d(TAG, "getNodeState called on initialized data for node %u.\n", nodeId);
         } else {
-            pl_log_d(TAG, "getAllData called for node %u.\n", nodeId); 
-            pl_log_e(TAG, "ERROR, data not initialized.\n");
+            pl_log_e(TAG, "ERROR, getNodeState called but data not initialized yet.\n");
         }
         
         for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
             if (combinedData.savedData[i].nodeId == nodeId)
                 return &(combinedData.savedData[i]);
         }				
+        pl_log_d(TAG, "NodeState for node %u not found (not neighbor)\n", nodeId);
         return NULL;
     }
     

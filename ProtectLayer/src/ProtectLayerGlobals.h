@@ -37,7 +37,7 @@
 
 // Default base station node ID
 #ifndef TOS_BS_NODE_ID
-#define TOS_BS_BODE_ID 40
+#define TOS_BS_NODE_ID 41
 #endif
 
 // Should be defined in application using this PL.
@@ -106,7 +106,8 @@ enum {
   AM_INTRUSION_MSG = 137,
   AM_CHANGEPL = 138,
   AM_IDS_ALERT = 139,
-  POLICEMAN_TIMER_MESSAGE_MILLI = 5000,
+  POLICEMAN_TIMER_MESSAGE_MILLI = 1000,
+  INTRUDER_INITIAL_WAIT_MILLI = 10000,
   KEY_LENGTH = 16,
   MAX_NEIGHBOR_COUNT = 30,
   RECEIVE_BUFFER_LEN = 5,
@@ -115,9 +116,9 @@ enum {
   IDS_MAX_MONITORED_NEIGHBORS = 5,
   IDS_BUFFER_SIZE = 5,
   IDS_DROPPING_THRESHOLD = 50,
-  IDS_MIN_PACKET_RECEIVED = 50,
+  IDS_MIN_PACKET_RECEIVED = 10,
   IDS_FORWARDER_SEND_BUFFER_LEN = 4,
-  DROPPING_RATE = 100,
+  DROPPING_RATE = 75,
   PHANTOM_JUMPS=3,
   MAC_LENGTH = 16,
   HASH_LENGTH = 16,
@@ -234,7 +235,7 @@ typedef enum _PRIVACY_LEVEL {
 typedef struct PLevelMsg {
 	uint8_t newPLevel; 				/**< new privacy level to be set */
 	uint16_t counter; 				/**< hash count from the signature stored in the node */
-	uint8_t signature[HASH_LENGTH]; /**< signature generated for this message, w.r.t. newPlevel, counter */
+	uint8_t signature[SIGNATURE_LENGTH]; /**< signature generated for this message, w.r.t. newPlevel, counter */
 } PLevelMsg_t;
 
 
