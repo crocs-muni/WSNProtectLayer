@@ -31,7 +31,6 @@ implementation {
 	components PrivacyP;   
 	components ActiveMessageC;
 	components new AMSenderC(AM_PROTECTLAYERRADIO);
-	//components new AMReceiverC(AM_PROTECTLAYERRADIO); replaced by dispatcherc
 	components IntrusionDetectC; 
 	components PrivacyLevelC;
 	components RouteC;
@@ -39,7 +38,6 @@ implementation {
 	components KeyDistribC;
     components CryptoC;
     components ForwarderC;
-    components LoggerC;
     components DispatcherC;
     components new TimerMilliC() as RetxmitTimer;
     components RandomC;
@@ -71,7 +69,6 @@ implementation {
 	PrivacyP.SharedData -> SharedDataC.SharedData;
 	PrivacyP.KeyDistrib -> KeyDistribC.KeyDistrib;
 	PrivacyP.Crypto -> CryptoC.Crypto;
-	PrivacyP.Logger -> LoggerC;
         
     PrivacyP.Dispatcher -> DispatcherC;
     PrivacyP.RetxmitTimer -> RetxmitTimer;

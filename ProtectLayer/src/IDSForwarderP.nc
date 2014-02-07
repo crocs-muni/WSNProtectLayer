@@ -6,15 +6,19 @@ module IDSForwarderP
 		interface Init;
 		interface Packet as IDSAlertPacket;
 		}
+#ifndef THIS_IS_BS
 	uses {
 		interface AMSend;
 		interface Receive;
 		interface Pool<message_t> as Pool; 
 		interface Queue<message_t*> as SendQueue;
 		interface Packet;
+		interface Route;
 	}
+#endif
 }
 implementation{
+#ifndef THIS_IS_BS
 	message_t* m_msgIDSAlert=NULL;
 	uint8_t m_msgIDSAlertLen=0;	
 	bool m_lastMsgWasIDSAlert = 0;
@@ -28,7 +32,7 @@ implementation{
 	command error_t Init.init(){
 		return SUCCESS;
 	}
-	
+
 	task void task_forwardMessage()
 	{
 		message_t* sendMsg=NULL;
@@ -48,6 +52,7 @@ implementation{
 			
 			//send packet
 			m_lastMsg = sendMsg;
+			
 			if (call AMSend.send(AM_BROADCAST_ADDR, sendMsg, sizeof(IDSMsg_t)) == SUCCESS)
 			{
 //				pl_printf("task_forwardMessage sent with success\n");
@@ -92,10 +97,24 @@ implementation{
 		}
 			
 	}
+	
 	//
 	// interfrace Receive
 	//
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
+		IDSMsg_t* idsmsg;
+		idsmsg = (IDSMsg_t*)payload;
+		
+		pl_printf("IDSForwarderP: Sender of the alert is %d and receiver is %d.\n", idsmsg-> sender, idsmsg->receiver);
+		// If the packet was addressed to someone else, do not forward the message to anyone
+		if (idsmsg->receiver != TOS_NODE_ID) {
+			return msg;
+		}
+		
+		// Change the sender for another hop 
+		idsmsg->sender = TOS_NODE_ID;
+		// Change the receiver for another hop
+		idsmsg->receiver = call Route.getParentID();
 		
 		if (!call Pool.empty()) 
 			{
@@ -183,10 +202,34 @@ implementation{
 		return call Packet.getPayload(msg, len);
 	}
 	
-	
-
+#else
+	command error_t Init.init(){
+		return SUCCESS;
+	}
+	command error_t IDSAlertSend.cancel(message_t *msg) {
+		return FAIL;
+	}
+	command void * IDSAlertSend.getPayload(message_t *msg, uint8_t len){
+		return NULL;
+	}
+	command uint8_t IDSAlertSend.maxPayloadLength(){
+		return 0;
+	}
+	command error_t IDSAlertSend.send(am_addr_t addr, message_t *msg, uint8_t len){
+	}	
+	command void IDSAlertPacket.clear(message_t* msg) {
+	}
+	command uint8_t IDSAlertPacket.payloadLength(message_t* msg) {
+		return 0;
+	}
+	command void IDSAlertPacket.setPayloadLength(message_t* msg, uint8_t len) {
+	}
+	command uint8_t IDSAlertPacket.maxPayloadLength() {
+		return 0;
+	}
+	command void* IDSAlertPacket.getPayload(message_t* msg, uint8_t len) {
+		return NULL;
+	}
+#endif
 }
-
-
-
 

@@ -10,32 +10,31 @@
 #include "ProtectLayerGlobals.h"
 configuration PrivacyLevelC{
 	provides {
-		interface PrivacyLevel;		
+		interface PrivacyLevel;
+		interface MagicPacket;		
+		interface Init;
 		}
 }
 implementation{
+	components MainC;
+	components PrivacyLevelP;
+#ifndef THIS_IS_BS	
 	components PrivacyC;
 	components CryptoC;
-	components PrivacyLevelP;
     components DispatcherC;
-    components new TimerMilliC() as TimerPL; //testing
-    components MainC;
-	
+    components SharedDataC;
+#endif
 	
 	MainC.SoftwareInit -> PrivacyLevelP.Init; // auto init phase 1
-	
-	PrivacyLevelP.TimerP-> TimerPL; //testing
-	
-	PrivacyLevelP.Privacy->PrivacyC.Privacy;
 	PrivacyLevel = PrivacyLevelP.PrivacyLevel;
-		
+	Init = PrivacyLevelP.PLInit;
+	MagicPacket = PrivacyLevelP.MagicPacket;
+	
+#ifndef THIS_IS_BS	
+	PrivacyLevelP.Privacy->PrivacyC.Privacy;	
 	PrivacyLevelP.AMSend -> PrivacyC.MessageSend[MSG_PLEVEL];
 	PrivacyLevelP.Receive -> DispatcherC.ChangePL_Receive;
-	
+	PrivacyLevelP.SharedData -> SharedDataC.SharedData;
 	PrivacyLevelP.Crypto -> CryptoC.Crypto;
-	
-
-	
-	
-	
+#endif
 }

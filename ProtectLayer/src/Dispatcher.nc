@@ -13,4 +13,6 @@ interface Dispatcher{
 	
 	command void serveState();
 	
+	event void stateChanged(uint8_t newState);
+	
 }

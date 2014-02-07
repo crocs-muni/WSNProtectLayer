@@ -49,4 +49,11 @@ interface SharedData {
 	 * @return a pointer to the key distribution module's private data from the combinedData structure
 	 */
 	command KDCPrivData_t* getKDCPrivData();
+	
+	/**
+	 * A shortcut to the predistributed keys.
+	 * @param nodeId id of node
+	 * @return a handle to predistributed key for node.
+	 */
+	command PL_key_t* getPredistributedKeyForNode(uint16_t nodeId);
 }

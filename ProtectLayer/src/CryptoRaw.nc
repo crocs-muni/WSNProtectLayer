@@ -1,6 +1,6 @@
 /** 
  *  Interface for cryptographic functions.
- *  This interface specifies cryptographic functions available in blocking and split-phase manner. 
+ *  This interface specifies cryptographic functions available in blocking manner. 
  *  
  *  @version   0.1
  *  @date      2012-2013
@@ -8,28 +8,31 @@
 #include "ProtectLayerGlobals.h"
 interface CryptoRaw {
 
-	/**
-			Command: Blocking version. Used by other components to start encryption of supplied buffer by supplied key.
-			Enough additional space in buffer to fit encrypted content is assumed.
-			@param[in] key handle to the key that should be used for encryption
-			@param[in out] counter counter value before, updated to new value after encryption
-			@param[in out] buffer buffer to be encrypted, wil contain encrypted data
-			@param[in] offset
-			@param[in out] pLen length of buffer to be encrypted, will contain resulting length
-			@return error_t status
-	*/
-	command error_t encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen);
 
 	/**
-			Command: Blocking version. Used by other components to start decryption of supplied buffer by supplied key.
-			@param[in] key handle to the key that should be used for decryption
-			@param[in out] counter counter value before, updated to new value after decryption
-			@param[in] buffer buffer to be decrypted
-			@param[in] len length of buffer to be decrypted
-			@return error_t status
+		Command: Blocking version. Used by other components to start encryption of supplied buffer by supplied key.
+		Enough additional space in buffer to fit encrypted content is assumed.
+		@param[in] key handle to the key that should be used for encryption
+		@param[in out] counter counter value before, updated to new value after encryption
+		@param[in out] buffer buffer to be encrypted, wil contain encrypted data
+		@param[in] offset
+		@param[in out] pLen length of buffer to be encrypted, will contain resulting length
+		@return error_t status
 	*/
-	command error_t decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t pLen);
-		
+	command error_t encryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len);
+	
+	/**
+		Command: Blocking version. Used by other components to start decryption of supplied buffer by supplied key.
+		Enough space in buffer to fit decrypted content is assumed.
+		Because of use of counter mode, this function uses encrypt buffer function.
+		@param[in] key handle to the key that should be used for encryption
+		@param[in out] counter counter value before, updated to new value after encryption
+		@param[in out] buffer buffer to be encrypted, wil contain encrypted data
+		@param[in] offset
+		@param[in out] pLen length of buffer to be encrypted, will contain resulting length
+		@return error_t status
+	*/
+	command error_t decryptBufferB(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len);
 		
 	/**
 		Command: Used by other components to derive new key from master key and derivation data. 
@@ -42,15 +45,6 @@ interface CryptoRaw {
 	*/	 
 	command error_t deriveKeyB(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey);
 		
-		
-	/**
-		Command: Used by other components to generate random new key
-		@param[in/out] newKey handle to free slot where new key should be generated
-		@return error_t status
-	*/	
-	// IS USED???
-	command error_t generateKeyB(PL_key_t* newKey);
-	
 	/**	
 		Command: function to calculate AES based hash of data in buffer.
 		makes one iteration. Length of data is aes block size
@@ -61,89 +55,58 @@ interface CryptoRaw {
 		@return error_t status
 	*/
 	command error_t hashDataBlockB( uint8_t* buffer, uint8_t offset, PL_key_t* key, uint8_t* hash);
-		
-		
+	/**
+		Command: Used by Crypto component as inner function for calculating mac of buffer.		
+		@param[in] key handle for key, that will be used foe mac calculation
+		@param[in] buffer data that will be processed
+		@param[in] offset of buffer
+		@param[in] pLen length of data in buffer
+		@param[out] mac calculated mac of data, space of MAC_LENGTH must be available in memory
+		@return error_t status
+	*/
+	command error_t macBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen, uint8_t* mac);
+	
+	/**
+		Command: Used by Crypto component as inner function for verification of mac.
+		@param[in] key handle for key, that was used for mac calculation
+		@param[in] buffer with original data
+		@param[in] offset of buffer
+		@param[in] pLen length of data in buffer
+		@param[in] mac value that will be verified against supplied data in buffer
+		@return error_t status
+	*/
+	command error_t verifyMac(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	
+	/**
+		Command: Used by Crypto component as inner function for mac calculation and encryption of buffer.
+		mac is appended to the buffer, so additional space of MAC_LENGTH is required.
+		offset can be used for shift of encryption, therefore mac will be calculated from whole payload including header
+		but header will stay unecrypted. Mac is calculated first and then is encrypted payload including mac.
+		@param[in] key handle for key fro encryption and mac calculation
+		@param[in out] buffer with original data
+		@param[in] offset of encryption
+		@param[in out] pLen length of data, will contain length of data with mac
+		@return error_t status
+	*/
+	command error_t protectBufferB( PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	
+	/**
+		Command: Used by Crypto component as inner function for mac verification and decryption of buffer.
+		buffer if first decrypted and then if verified mac. If mac does not match, attempt is made to 
+		synchronize counter value in range of COUNTER_SYNCHRONIZATION_WINDOW. If synchronization is 
+		succesfull, counter is updated to right value. Offset is used to specifie ecryption offset used.
+		(i.e. header is not encrypted, but included in mac calculation)
+		@param[in] key handle for key for decryption and mac verification
+		@param[in out] buffer with original data
+		@param[in] offset of encryption
+		@param[in] pLen length of data in buffer
+		@return error_t status
+	*/
+	command error_t unprotectBufferB( PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen);
+	
 	/**
 		Command: self test of Cryptoraw component
 		@return error_t SUCCESS or error message
 	*/
 	command error_t selfTest();
-		
-/*** DEPRICATED ***/
-
-
-	/**
-                Command: Split-phase version. Used by other components to start encryption of supplied buffer by supplied key.
-		Enough additional space in buffer to fit encrypted comtent is assumed.
-		@param[in] key handle to the key that should be used for encryption
-                @param[in out] buffer buffer to be encrypted, wil contain encrypted data
-		@param[in] len length of buffer to be encrypted 
-		@return error_t status
-	*/	
-	//command error_t encryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len);
-        /**
-		Event: Signalized when encryptBuffer task was finished 
-		@param[out] status returned by Crypto.encryptBuffer command
-		@param[out] buffer encrypted buffer
-		@param[out] resultLen length of encrypted data
-		@return nothing
-	*/	
-
-	//event void encryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen);
-
-	/**
-		Command: Used by other components to start decryption of supplied buffer by supplied key. 
-		@param[in] key handle to the key that should be used for decryption
-		@param[in] buffer buffer to be decrypted
-		@param[in] len length of buffer to be decrypted 
-		@return error_t status
-	*/	
-	//command error_t decryptBuffer(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t len);
-	/**
-		Event: Signalized when decryptBuffer task was finished 
-		@param[out] status returned by Crypto.decryptBuffer command
-		@param[out] buffer decrypted buffer
-		@param[out] resultLen length of decrypted data
-		@return nothing
-	*/	
-	//event void decryptBufferDone(error_t status, uint8_t* buffer, uint8_t resultLen);
-
-	/**
-		Command: Used by other components to derive new key from master key and derivation data. 
-		@param[in] masterKey handle to the master key that will be used to derive new one
-		@param[in] derivationData buffer containing derivation data
-		@param[in] offset offset inside derivationData buffer from which derivation data start
-		@param[in] len length of derivation data
-		@return error_t status
-	*/	
-	//command error_t deriveKey(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey);
-	/**
-		Event: Signalized when deriveKey task was finished 
-		@param[out] status returned by Crypto.deriveKey command
-		@param[out] derivedKey handle to newly derived key
-		@return nothing
-	*/	
-	//event void deriveKeyDone(error_t status, PL_key_t* derivedKey);
-
-	/**
-		Command: Used by other components to generate random new key
-		@param[in] newKey handle to free slot where new key should be generated
-		@return error_t status
-	*/	
-	//command error_t generateKey(PL_key_t* newKey);
-	/**
-		Event: Signalized when generateKey task was finished 
-		@param[out] status returned by Crypto.generateKey command
-		@param[out] newKey handle to newly generated key
-		@return nothing
-	*/	
-	//event void generateKeyDone(error_t status, PL_key_t* newKey);
-
-
-	/**
-			Command: Used by other components to generate random new key. Blocking => waits until new key is generated.
-			@param[in] newKey handle to free slot where new key should be generated
-			@return error_t status
-	*/
-	//command error_t generateKeyBlocking(PL_key_t* newKey);
 }

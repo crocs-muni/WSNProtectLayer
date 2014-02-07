@@ -7,6 +7,7 @@
 #include "ProtectLayerGlobals.h"
 
 module IntrusionDetectP {
+#ifndef THIS_IS_BS
     uses {
         //		interface AMSend;
         //		interface Receive;
@@ -20,7 +21,9 @@ module IntrusionDetectP {
         interface Crypto;
         interface AMPacket;
         interface Packet;
+        interface Route;
     }
+#endif
     provides {
         interface Init;
         interface Init as PLInit;
@@ -29,6 +32,7 @@ module IntrusionDetectP {
 }
 
 implementation {
+#ifndef THIS_IS_BS
     message_t m_msg;
     
     // Logging
@@ -45,6 +49,8 @@ implementation {
     SavedData_t* savedData;
     IDS_STATUS ids_status = IDS_RESET;
     //	uint32_t offset_write = 0;
+    
+    static const char *TAG = "IntrusionDetectP";
     
     
     //
@@ -168,20 +174,20 @@ implementation {
     //			}
     //	}
     
-    
     // Messages passed to the IDS from privacy component
     event message_t * ReceiveMsgCopy.receive(message_t *msg, void *payload, uint8_t len){
         
         //        pl_printf("IDS: ReceiveMsgCopy.receive\n");
         
         //		uint8_t msgType;
-        // uint64 may cause some problems
-        uint64_t hashedPacket;
+
+        uint32_t hashedPacket;
+		uint8_t i;
         
         SPHeader_t* spHeader;        
         spHeader = (SPHeader_t*) payload;
 
-            pl_printf("IDSState: A copy of a message from Privacy component received.\n");
+        pl_printf("IDSState: A copy of a message from Privacy component received. Sender is %d.\n", spHeader->sender);
 
         savedData = call SharedData.getNodeState(spHeader->sender);
         
@@ -192,8 +198,11 @@ implementation {
         savedData->idsData.nb_received++;
         
         //        msgType = spHeader->msgType;
+        if (len < sizeof(SPHeader_t)){
+        	return msg;
+        }
         
-        call Crypto.hashDataHalfB( (uint8_t*) payload, 0, len, &hashedPacket);
+        call Crypto.hashDataShortB( ((uint8_t*) payload), sizeof(SPHeader_t), len - sizeof(SPHeader_t), &hashedPacket);
         
         // AES (or another cryptographic function) of the payload should be computed in order
         // to identify content of the messages
@@ -259,7 +268,7 @@ implementation {
         
         savedData = call SharedData.getNodeState(receiver);
 
-            pl_printf("IDSState: Neighbor %d dropped a packet. IDS alert will be sent.\n", receiver); 
+            pl_printf("IDSState: Neighbor %d dropped a packet. IDS alert may be sent.\n", receiver); 
         
         // Did we listen enough packets from the node?
         if (savedData->idsData.nb_received > IDS_MIN_PACKET_RECEIVED) {
@@ -271,9 +280,15 @@ implementation {
                     if (idspkt == NULL) {
                         return;
                     }
-                    idspkt->nodeID = receiver;
-                    idspkt->dropping = savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received;
+                    pl_printf("IDSState: Neighbor %d dropped too many packets. IDS alert will be sent.\n", receiver);
                     
+                    idspkt->source = TOS_NODE_ID;
+                    idspkt->sender = TOS_NODE_ID;
+                    idspkt->receiver = call Route.getParentID();
+                    idspkt->nodeID = receiver;
+                    idspkt->dropping = (uint16_t) savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received;
+                    
+                    // TODO - Will we send alert after any packet received?
                     if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(IDSMsg_t)) == SUCCESS) {
                         m_radioBusy = TRUE;
                     }
@@ -294,11 +309,15 @@ implementation {
      * Event: Some IDS alert was received from Dispatcher - IDS alert
      */
     event message_t * ReceiveIDSMsgCopy.receive(message_t *msg, void *payload, uint8_t len){
-        uint64_t hashedPacket;
-        uint16_t sender = call AMPacket.source(msg);
-        uint16_t receiver = call AMPacket.destination(msg);
+        uint32_t hashedPacket;
+        uint16_t sender;
+        uint16_t receiver;
+        IDSMsg_t* idsmsg;
+		idsmsg = (IDSMsg_t*)payload;
+        sender = idsmsg->sender;
+        receiver = idsmsg->receiver;
 
-            pl_printf("IDSState: A copy of an IDSAlert from IDSForwarder received. Sender: %d, receiver: %d.\n", sender, receiver); 
+        pl_printf("IDSState: A copy of an IDSAlert from IDSForwarder received. Sender: %d, receiver: %d.\n", sender, receiver); 
 
 		savedData = call SharedData.getNodeState(receiver); 
         
@@ -308,7 +327,7 @@ implementation {
         
         if ( savedData != NULL) {
         	// If nb of received packets is higher than size of its type, assign 0 to both received and forwardwed packets
-        	if (savedData->idsData.nb_received >= 4294967295) {
+        	if (savedData->idsData.nb_received >= 4294967295u) {
         		savedData->idsData.nb_received = 0;
         		savedData->idsData.nb_forwarded = 0;
         		pl_printf("IDSState: counters of received and forwarded packets were reset.\n");
@@ -319,7 +338,11 @@ implementation {
 
         }
         
-        call Crypto.hashDataHalfB( (uint8_t*) payload, 0, len, &hashedPacket);
+        if (len < sizeof(SPHeader_t)){
+        	return msg;
+        }
+        
+        call Crypto.hashDataShortB( ((uint8_t*) payload) + sizeof(SPHeader_t), 0, len - sizeof(SPHeader_t), &hashedPacket);
         
         // AES (or another cryptographic function) of the payload should be computed in order
         // to identify content of the messages
@@ -335,4 +358,19 @@ implementation {
         m_radioBusy = FALSE;
     }
     
+#else
+ 	
+    command error_t Init.init() {
+        return SUCCESS;
+    }
+    command error_t PLInit.init(){
+        return SUCCESS;
+    }
+    command void IntrusionDetect.switchIDSoff(){
+    }
+    command void IntrusionDetect.switchIDSon(){
+    }
+    command void IntrusionDetect.resetIDS(){
+    }
+#endif
 }

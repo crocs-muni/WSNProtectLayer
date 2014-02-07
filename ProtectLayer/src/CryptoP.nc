@@ -21,260 +21,126 @@ module CryptoP {
     }
 }
 implementation {
-    //uint8_t 	m_state; 	/**< current state of the component - used to decice on next step inside task */
+    
     PL_key_t* 	m_key1;		/**< handle to the key used as first (or only) one in cryptographic operations. Value is set before task is posted. */
     PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
-    uint8_t 	m_buffer[BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-    //uint8_t 	m_bufferTmp[10];	/**< temporary buffer for help with encryption or decryption operation. */
-    //uint8_t 	m_offset;   /**< offset inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-    //uint8_t 	m_len;		/**< length of data inside buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */
-    //uint16_t	m_dbgKeyID;	/**< unique key id for debugging */
-    uint8_t         exp[240]; //expanded key
+    uint8_t 	m_buffer[BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */    
+    uint8_t         m_exp[240]; //expanded key
+    
+    // Logging tag for this component
+    static const char *TAG = "CryptoP";
+    
     //
     //	Init interface
     //
     command error_t Init.init() {        
-        // TODO: do other initialization
-        //m_state = 0;
-        //m_dbgKeyID = 0;
+        // do other initialization        
         return SUCCESS;
     }
-    
-    command error_t Crypto.macBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
-        uint8_t i;
-        uint8_t j;
-        uint8_t xor[BLOCK_SIZE];
+
+    command error_t Crypto.macBufferForNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){        
         error_t status = SUCCESS;
         
-        pl_printf("CryptoP:  macBufferForNodeB called.\n"); 
+        pl_log_i(TAG,"CryptoP:  macBufferForNodeB called.\n");
         
-        memcpy(xor, buffer + offset, BLOCK_SIZE);
-        if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1)) == SUCCESS){	
-            
-            call AES.keyExpansion( exp, (uint8_t*) m_key1->keyValue);
-            
-            //process buffer by blocks 
-            for(i = 0; i < (*pLen / BLOCK_SIZE); i++){
-                
-                call AES.encrypt( xor, exp, xor);
-                for (j = 0; i < BLOCK_SIZE; j++){
-                    xor[j] = (*pLen < (i*BLOCK_SIZE+j)) ? xor[j] : buffer[offset + i*BLOCK_SIZE + j] ^ xor[j];
-                }			
-            }
-            
-            //append mac
-            memcpy(buffer+offset+*pLen, xor, BLOCK_SIZE);
+        if((status = call KeyDistrib.getKeyToNodeB( nodeID, &m_key1)) == SUCCESS){
+            status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
         } else {
-            
-            pl_printf("CryptoP:  macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID); 
-            
-            
+            pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID); 
         }
         return status;
     }	
     
     command error_t Crypto.macBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){		
-        uint8_t i;
-        uint8_t j;
-        uint8_t xor[BLOCK_SIZE];
         error_t status = SUCCESS;
         
+        pl_log_i(TAG,"CryptoP:  macBufferForBSB called.\n"); 
         
-        pl_printf("CryptoP:  macBufferForBSB called.\n"); 
-        
-        
-        memcpy(xor, buffer + offset, BLOCK_SIZE);
-        if((status = call KeyDistrib.getKeyToBSB(m_key1)) == SUCCESS){	
-            
-            call AES.keyExpansion( exp,  (uint8_t*) m_key1->keyValue);
-            
-            //process buffer by blocks 
-            for(i = 0; i < (*pLen / BLOCK_SIZE); i++){
-                
-                call AES.encrypt( xor, exp, xor);
-                for (j = 0; i < BLOCK_SIZE; j++){
-                    xor[j] = (*pLen < (i*BLOCK_SIZE+j)) ? xor[j] : buffer[offset + i*BLOCK_SIZE + j] ^ xor[j];
-                }			
-            }
-            
-            //append mac
-            memcpy(buffer + offset + *pLen, xor, BLOCK_SIZE);
-        } else {			
-            
-            pl_printf("CryptoP:  macBufferForBSB failed, key to BS not found.\n"); 
-            
-            
+        if((status = call KeyDistrib.getKeyToBSB(&m_key1)) == SUCCESS){	
+            status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
+        } else {
+            pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to BS not found.\n"); 
         }
-        return status;
+        return status;        
     }
     
-    command error_t Crypto.verifyMacFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
-        uint8_t mac[BLOCK_SIZE];
-        error_t status = SUCCESS;
-        uint8_t newPlen = (*pLen) - BLOCK_SIZE;
+    command error_t Crypto.verifyMacFromNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+        error_t status = SUCCESS;        
         
         pl_printf("CryptoP:  verifyMacFromNodeB called.\n"); 
-        
-        // TODO: verify this condition, may be buggy
-        // Check sanity of the input parameters
-        if (*pLen < BLOCK_SIZE){
-        	pl_printf("CryptoP; ERROR; Insane input par. %u %u\n", offset, *pLen);
-        	return FAIL;
-        }
-        
-        memcpy(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
-        status = call Crypto.macBufferForNodeB(nodeID, buffer, offset, &newPlen); //calculate new mac
-	
-        if((memcmp(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE))){ //compare new with received
-            status = EWRONGMAC;
-            
-            
-            pl_printf("CryptoP:  verifyMacFromNodeB message MAC does not match.\n"); 
-            
-            
-            return status;		
-        }
+                
+        if((status = call KeyDistrib.getKeyToNodeB(nodeID, &m_key1)) != SUCCESS){
+	   pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to node not found.\n"); 
+	}
+        status = call CryptoRaw.verifyMac(m_key1, buffer,  offset, pLen);
         return status;
     }	
     
     command error_t Crypto.verifyMacFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
-        uint8_t mac[BLOCK_SIZE];
-        error_t status = SUCCESS;
-        uint8_t newPlen = (*pLen) - BLOCK_SIZE;
-
+       error_t status = SUCCESS;        
+        
         pl_printf("CryptoP:  verifyMacFromBSB called.\n"); 
-        
-        // TODO: verify this condition, may be buggy
-        // Check sanity of the input parameters
-        if (*pLen < BLOCK_SIZE){
-        	pl_printf("CryptoP; ERROR; Insane input par. %u %u\n", offset, *pLen);
-        	return FAIL;
-        }
-        
-        memcpy(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE); //copy received mac to temp location
-        status = call Crypto.macBufferForBSB(buffer, offset, &newPlen); //calculate new mac
-        if((memcmp(mac, buffer + offset + *pLen - BLOCK_SIZE, BLOCK_SIZE))){ //compare new with received
-            status = EWRONGMAC;
-            
-            pl_printf("CryptoP:  verifyMacFromBSB message MAC does not match.\n"); 
-            
-            
-            return status;		
-        }
+                
+        if((status = call KeyDistrib.getKeyToBSB( &m_key1)) != SUCCESS){
+	   pl_log_e(TAG,"CryptoP:  macBufferForBSB failed, key to BS not found.\n"); 
+	}
+        status = call CryptoRaw.verifyMac(m_key1, buffer,  offset, pLen);
         return status;
     }	
     
-    command error_t Crypto.protectBufferForNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
+    command error_t Crypto.protectBufferForNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         error_t status = SUCCESS;	
         
         pl_printf("CryptoP:  protectBufferForNodeB called.\n"); 
-        
-        
-        
-        if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1))!= SUCCESS){
-            
-            pl_printf("CryptoP:  protectBufferForNodeB key not retrieved.\n"); 
-            
+
+        if((status = call KeyDistrib.getKeyToNodeB( nodeID, &m_key1))!= SUCCESS){
+            pl_printf("CryptoP:  protectBufferForNodeB key not retrieved.\n");
             return status;
         }
-        if((status = call CryptoRaw.encryptBufferB( m_key1, buffer, offset, *pLen))!= SUCCESS){
-            
-            pl_printf("CryptoP:  protectBufferForNodeB key not retrieved.\n"); 
-            
-            return status;
-        }
-        if((status = call Crypto.macBufferForNodeB(nodeID, buffer, offset, pLen))!= SUCCESS){
-            
-            pl_printf("CryptoP:  protectBufferForNodeB key not retrieved.\n"); 
-            
-            return status;
-        }
+        status = call CryptoRaw.protectBufferB( m_key1, buffer, offset, pLen);
         
         return status;
     }	
     
-    command error_t Crypto.unprotectBufferFromNodeB( uint8_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){		
+    command error_t Crypto.unprotectBufferFromNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){		
         error_t status = SUCCESS;		
         
         pl_printf("CryptoP:  unprotectBufferFromNodeB called.\n"); 
-        
-        
-        if((status = call Crypto.verifyMacFromNodeB(nodeID, buffer, offset, pLen)) != SUCCESS){
-            
-            pl_printf("CryptoP:  unprotectBufferFromNodeB mac verification failed.\n"); 
-            
-            
+       
+        if((status = call KeyDistrib.getKeyToNodeB( nodeID, &m_key1))!= SUCCESS){
+            pl_printf("CryptoP:  unprotectBufferFromNodeB key not retrieved.\n");
             return status;
         }
-        if((status = call KeyDistrib.getKeyToNodeB( nodeID, m_key1))!= SUCCESS){	
-            
-            pl_printf("CryptoP:  unprotectBufferFromNodeB key not retrieved.\n"); 
-            
-            
-            return status;
-        }
-        if((status = call CryptoRaw.decryptBufferB( m_key1, buffer, offset, *pLen))!= SUCCESS){	
-            
-            pl_printf("CryptoP:  unprotectBufferFromNodeB decryption failed.\n"); 
-            
-            
-            return status;
-        }
-        
+       
+        status = call CryptoRaw.unprotectBufferB( m_key1, buffer, offset, pLen);
         return status;
     }		
     
     command error_t Crypto.protectBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
-        error_t status = SUCCESS;		
-        
+        error_t status = SUCCESS;	
         
         pl_printf("CryptoP:  protectBufferForBSB called.\n"); 
-        
-        
-        if((status = call KeyDistrib.getKeyToBSB( m_key1)) != SUCCESS){	
-            
-            pl_printf("CryptoP:  protectBufferForBSB key not retrieved.\n"); 
-            
-            return status;		
-        }
-        if((status = call CryptoRaw.encryptBufferB( m_key1, buffer, offset, *pLen)) != SUCCESS){
-            
-            pl_printf("CryptoP:  protectBufferForBSB encrypt failed.\n"); 
-            
-            return status;		
-        }
-        if((status = call Crypto.macBufferForBSB( buffer, offset, pLen)) != SUCCESS){
-            
-            pl_printf("CryptoP:  protectBufferForBSB mac failed.\n"); 		
-                        
+
+        if((status = call KeyDistrib.getKeyToBSB( &m_key1))!= SUCCESS){
+            pl_printf("CryptoP:  protectBufferForBSB key not retrieved.\n");
             return status;
         }
+        status = call CryptoRaw.protectBufferB( m_key1, buffer, offset, pLen);
+        
+        return status;
     }
     
     command error_t Crypto.unprotectBufferFromBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         error_t status = SUCCESS;		
         
-        pl_printf("CryptoP:  unprotectBufferFromBSB called.\n"); 
-        
-        
-        if((status = call Crypto.verifyMacFromBSB( buffer, offset, pLen)) != SUCCESS){
-            
-            pl_printf("CryptoP:  unprotectBufferFromBSB mac verification failed.\n"); 
-            
+        pl_printf("CryptoP:  unprotectBufferBSB called.\n"); 
+       
+        if((status = call KeyDistrib.getKeyToBSB( &m_key1))!= SUCCESS){
+            pl_printf("CryptoP:  unprotectBufferFromBSB key not retrieved.\n");
             return status;
         }
-        if((status = call KeyDistrib.getKeyToBSB( m_key1)) != SUCCESS){
-            
-            pl_printf("CryptoP:  unprotectBufferFromBSB BS key not retrieved.\n"); 
-            
-            return status;
-        }
-        if((status = call CryptoRaw.decryptBufferB( m_key1, buffer, offset, *pLen)) != SUCCESS){
-            
-            pl_printf("CryptoP:  unprotectBufferFromBSB decrypt buffer failed.\n"); 
-            
-            return status;
-        }		
+       
+        status = call CryptoRaw.unprotectBufferB( m_key1, buffer, offset, pLen);
         return status;
     }		
     
@@ -283,9 +149,10 @@ implementation {
     command error_t Crypto.initCryptoIIB(){
         error_t status = SUCCESS;
         uint16_t copyId;
+        uint8_t i;
         SavedData_t* SavedData = NULL;
         KDCPrivData_t* KDCPrivData = NULL;
-        SavedData_t* SavedDataEnd = NULL;
+        //SavedData_t* SavedDataEnd = NULL;
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
 #endif
@@ -300,161 +167,256 @@ implementation {
         SavedData = call SharedData.getSavedData();
         if(SavedData == NULL || KDCPrivData == NULL){
             status = EDATANOTFOUND;
+            pl_log_f(TAG, "CryptoP initialization cannot acces predistributed data.\n");
             return status;
         }
-        SavedDataEnd = SavedData + sizeof(SavedData) / sizeof(SavedData[0]);
-        //process all saved data items
-        while ( SavedData < SavedDataEnd ){
-            m_key1 = &(KDCPrivData->preKeys[SavedData->nodeId]); //predistributed key
-            
-            //get derivation data 
+        for(i = 0; i < MAX_NEIGHBOR_COUNT; i++){
+            m_key1 = call SharedData.getPredistributedKeyForNode(i);
+	    if(m_key1 == NULL){
+		pl_log_e(TAG, "CryptoP:  predistributed key for node %x not retrieved.\n", i); 
+                continue;
+	    }
             /*
             calculates derivation data by appending node ID's first lower on, then higher one
             these are appended to array by memcpy and pointer arithmetics ()
             */
             memset(m_buffer, 0, BLOCK_SIZE); //pad whole block with zeros
-            copyId = min(SavedData->nodeId, TOS_NODE_ID);	
+            copyId = min(SavedData[i].nodeId, TOS_NODE_ID);	
             memcpy(m_buffer, &copyId, sizeof(copyId)); 
-            copyId = max(SavedData->nodeId, TOS_NODE_ID);
+            copyId = max(SavedData[i].nodeId, TOS_NODE_ID);
             memcpy(m_buffer + sizeof(copyId), &copyId, sizeof(copyId)); 
             
+	    m_key2 = &(SavedData[i].kdcData.shared_key);
             //derive key from data and predistributed key
             status = call CryptoRaw.deriveKeyB(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
-            if(status != SUCCESS){
-                
-                pl_printf("CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData->nodeId, status); 
-                
+            if(status != SUCCESS){                
+                pl_log_e(TAG, "CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData[i].nodeId, status); 
+                continue;
             }
             m_key2->counter = 0;
-            //save key to KDCData shared key		
-            memcpy( &((SavedData->kdcData).shared_key), m_key2, sizeof(PL_key_t));
-            
-            SavedData++;
         }
-        
         return status;
     }
     
-    command error_t Crypto.hashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash){
+    command error_t Crypto.hashDataB(uint8_t* buffer, uint8_t offset, uint8_t len, uint8_t* hash){
         error_t status = SUCCESS;
         uint8_t i;
         uint8_t j;
-        uint8_t tempHash[BLOCK_SIZE];
+        uint8_t numBlocks;
+        uint8_t tempHash[HASH_LENGTH];
         
-        pl_printf("CryptoP:  hashDataB called.\n"); 
+        pl_printf("CryptoP:  hashDataB called.\n");
+	//check arguments
+        if(len == 0){
+	    pl_log_e(TAG,"CryptoRawP: hashDataB len == 0.\n");
+	    return FAIL;	    
+        }
+        if(hash == NULL){
+	    pl_log_e(TAG,"CryptoRawP: hashDataB NULL hash.\n");
+	    return FAIL;	    
+        }
         
-        memset(m_key1->keyValue, 0, KEY_SIZE); //init default key value
-        for(i = 0; i < pLen/BLOCK_SIZE; i++){
-            if((status = call CryptoRaw.hashDataBlockB(buffer, offset + i * BLOCK_SIZE, m_key1, tempHash)) != SUCCESS){
-                
+        //get hash key
+        if((status = call KeyDistrib.getHashKeyB( &m_key1))!= SUCCESS){
+            pl_printf("CryptoP: hashDataB key not retrieved.\n");
+            return status;
+        }
+
+        numBlocks = len / HASH_LENGTH;
+        pl_printf("CryptoP: numBlocks == %d.\n", numBlocks);
+
+        for(i = 0; i < numBlocks + 1; i++) {
+	    //incomplete block check, if input is in buffer, than copy data to input, otherwise use zeros as padding 
+            for (j = 0; j < HASH_LENGTH; j++){
+                if ((i * HASH_LENGTH + j) < len) {
+                    hash[j] = buffer[offset + i * HASH_LENGTH + j];
+                } else {
+		    hash[j] = 0;
+                } 
+            }
+            if((status = call CryptoRaw.hashDataBlockB(hash, 0, m_key1, tempHash)) != SUCCESS){
                 pl_printf("CryptoP:  hashDataB calculation failed.\n"); 
-                
                 return status;
             }
-            for(j = 0; j < BLOCK_SIZE; j++){
-                m_key1->keyValue[j] = tempHash[j] ^ buffer[offset + i * BLOCK_SIZE];
+
+            //copy result to key value for next round
+            for(j = 0; j < HASH_LENGTH; j++){
+                m_key1->keyValue[j] = tempHash[j];
             }
         }
-        //pad and calculate last block
-        if((pLen % BLOCK_SIZE) == 0){
-            for(j = 0; j < BLOCK_SIZE; j++){
+        //put hash to output
+        for(j = 0; j < HASH_LENGTH; j++){
                 hash[j] = tempHash[j];
-            }
-        } else {
-            for(j = pLen - (pLen % BLOCK_SIZE); j < BLOCK_SIZE; j++){
-                buffer[j + offset] = 0;
-            }
-            if((status = call CryptoRaw.hashDataBlockB(buffer, offset + pLen - (pLen % BLOCK_SIZE), m_key1, hash)) != SUCCESS){
-                
-                pl_printf("CryptoP:  hashDataB calculation failed.\n"); 
-                
-                return status;
-            }
         }
         return status;
     }
     
-    command error_t Crypto.hashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t* hash){
-        uint8_t tempHash[BLOCK_SIZE];
+    //TODO define short hash as array of uint8_t
+    command error_t Crypto.hashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t len, uint32_t* hash){
+        uint8_t tempHash[HASH_LENGTH];
         uint8_t status;
         uint8_t i;
-        
-        pl_printf("CryptoP: hashDataHalfB called.\n"); 
-        
-        if((status = call Crypto.hashDataB(buffer, offset, pLen, tempHash)) != SUCCESS){
-            
-            pl_printf("CryptoP: hashDataHalfB calculation failed.\n"); 
-            
+
+        pl_printf("CryptoP: hashDataShortB called.\n"); 
+        if(hash == NULL){
+	    pl_log_e(TAG,"CryptoRawP: hashDataShortB NULL hash.\n");
+	    return FAIL;	    
+        }
+        if((status = call Crypto.hashDataB(buffer, offset, len, tempHash)) != SUCCESS){
+            pl_printf("CryptoP: hashDataShortB calculation failed.\n"); 
             return status;
         }
-        for (i = 0; i < BLOCK_SIZE/2; i++){
-            tempHash[i] = tempHash[i]^tempHash[i + BLOCK_SIZE/2];
-        }
-        memcpy(hash, tempHash, sizeof(hash));
+
+        memcpy(hash, tempHash, sizeof(uint32_t));
         return SUCCESS;
     }
     
-    command error_t Crypto.verifyHashDataB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint8_t* hash){
+    command error_t Crypto.verifyHashDataB( uint8_t* buffer, uint8_t offset, uint8_t len, uint8_t* hash){
         error_t status = SUCCESS;
         uint8_t tempHash[BLOCK_SIZE];
-        
+
         pl_printf("CryptoP:  verifyHashDataB called.\n"); 
-        
-        if((status = call Crypto.hashDataB(buffer, offset, pLen, tempHash)) != SUCCESS){
-            
+        if((status = call Crypto.hashDataB(buffer, offset, len, tempHash)) != SUCCESS){
             pl_printf("CryptoP:  verifyHashDataB failed to calculate hash.\n"); 
-            
         }
         if(memcmp(tempHash, hash, BLOCK_SIZE) != 0){
-            
             pl_printf("CryptoP:  verifyHashDataB hash not verified.\n"); 
-            
             return EWRONGHASH;
         }
         return status;
     }
     
-    command error_t Crypto.verifyHashDataHalfB( uint8_t* buffer, uint8_t offset, uint8_t pLen, uint64_t hash){
+    command error_t Crypto.verifyHashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t len, uint32_t hash){
         error_t status = SUCCESS;
-        uint64_t tempHash;
-        
-        pl_printf("CryptoP:  verifyHashDataB called.\n"); 
-        
-        if((status = call Crypto.hashDataHalfB(buffer, offset, pLen, &tempHash)) != SUCCESS){
-            
+        uint32_t tempHash;
+
+        pl_printf("CryptoP:  verifyHashDataB called.\n");
+        if((status = call Crypto.hashDataShortB(buffer, offset, len, &tempHash)) != SUCCESS){
             pl_printf("CryptoP:  verifyHashDataB failed to calculate hash.\n"); 
-            
         }
         if(tempHash != hash){
-            
             pl_printf("CryptoP:  verifyHashDataB hash not verified.\n"); 
-            
             return EWRONGHASH;
         }
-        return status;		
+        return status;
+    }
+
+    command error_t Crypto.computeSignature( PRIVACY_LEVEL privacyLevel, uint16_t lenFromRoot, Signature_t* signature){
+        uint8_t status = SUCCESS;
+	uint8_t i;
+	uint8_t tmpSignature[HASH_LENGTH];
+	Signature_t* root;
+	PPCPrivData_t* ppcPrivData = NULL;
+	
+        pl_log_i(TAG,"CryptoRawP: computeSignatures started.\n");
+	 if(root == NULL){
+	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL root.\n");
+	    return FAIL;
+        }
+        if(lenFromRoot == 0){
+	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL signature.\n");
+	    return FAIL;
+        }
+        if(signature == NULL){
+	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL signature.\n");
+	    return FAIL;
+        }
+
+        ppcPrivData = call SharedData.getPPCPrivData();
+        if(ppcPrivData == NULL){
+	    pl_log_e(TAG,"CryptoRawP: verifySignature ppcPrivData not retreived.\n");
+	    return FAIL;
+        }
+        root = &(ppcPrivData->signatures[privacyLevel]);
+        
+        memcpy(tmpSignature, root->signature, HASH_LENGTH);
+        for(i = 0; i < lenFromRoot; i++){
+	    status = call Crypto.hashDataB( tmpSignature, 0, HASH_LENGTH, tmpSignature);
+	    if (status != SUCCESS){
+	        pl_log_e(TAG,"CryptoRawP: computeSignatures failed.\n");
+	        return FAIL;
+	    }
+        }
+        memcpy(signature->signature, tmpSignature, HASH_LENGTH);
+        signature->privacyLevel = privacyLevel;
+        signature->counter = root->counter - lenFromRoot;
+        pl_log_i(TAG,"CryptoRawP: computeSignatures succesfully finished.\n");
+	return status;
     }
     
-    command bool Crypto.verifySignature( uint8_t* buffer, uint8_t offset, uint8_t pLen, PRIVACY_LEVEL level, uint8_t counter){
+    //counter udává pozici od konce, předdistribuovaná hodnota má counter 0, původní hodnota na BS má counter MAX
+    command error_t Crypto.verifySignature( uint8_t* buffer, uint8_t offset, PRIVACY_LEVEL level, uint16_t counter, Signature_t* signature){
         uint8_t i;
-        uint8_t signature[BLOCK_SIZE];
-        
-        pl_printf("CryptoP:  verifySignature called.\n"); 
-        
-        for(i = 0; i < counter; i++){			
-            call Crypto.hashDataB( buffer, offset, pLen, buffer + offset);			
+        uint8_t status = SUCCESS;
+        uint8_t tmpSignature[SIGNATURE_LENGTH];
+        PPCPrivData_t* ppcPrivData = NULL;
+
+	if(buffer == NULL){
+	    pl_log_e(TAG,"CryptoRawP: verifySignatures NULL buffer.\n");
+	    return FAIL;
         }
-        //call shared data to fill signature
-        if(memcmp(buffer + offset, signature, BLOCK_SIZE)){
-            return FALSE;
-        } else {
-            return TRUE;
+        if(level < 0 || level >= 5){
+	    pl_log_e(TAG,"CryptoRawP: verifySignatures invalid level.\n");
+	    return FAIL;
         }
+        if(counter < 1){
+	    pl_log_e(TAG,"CryptoRawP: verifySignatures invalid counter.\n");
+	    return FAIL;
+        }
+
+
+        pl_printf("CryptoP:  verifySignature called.\n");
+        ppcPrivData = call SharedData.getPPCPrivData();
+        if(ppcPrivData == NULL){
+	    pl_log_e(TAG,"CryptoRawP: verifySignature ppcPrivData not retreived.\n");
+	    return FAIL;
+        }
+        
+        if(counter - ppcPrivData->signatures[level].counter < 1){
+	    pl_log_e(TAG,"CryptoRawP: verifySignatures invalid counter value.\n");
+	    return FAIL;
+        }
+        memcpy(tmpSignature, buffer + offset, SIGNATURE_LENGTH);
+        for(i = 0; i < counter - ppcPrivData->signatures[level].counter; i++){
+	    status = call Crypto.hashDataB( tmpSignature, 0, SIGNATURE_LENGTH, tmpSignature);
+	    if (status != SUCCESS){
+	        pl_log_e(TAG,"CryptoRawP: verifySignatures failed.\n");
+	        return FAIL;
+	    }
+        }
+        
+        if(memcmp((ppcPrivData->signatures[level]).signature, tmpSignature, SIGNATURE_LENGTH) == 0){
+           if (signature != NULL){ //if optional parameter is present, then copy verified signature there
+	      memcpy(signature->signature, tmpSignature, SIGNATURE_LENGTH);
+	      signature->counter = counter;
+	      signature->privacyLevel = level;
+	   }
+           return SUCCESS;
+        }
+            
+        pl_log_e(TAG,"CryptoRawP: verifySignature not succesfull.\n");
+	return FAIL;
     }
+    
+    command void Crypto.updateSignature( Signature_t* signature){
+        PPCPrivData_t* ppcPrivData = NULL;
+        if(signature == NULL){
+	    pl_log_e(TAG,"CryptoRawP: updateSignature NULL signature.\n");
+	    return;
+        }
+        ppcPrivData = call SharedData.getPPCPrivData();
+        if(ppcPrivData == NULL){
+	    pl_log_e(TAG,"CryptoRawP: updateSignature ppcPrivData not retreived.\n");
+	    return;	    
+        }
+        ppcPrivData->signatures[signature->privacyLevel] = *signature;
+    }
+    //TODO revert counter
     
     command error_t Crypto.selfTest(){
         uint8_t status = SUCCESS;
         uint8_t hash[BLOCK_SIZE];
-        uint64_t halfHash = 0;
+        uint32_t halfHash = 0;
         uint8_t macLength = BLOCK_SIZE;
         
         pl_printf("CryptoP:  Self test started.\n"); 
@@ -478,15 +440,15 @@ implementation {
         
         pl_printf("CryptoP:  hashDataHalfB started.\n"); 
         
-        if((status = call Crypto.hashDataHalfB(m_buffer, 0, BLOCK_SIZE, &halfHash)) != SUCCESS){
+        if((status = call Crypto.hashDataShortB(m_buffer, 0, BLOCK_SIZE, &halfHash)) != SUCCESS){
             
-            pl_printf("CryptoP:  hashDataHalfB failed.\n"); 
+            pl_printf("CryptoP:  hashDataShortB failed.\n"); 
             
             return status;		 
         }		
-        if((status = call Crypto.verifyHashDataHalfB(m_buffer, 0, BLOCK_SIZE, halfHash)) != SUCCESS){
+        if((status = call Crypto.verifyHashDataShortB(m_buffer, 0, BLOCK_SIZE, halfHash)) != SUCCESS){
             
-            pl_printf("CryptoP:  verifyHashDataB failed.\n"); 
+            pl_printf("CryptoP:  verifyHashDataShortB failed.\n"); 
             
             return status;
         }

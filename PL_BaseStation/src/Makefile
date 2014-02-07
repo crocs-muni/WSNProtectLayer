@@ -1,4 +1,4 @@
-COMPONENT=BlinkToRadioAppC
+COMPONENT=BaseStationAppC
 INCLUDES= -I../../ProtectLayer/src  \
 		  -I$(TOSDIR)/lib/printf	\
 		  -I../../TOSCTP 			\

@@ -43,11 +43,6 @@
 #define KEY_SIZE    16
 
 /*
-    The block size in bytes.
-*/
-#define BLOCK_SIZE    16
-
-/*
     Number of rounds. It should be 10 for a 16-byte key, 12 for a 24-byte key and 14 for a 32-byte key.
 */
 #define NB_ROUNDS   10

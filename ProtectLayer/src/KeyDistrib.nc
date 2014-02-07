@@ -19,71 +19,25 @@ interface KeyDistrib {
 		@param[out] pNodeKey handle to key shared between node and base station 
 		@return error_t status.
 	*/	
-	command error_t getKeyToNodeB(uint8_t nodeID, PL_key_t* pNodeKey);
+	command error_t getKeyToNodeB(uint8_t nodeID, PL_key_t** pNodeKey);
 	
 	/**
 		Command: Get key to base station
 		@param[out] pBSKey handle to key shared between node and base station 
 		@return error_t status.
 	*/
-	command error_t getKeyToBSB(PL_key_t* pBSKey);	
+	command error_t getKeyToBSB(PL_key_t** pBSKey);	
+	
+	/**
+		Command: Get key for AES based hashing function 
+		@param[out] pBSKey handle to key
+		@return error_t status.
+	*/
+	command error_t getHashKeyB(PL_key_t** pHashKey);	
 	
 	/**
 		Command: selftest provides possibility to test functionality of KeyDistrib component
 		@return: error_t status
 	*/
 	command error_t selfTest();
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
-/*** DEPRICATED ***/
-
-/**
-		Event: Signalized when KeyDistrib.discoverKeys task was finished. After signal, all nodes should have pairwise keys established 
-		@param[out] error_t status returned by task_discoverKeys task
-		@return nothing
-	*/	
-	//event void discoverKeysDone(error_t result);
-
-	/**
-		Command: Posts task for obtaining key to base station
-		@return error_t status. SUCCESS or EALREADY if already pending	
-	*/	
-	//command error_t getKeyToBS();
-	/**
-		Event: Signalized when KeyDistrib.getKeyToBSDone task was finished. After signal, returned key can be used toencrypt messages for base station
-		@param[out] resultreturned by task_getKeyToBS
-		@param[out] pBSKey handle to key shared between node and base station
-		@return nothing
-	*/	
-	//event void getKeyToBSDone(error_t result, PL_key_t* pBSKey);
-
-	/**
-		Task: Post task for obtaining key between current node and  other node specified by it's nodeID
-		Signal: KeyDistrib.getKeyToNodeDone
-		@param[in] nodeID node identification of node for which the key should be searched for
-		@return error_t status. SUCCESS or EALREADY if already pending
-	*/	
-	//command error_t getKeyToNode(uint8_t nodeID);
-	/**
-		Event: Signalized when KeyDistrib.getKeyToNodeDone task was finished
-		@param[out] result returned by task_getKeyToNode
-		@param[out] pNodeKey handle to key shared between this node and specified node returned
-		@return nothing
-	*/	
-	//event void getKeyToNodeDone(error_t result, PL_key_t* pNodeKey);
-
 }

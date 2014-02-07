@@ -11,12 +11,17 @@ module ForwarderP
 	provides {
 		interface Init;
 		}
+#ifndef THIS_IS_BS
 	uses {
 		interface AMSend;
 		interface Receive;
 		}
+#endif
 }
 implementation{
+#ifndef THIS_IS_BS
+	static const char *TAG = "FwdP";
+
 	message_t m_msgMemory;
 	message_t* m_msg;
 	message_t* m_lastMsg;
@@ -39,7 +44,7 @@ implementation{
 	//
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
 		//is busy?
-		pl_printf("ForwarderP: Forwarder Receive.receive called.\n"); 
+		pl_log_d(TAG, "Forwarder Receive.receive called.\n"); 
 
 		if (m_busy)
 		{
@@ -57,7 +62,7 @@ implementation{
 			m_len = len;
 			m_busy = TRUE;
 			}
-			pl_printf("Fwd: add; 2send=%p, free=%p\n", m_lastMsg, m_msg);
+			pl_log_d(TAG, "add; 2send=%p, free=%p\n", m_lastMsg, m_msg);
 			
 			post sendTask();
 			return m_msg;
@@ -76,7 +81,7 @@ implementation{
 			m_busy = FALSE;
 			}
 			
-			pl_printf("Fwd: fwded msg %p err=%d\n", msg, error);
+			pl_log_d(TAG, "fwded msg %p err=%d\n", msg, error);
     	}
 	}
 	
@@ -102,4 +107,9 @@ implementation{
 			}	
 		}
 	}
+#else
+	command error_t Init.init(){
+		return SUCCESS;
+	}
+#endif
 }

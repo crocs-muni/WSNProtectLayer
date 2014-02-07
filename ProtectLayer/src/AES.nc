@@ -49,7 +49,7 @@ interface AES{
      *  @param expkey an array that contains the expanded key. It must be (NB_ROUND+1) * 16 bytes long.
      *  @param key the secret key.
      */
-	command void keyExpansion(uint8_t *expkey, uint8_t *key);
+    command void keyExpansion(uint8_t *expkey, uint8_t *key);
 
     /**
      *  Encrypt one block of plaintext.

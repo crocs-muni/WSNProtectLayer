@@ -16,22 +16,27 @@ implementation{
 	components MainC;
 	components CryptoC;
 	components PrivacyC;
+	components RouteC;
 	components SharedDataC;
 	components ForwarderC;
 	components PrivacyLevelC;
 	components IntrusionDetectC;
 	components KeyDistribC;
 	
+#ifndef THIS_IS_BS	
 	components new AMReceiverC(AM_PROTECTLAYERRADIO) as PL_ReceiverC;
 	components new AMReceiverC(AM_CHANGEPL) as ChangePL_ReceiverC;
 	components new AMReceiverC(AM_IDS_ALERT) as IDS_ReceiverC;
-	
+#endif
+
 	MainC.SoftwareInit -> DispatcherP.Init;
 	
+#ifndef THIS_IS_BS	
 	DispatcherP.Lower_PL_Receive -> PL_ReceiverC;
 	DispatcherP.Lower_IDS_Receive -> IDS_ReceiverC;
 	DispatcherP.Lower_ChangePL_Receive -> ChangePL_ReceiverC;
-	
+#endif
+
 	DispatcherP.Packet -> ActiveMessageC.Packet;
 	
 	PL_Receive = DispatcherP.PL_Receive;
@@ -46,7 +51,10 @@ implementation{
 	DispatcherP.SharedDataCInit -> SharedDataC.PLInit;
 	DispatcherP.IntrusionDetectCInit -> IntrusionDetectC.PLInit;
 	DispatcherP.KeyDistribCInit -> KeyDistribC.Init;
+	DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
+	DispatcherP.RouteCInit -> RouteC.PLInit;
 	DispatcherP.Privacy -> PrivacyC.Privacy;
+	DispatcherP.MagicPacket -> PrivacyLevelC.MagicPacket;
 	//DispatcherP.ForwarderCInit -> ForwarderC.Init;
 	//DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
 	

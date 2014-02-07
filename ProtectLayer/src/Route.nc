@@ -15,6 +15,22 @@ interface Route{
 	command node_id_t getParentID();
 	
 	/**
+	 * Returns random neighbor. Blocking variant.
+	 * 
+	 * 
+	 * @param neigh		random neighbor is provided via this parameter.
+	 */
+	command error_t getRandomNeighborIDB(node_id_t * neigh);
+	
+	/**
+	 * Returns CTP parent. Blocking variant.
+	 * 
+	 * 
+	 * @param neigh		CTP parent.
+	 */
+	command error_t getCTPParentIDB(node_id_t * parent);
+	
+	/**
 	 * Command that requests the ID of randomly chosen parent node. 
 	 * If the command returns SUCCESS, then the component will signal the randomParentIDprovided event in the future;
 	 * if send returns an error, it will not signal the randomParentIDProvided. 
@@ -34,9 +50,7 @@ interface Route{
 	 * @see getRandomParentID()
 	 * 
 	 */
-	
-	
-	event void randomParentIDprovided(error_t status, node_id_t id);
+	//event void randomParentIDprovided(error_t status, node_id_t id);
 	
 	/**
 	 * Command that requests the ID of randomly chosen neighbor node. 
@@ -58,7 +72,7 @@ interface Route{
 	 * @see getRandomNeighborID()
 	 * 
 	 */
-	event void randomNeighborIDprovided(error_t status, node_id_t id);
+	//event void randomNeighborIDprovided(error_t status, node_id_t id);
 	/*
 	command error_t getParentIDs(node_id_t* ids, uint8_t maxCount);
 	event void parentIDsProvided(error_t status, node_id_t* ids, uint8_t resultCount);
