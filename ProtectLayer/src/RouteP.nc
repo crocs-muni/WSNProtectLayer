@@ -255,8 +255,11 @@ implementation{
 			ctpBusyCount+=1;
 			pl_log_w(TAG, "CTPSendTask, busy[%u]\n", ctpBusyCount);
 			
-			// start re-tx timer, if aperiodic timer is choosen
+			// Start re-tx timer, if aperiodic timer is choosen.
 			call CtpSendTimer.startOneShot(CTP_TIME_SEND_FAIL + (call Random.rand16() % CTP_TIME_SEND_FAIL_RND));
+			
+			// This may also happen if no root is found thus CTP is unable to deliver given message.
+			// If no root is found, program will stay in this busy state.
 			return;
 		}
 		
@@ -266,7 +269,7 @@ implementation{
 			return;
 		}
 		
-		pl_log_d(TAG, "CTPinitTask()\n");
+		pl_log_d(TAG, "CTPsendTask()\n");
 
 #ifdef THIS_IS_BS
 		if (ctp_init_state==CTP_STATE_FIND_PARENT){
