@@ -462,10 +462,15 @@ recv_finish:
 	            // Facilitates debugging during tests since it SPHeader is not encrypted
 	            // and thus visible on sniffers and base station without decryption.
 #ifdef PLAINTEXT_DEMO
-				memcpy(
-					&(spHeader->plaintext), 
-					((uint8_t*)spHeader) + sizeof(SPHeader_t), 
-				(PLAINTEXT_BYTES <= (sReq.len - sizeof(SPHeader_t))) ? PLAINTEXT_BYTES : (sReq.len - sizeof(SPHeader_t)));
+				{
+					uint8_t tmpi = 0;
+					uint8_t maxLen = PLAINTEXT_BYTES <= (sReq.len - sizeof(SPHeader_t)) ? PLAINTEXT_BYTES : (sReq.len - sizeof(SPHeader_t));
+					memset(spHeader->plaintext, 0x0, PLAINTEXT_BYTES);
+					
+					for(tmpi=0; tmpi<maxLen; tmpi++){
+						spHeader->plaintext[tmpi] = 0xff;//*((((uint8_t*)spHeader) + sizeof(SPHeader_t)) + tmpi);
+					}
+				}
 #endif            
 				pl_log_d(TAG, "sendtask, MSG_APP recv=%u msg=%p\n", spHeader->receiver, sReq.msg);
 				break;

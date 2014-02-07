@@ -241,6 +241,10 @@ implementation{
 		}
 	}
 	
+#ifdef CTP_DUMP_NEIGHBORS
+	void dumpNeighbors();
+#endif
+	
 	/**
 	 * Task for sending CTP messages.
 	 * Used after boot to initialize CTP component - real TCP traffic.
@@ -310,6 +314,10 @@ implementation{
 				ctp_init_state=CTP_STATE_TERMINATE;
 				parentFound=TRUE;
 				
+				// Dump neighbors to the log file
+#ifdef CTP_DUMP_NEIGHBORS
+				dumpNeighbors();						
+#endif				
 				return;
 			} else {
 				pl_log_w(TAG, "Parent NOT found. Err [%u]. Try again\n", parentStatus);
@@ -401,7 +409,7 @@ implementation{
 				}
 			}
 			
-			pl_log_d(TAG, "getRandNeigh, %u neigh above threshold\n", numAboveThreshold);
+			pl_log_d(TAG, "getRandNeigh, %u neigh above thr\n", numAboveThreshold);
 			
 			// If 0 above threshold -> fail
 			if (numAboveThreshold==0){
@@ -415,6 +423,28 @@ implementation{
 #endif
 		return FAIL;
 	}
+	
+#ifdef CTP_DUMP_NEIGHBORS
+	void dumpNeighbors(){
+		uint8_t numNeigh = 0;
+		uint8_t i=0;
+		numNeigh = call CtpInfo.numNeighbors();
+		pl_log_d(TAG, "neighbors=%u\n", numNeigh);
+		
+		// If zero -> nothing to do...
+		if (numNeigh == 0){
+			return;
+		} 
+		
+		// Iterate over, neighbors, pick only those with quality above threshold.
+		for(i=0; i<numNeigh; i++){
+			uint16_t linkQuality = call CtpInfo.getNeighborLinkQuality(i);
+			am_addr_t addr = call CtpInfo.getNeighborAddr(i);
+			
+			pl_log_d(TAG, "  N[%u] addr=%u etx=%u\n", i, addr, linkQuality);
+		}
+	}
+#endif
 	
 	command error_t Route.getCTPParentIDB(node_id_t * parent){
 		return call CtpInfo.getParent(parent);
