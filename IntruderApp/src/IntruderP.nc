@@ -53,13 +53,13 @@ implementation {
 				call Leds.led1On();
 				
 				// Start movement event simulation every 3.5 time interval
-				call Timer.startOneShot(POLICEMAN_TIMER_MESSAGE_MILLI);
+				call Timer.startOneShot(INTRUDER_INITIAL_WAIT_MILLI);
 			} else if (intruderState == STATE_MSN) {
 				intruderState = STATE_INTRUDER;
 				call Leds.led1Off();
 				call Leds.led0On();
 				
-				call Timer.startOneShot(POLICEMAN_TIMER_MESSAGE_MILLI);
+				call Timer.startOneShot(INTRUDER_INITIAL_WAIT_MILLI);
 			} else {
 				intruderState = STATE_PASSIVE;
 				call Leds.led0Off();
