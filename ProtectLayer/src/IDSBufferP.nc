@@ -76,7 +76,7 @@ implementation{
 			return;
 		}
 		
-		signal IDSBuffer.packetForwarded(idsBuffer[id].sender, idsBuffer[id].receiver);
+		signal IDSBuffer.packetForwarded(*sender, *receiver);
 		
 			
 		// Remove the gap after the forwarded packet!

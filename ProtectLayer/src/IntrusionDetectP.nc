@@ -48,6 +48,7 @@ implementation {
     NODE_REPUTATION reputation;
     SavedData_t* savedData;
     IDS_STATUS ids_status = IDS_RESET;
+    uint8_t alertCounter = 0;
     //	uint32_t offset_write = 0;
     
     static const char *TAG = "IntrusionDetectP";
@@ -182,17 +183,29 @@ implementation {
         //		uint8_t msgType;
 
         uint32_t hashedPacket;
-		uint8_t i;
         
         SPHeader_t* spHeader;        
         spHeader = (SPHeader_t*) payload;
 
         pl_printf("IDSState: A copy of a message from Privacy component received. Sender is %d.\n", spHeader->sender);
 
-        savedData = call SharedData.getNodeState(spHeader->sender);
+        savedData = call SharedData.getNodeState(spHeader->receiver);
         
         if (savedData == NULL && call SharedData.getNodeState(spHeader->receiver) == NULL ) {
             return msg;
+        }
+        
+        if ( savedData != NULL) {
+        	// If nb of received packets is higher than size of its type, assign 0 to both received and forwardwed packets
+        	if (savedData->idsData.nb_received >= 4294967295u) {
+        		savedData->idsData.nb_received = 0;
+        		savedData->idsData.nb_forwarded = 0;
+        		pl_printf("IDSState: counters of received and forwarded packets were reset.\n");
+        	}
+            savedData->idsData.nb_received++;
+
+            pl_printf("IDSState: Receiver %d is our neighbor, PRR incremented.\n", spHeader->receiver); 
+
         }
         
         savedData->idsData.nb_received++;
@@ -266,19 +279,31 @@ implementation {
         
         IDSMsg_t* idspkt;
         
+        uint16_t dropping;
+        
         savedData = call SharedData.getNodeState(receiver);
 
-            pl_printf("IDSState: Neighbor %d dropped a packet. IDS alert may be sent.\n", receiver); 
+        dropping = savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received;
+
+        pl_printf("IDSState: Neighbor %d dropped a packet. IDS alert may be sent.\n", receiver);
+        
+        pl_printf("IDSState: Packet forwarded: %lu\n. Packet received: %lu. Dropping: %d\n.", savedData->idsData.nb_forwarded, savedData->idsData.nb_received, dropping);        
         
         // Did we listen enough packets from the node?
         if (savedData->idsData.nb_received > IDS_MIN_PACKET_RECEIVED) {
         	// Is the dropping ration higher than threshold?
-            if ( (savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received) < IDS_DROPPING_THRESHOLD ) {
+            if ( dropping < IDS_DROPPING_THRESHOLD ) {
             	// Send IDS alert to the BS!
                 if (!m_radioBusy) {
                     idspkt = (IDSMsg_t*)(call Packet.getPayload(&pkt, sizeof(IDSMsg_t)));
                     if (idspkt == NULL) {
                         return;
+                    }
+                    if (alertCounter > 0) {
+                    	if (alertCounter >= 10) {
+                    		alertCounter = 0;
+                    	}
+                    	return;
                     }
                     pl_printf("IDSState: Neighbor %d dropped too many packets. IDS alert will be sent.\n", receiver);
                     
@@ -286,11 +311,12 @@ implementation {
                     idspkt->sender = TOS_NODE_ID;
                     idspkt->receiver = call Route.getParentID();
                     idspkt->nodeID = receiver;
-                    idspkt->dropping = (uint16_t) savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received;
+                    idspkt->dropping = (uint16_t) dropping;
                     
                     // TODO - Will we send alert after any packet received?
                     if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(IDSMsg_t)) == SUCCESS) {
                         m_radioBusy = TRUE;
+                        alertCounter++;
                     }
                 }	
             }
