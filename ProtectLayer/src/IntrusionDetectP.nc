@@ -191,7 +191,7 @@ implementation {
 
         savedData = call SharedData.getNodeState(spHeader->receiver);
         
-        if (savedData == NULL && call SharedData.getNodeState(spHeader->receiver) == NULL ) {
+        if (savedData == NULL && call SharedData.getNodeState(spHeader->sender) == NULL ) {
             return msg;
         }
         
@@ -207,8 +207,6 @@ implementation {
             pl_printf("IDSState: Receiver %d is our neighbor, PRR incremented.\n", spHeader->receiver); 
 
         }
-        
-        savedData->idsData.nb_received++;
         
         //        msgType = spHeader->msgType;
         if (len < sizeof(SPHeader_t)){
@@ -285,9 +283,9 @@ implementation {
 
         dropping = savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received;
 
-        pl_printf("IDSState: Neighbor %d dropped a packet. IDS alert may be sent.\n", receiver);
+        pl_printf("IDSState: Neighbor %d dropped a packet. IDS alert may be sent. Alert counter: %d\n", receiver, alertCounter);
         
-        pl_printf("IDSState: Packet forwarded: %lu\n. Packet received: %lu. Dropping: %d\n.", savedData->idsData.nb_forwarded, savedData->idsData.nb_received, dropping);        
+        pl_printf("IDSState: Packet forwarded: %lu\n. Packet received: %lu. Dropping: %d\n.", savedData->idsData.nb_forwarded, savedData->idsData.nb_received, (100-dropping) );        
         
         // Did we listen enough packets from the node?
         if (savedData->idsData.nb_received > IDS_MIN_PACKET_RECEIVED) {
@@ -299,7 +297,8 @@ implementation {
                     if (idspkt == NULL) {
                         return;
                     }
-                    if (alertCounter > 0) {
+                    alertCounter++;
+                    if (alertCounter > 1) {
                     	if (alertCounter >= 10) {
                     		alertCounter = 0;
                     	}
@@ -311,12 +310,11 @@ implementation {
                     idspkt->sender = TOS_NODE_ID;
                     idspkt->receiver = call Route.getParentID();
                     idspkt->nodeID = receiver;
-                    idspkt->dropping = (uint16_t) dropping;
+                    idspkt->dropping = (uint16_t) 100 - dropping;
                     
                     // TODO - Will we send alert after any packet received?
                     if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(IDSMsg_t)) == SUCCESS) {
                         m_radioBusy = TRUE;
-                        alertCounter++;
                     }
                 }	
             }
@@ -327,7 +325,7 @@ implementation {
         savedData = call SharedData.getNodeState(sender);
         savedData->idsData.nb_forwarded++;
 
-            pl_printf("IDSState: Neighbor %d forwarded packet.\n", sender); 
+        pl_printf("IDSState: Neighbor %d forwarded packet.\n", sender); 
 
     }
     

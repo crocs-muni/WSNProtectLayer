@@ -47,6 +47,7 @@ implementation{
 				
 				if (*hashedPacket == idsBuffer[i].hashedPacket && *sender == idsBuffer[i].receiver) {
 					
+					pl_printf("IDSBuffer: packet found in the buffer\n.");
 					
 					// Mark the packet as forwarded and remove it from the buffer
 					removeForwardedPacket(sender, receiver, hashedPacket, i);
