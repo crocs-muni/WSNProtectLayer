@@ -120,10 +120,14 @@ implementation {
         }
 		
 	// TODO: substitute in final version by CTP
+        pl_log_d(TAG, "Neighbors of node %d are:", TOS_NODE_ID);
         for (i = 0; i < MAX_FIXED_NEIGHBOR_COUNT; i++) {
-	    pl_log_d(TAG, "neigh %d.\n", fixedNeighborsMap[TOS_NODE_ID][i]);
-            if (fixedNeighborsMap[TOS_NODE_ID][i] != 0) combinedData.savedData[i].nodeId = fixedNeighborsMap[TOS_NODE_ID][i];
+            if (fixedNeighborsMap[TOS_NODE_ID][i] != 0) {
+		combinedData.savedData[i].nodeId = fixedNeighborsMap[TOS_NODE_ID][i];
+	        pl_printf("%d,", fixedNeighborsMap[TOS_NODE_ID][i]);
+            }
         }	
+        pl_printf("\n");
 
         pl_log_i(TAG, "PLInit.init() finished.\n");
 
