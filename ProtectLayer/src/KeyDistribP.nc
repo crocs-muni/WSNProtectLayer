@@ -11,6 +11,7 @@ module KeyDistribP{
     uses {
         interface Crypto; /**< Crypto interface is used */
         interface SharedData;
+        interface Leds;
     }
     provides {
         interface Init as PLInit;
@@ -31,6 +32,8 @@ implementation{
     command error_t PLInit.init() {
         pl_log_d(TAG, "<KeyDistribP.PLInit.init()>\n"); 
         call KeyDistrib.discoverKeys();
+        
+        
         pl_log_d(TAG, "</KeyDistribP.PLInit.init()>\n"); 
         return SUCCESS;
     }
@@ -119,7 +122,13 @@ implementation{
 
     command error_t KeyDistrib.selfTest(){
         uint8_t status = SUCCESS;
-
+        status = call Crypto.selfTest();
+        if(status == SUCCESS){
+            call Leds.led1On();
+        } else {
+            call Leds.led2On();
+        }
+        
         pl_log_d(TAG, "<Self test>\n"); 
         m_testKey = NULL;
 

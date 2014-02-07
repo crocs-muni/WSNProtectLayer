@@ -39,7 +39,7 @@
 #include <Timer.h>
 
 #define NEW_PRINTF_SEMANTICS
-
+//#define SKIP_MAGIC_PACKET
 #include "BlinkToRadio.h"
 #include "printf.h"
 configuration BlinkToRadioAppC {

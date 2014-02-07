@@ -24,7 +24,7 @@ implementation {
     
     PL_key_t* 	m_key1;		/**< handle to the key used as first (or only) one in cryptographic operations. Value is set before task is posted. */
     PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
-    uint8_t 	m_buffer[BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */    
+    uint8_t 	m_buffer[2*BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */    
     uint8_t         m_exp[240]; //expanded key
     
     // Logging tag for this component
@@ -45,6 +45,7 @@ implementation {
         
         if((status = call KeyDistrib.getKeyToNodeB( nodeID, &m_key1)) == SUCCESS){
             status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
+            *pLen = *pLen + MAC_LENGTH;
         } else {
             pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID); 
         }
@@ -58,6 +59,7 @@ implementation {
         
         if((status = call KeyDistrib.getKeyToBSB(&m_key1)) == SUCCESS){	
             status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
+            *pLen = *pLen + MAC_LENGTH;
         } else {
             pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to BS not found.\n"); 
         }
@@ -419,6 +421,7 @@ implementation {
         uint32_t halfHash = 0;
         uint8_t macLength = BLOCK_SIZE;
         
+        
         pl_printf("CryptoP:  Self test started.\n"); 
         
         memset(m_buffer, 1, BLOCK_SIZE);
@@ -430,7 +433,8 @@ implementation {
             pl_printf("CryptoP:  hashDataB failed.\n"); 
             
             return status;
-        }		
+        }	
+        
         if((status = call Crypto.verifyHashDataB(m_buffer, 0, BLOCK_SIZE, hash)) != SUCCESS){
             
             pl_printf("CryptoP:  verifyHashDataB failed.\n"); 
@@ -445,7 +449,8 @@ implementation {
             pl_printf("CryptoP:  hashDataShortB failed.\n"); 
             
             return status;		 
-        }		
+        }	
+        
         if((status = call Crypto.verifyHashDataShortB(m_buffer, 0, BLOCK_SIZE, halfHash)) != SUCCESS){
             
             pl_printf("CryptoP:  verifyHashDataShortB failed.\n"); 
@@ -454,7 +459,7 @@ implementation {
         }
         
         pl_printf("CryptoP:  macBufferForBSB started.\n"); 
-        
+        macLength = BLOCK_SIZE;
         if((status = call Crypto.macBufferForBSB(m_buffer, 0, &macLength)) != SUCCESS){
             
             pl_printf("CryptoP:  macBufferForBSB failed.\n"); 
@@ -462,12 +467,14 @@ implementation {
             
             return status;
         }
-        if(macLength != 2 * BLOCK_SIZE){
+        
+        if(macLength != BLOCK_SIZE + MAC_LENGTH){
             
             pl_printf("CryptoP:  macBufferForBSB failed to append hash.\n"); 
             
             return EWRONGHASH;
         }
+        //return status;
         if((status = call Crypto.verifyMacFromBSB(m_buffer, 0, &macLength)) != SUCCESS){
             
             
@@ -475,7 +482,7 @@ implementation {
             
             return status;
         }
-        
+        return status;
         pl_printf("CryptoP:  macBufferForNodeB started.\n"); 
         
         macLength = BLOCK_SIZE;
