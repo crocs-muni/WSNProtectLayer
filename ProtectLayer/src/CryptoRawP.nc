@@ -214,7 +214,7 @@ implementation {
         }
         
         call AES.keyExpansion( m_exp, (uint8_t*)(masterKey->keyValue));
-        call AES.encrypt( derivationData + offset, m_exp, (uint8_t*)(derivedKey->keyValue));		
+        call AES.encrypt( derivationData + offset, m_exp, (uint8_t*)(derivedKey->keyValue));
         
         return SUCCESS;
     }
