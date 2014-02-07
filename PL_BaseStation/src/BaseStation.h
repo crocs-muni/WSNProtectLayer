@@ -5,7 +5,7 @@
 
 // This is basestation definition fro protect layer
 #define THIS_IS_BS
-#define USE_CTP
+//#define USE_CTP
 #define DEBUG_PRINTF
 
 #define ACCEPT_ALL_SIGNATURES
@@ -30,7 +30,7 @@ enum {
 };
 
 enum {
-    UART_QUEUE_LEN = 24,
+    UART_QUEUE_LEN = 32,
     RADIO_QUEUE_LEN = 4,
 };
 

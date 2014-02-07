@@ -113,7 +113,7 @@ implementation {
       if (btrpkt == NULL) {
         return;
       }
-      call CC2420Packet.setPower(&pkt, 3);
+      //call CC2420Packet.setPower(&pkt, 3);
 
       btrpkt->messageType = MSGTYPE_STILLALIVE;
       btrpkt->nodeid = TOS_NODE_ID;
@@ -164,7 +164,7 @@ implementation {
       PoliceAppMsg_MovementDetected* btrpkt = (PoliceAppMsg_MovementDetected*)(call Packet.getPayload(&pkt, sizeof(PoliceAppMsg_MovementDetected)));
       if (btrpkt == NULL) return;
 
-      call CC2420Packet.setPower(&pkt, 3);
+      //call CC2420Packet.setPower(&pkt, 3);
 
       btrpkt->messageType = MSGTYPE_MOVEMENTDETECTED;
       btrpkt->nodeid = TOS_NODE_ID;
@@ -189,7 +189,7 @@ implementation {
       PoliceAppMsg_MovementDetected* btrpkt = (PoliceAppMsg_MovementDetected*)(call Packet.getPayload(&pkt, sizeof(PoliceAppMsg_MovementDetected)));
       if (btrpkt == NULL) return;
 
-      call CC2420Packet.setPower(&pkt, 3);
+      //call CC2420Packet.setPower(&pkt, 3);
 
       btrpkt->messageType = MSGTYPE_MSNDETECTED;
       btrpkt->nodeid = TOS_NODE_ID;

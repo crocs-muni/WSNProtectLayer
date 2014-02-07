@@ -6,6 +6,6 @@ INCLUDES= -I../../ProtectLayer/src  \
           -I$(TOSDIR)/lib/net/le	\
           -I$(TOSDIR)/lib/net/ctp
 
-CFLAGS += $(INCLUDES) -DPRINTF_BUFFER_SIZE=1024
+CFLAGS += $(INCLUDES) -DPRINTF_BUFFER_SIZE=2048 -DCC2420_DEF_CHANNEL=15
 
 include $(MAKERULES)
