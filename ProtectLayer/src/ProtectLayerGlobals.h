@@ -11,6 +11,11 @@
 
 #include "message.h"
 
+// Define following constant if you want to use buffered forwarder for 
+// hop-by-hop forwarding to base station (Has more slots for messages
+// than default forwarder which has only one slot.).
+//#define USE_BUFFERED_FORWARDER 1
+
 // Defines that first 8 bytes of the payload should be copied
 // to the SPHeader (unencrypted). Helps to demonstrate functionality
 // of the prototype during experiment. TODO: REMOVE THIS
@@ -110,7 +115,7 @@ enum {
   INTRUDER_INITIAL_WAIT_MILLI = 10000,
   KEY_LENGTH = 16,
   MAX_NEIGHBOR_COUNT = 30,
-  RECEIVE_BUFFER_LEN = 24,
+  RECEIVE_BUFFER_LEN = 16,
   LOGGED_SIZE = 20,
   RSSI_THRESHOLD = -73,
   IDS_MAX_MONITORED_NEIGHBORS = 5,
@@ -482,6 +487,31 @@ enum {
   SENDDONE_FAIL_WINDOW_X      = SENDDONE_FAIL_OFFSET_X
 };
 
+/* 
+ * The number of times the ForwarderBuffered will try to 
+ * transmit a packet before giving up.
+ */
+enum {
+  FWDER_MAX_RETRIES = 30,
+  FWDER_FORWARD_COUNT = 8,  
+  QUEUE_SIZE = FWDER_FORWARD_COUNT  
+};
+
+/*
+ * An element in the ForwardingEngine send queue.
+ * The client field keeps track of which send client 
+ * submitted the packet or if the packet is being forwarded
+ * from another node (client == 255). Retries keeps track
+ * of how many times the packet has been transmitted.
+ */
+typedef struct {
+  message_t * ONE_NOK msg;
+  uint8_t len;
+  uint8_t client;
+  uint8_t retries;
+} fwd_queue_entry_t;
+
+
 #ifdef USE_CTP
 /**
  * Warning!
@@ -521,7 +551,7 @@ enum {
   CTP_STATE_FIND_PARENT = 2,
   CTP_STATE_TERMINATE = 3,
   CTP_MAX_RAND_NEIGH=12,
-  CTP_MAX_NEIGH=255u
+  CTP_MAX_NEIGH=255u,
 };
 
 typedef nx_struct CtpResponseMsg {
