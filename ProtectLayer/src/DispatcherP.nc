@@ -167,8 +167,7 @@ implementation{
         }
         case STATE_READY_FOR_APP:
         {
-            // TODO: init app
-            // call App.init
+         
             
             m_state = STATE_WORKING;
             signal Dispatcher.stateChanged(m_state);

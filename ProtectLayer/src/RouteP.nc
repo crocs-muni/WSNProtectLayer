@@ -11,7 +11,6 @@ module RouteP{
 		interface Random;
 		interface Dispatcher;
 		
-#ifdef USE_CTP
 		/*************** CTP ****************/
   		interface StdControl as ForwardingControl;
   		interface StdControl as CtpLoggerControl;
@@ -29,7 +28,6 @@ module RouteP{
 		
 		interface Timer<TMilli> as CtpSendTimer;
 		interface Timer<TMilli> as CtpInitTimer;
-#endif
 		
 	}
 	provides {
@@ -42,53 +40,12 @@ implementation{
 
 	// Logging tag for this component
     static const char *TAG = "RouteP";
+	
 
 	//
 	//	Init interface
 	//
 	command error_t PLInit.init() {
-		// TODO: do other initialization
-		
-                //uint8_t i=0;
-		RoutePrivData_t* pTable = call SharedData.getRPrivData();
-		
-		pTable->isValid = 1;
-		/*
-		 * Is already done in SharedData
-		 * 
-		switch (TOS_NODE_ID) {
-			case 4: { pTable->parentNodeId = 41; break; }
-			case 5: { pTable->parentNodeId = 40; break; }
-			case 6: { pTable->parentNodeId = 19; break; }
-			case 7: { pTable->parentNodeId = 17; break; }
-			case 10: { pTable->parentNodeId = 25; break; }
-			case 14: { pTable->parentNodeId = 37; break; }
-			case 15: { pTable->parentNodeId = 17; break; }
-			case 17: { pTable->parentNodeId = 37; break; }
-			case 19: { pTable->parentNodeId = 4; break; }
-			case 22: { pTable->parentNodeId = 41; break; }
-			case 25: { pTable->parentNodeId = 44; break; }
-			case 28: { pTable->parentNodeId = 4; break; }
-			case 29: { pTable->parentNodeId = 50; break; }
-			case 30: { pTable->parentNodeId = 35; break; }
-			case 31: { pTable->parentNodeId = 41; break; }
-			case 32: { pTable->parentNodeId = 50; break; }
-			case 33: { pTable->parentNodeId = 41; break; }
-			case 35: { pTable->parentNodeId = 22; break; }
-			case 36: { pTable->parentNodeId = 42; break; }
-			case 37: { pTable->parentNodeId = 41; break; }
-			case 40: { pTable->parentNodeId = 41; break; }
-			case 41: { pTable->parentNodeId = 41; break; }
-			case 42: { pTable->parentNodeId = 22; break; }
-			case 43: { pTable->parentNodeId = 14; break; }
-			case 44: { pTable->parentNodeId = 41; break; }
-			case 46: { pTable->parentNodeId = 33; break; }
-			case 47: { pTable->parentNodeId = 46; break; }
-			case 48: { pTable->parentNodeId = 33; break; }
-			case 50: { pTable->parentNodeId = 31; break; }
-			default: pTable->isValid = 1;
-			} 
-		*/
 		
 		// Start CTP initialization.
 		post initCTP();
@@ -108,62 +65,22 @@ implementation{
 		}
 		else
 		{
-			//TODO go through whole table	
+			//try to find random neighbor, otherwise return INVALID_NODE_ID
+			node_id_t neighbor = INVALID_NODE_ID;
+			if (call Route.getRandomNeighborIDB(&neighbor) == SUCCESS)
+			{
+				return neighbor;
+			}	
 		}
-		return 0;	//TODO in case no parent found return max value that cannot appear in reality
-	}
-	
-	task void task_getRandomParentID() {
-	  	//dbg("NodeState", "KeyDistrib.task_getKeyToBS called.\n");
-		//SavedData_t* pTable = call SharedData.getSavedData();
-		//node_id_t randIndex = call Random.rand16() % MAX_NEIGHBOR_COUNT;
-		
-	}
-	command error_t Route.getRandomParentID(){
-		post task_getRandomParentID();
-		return SUCCESS;
+		return INVALID_NODE_ID;	
 	}
 	
 	
-	task void task_getRandomNeighborID() {
-	  	//dbg("NodeState", "KeyDistrib.task_getKeyToBS called.\n");
-		//SavedData_t* pTable = call SharedData.getSavedData();
-		//node_id_t randIndex = call Random.rand16() % MAX_NEIGHBOR_COUNT;
-		
-	}
-	command error_t Route.getRandomNeighborID(){
-			post task_getRandomNeighborID();
-			return SUCCESS;
-	}
 	
 	event void Dispatcher.stateChanged(uint8_t newState){ }
 	
-#ifndef USE_CTP
-	task void initCTP(){
-		// Signalize dispatcher routing is done.
-		call Dispatcher.serveState();
-	}
-	
-	command error_t Route.getRandomNeighborIDB(node_id_t * neigh){
-		// TODO: not implemented yet.
-		return FAIL;
-	}
-	
-	command error_t Route.getCTPParentIDB(node_id_t * neigh){
-		return FAIL;
-	}
-#endif
-	/*
-	command error_t getParentIDs(node_id_t* ids, uint8_t maxCount);
-	
-	command error_t getChildrenIDs(node_id_t* ids, uint8_t maxCount);
-	
-	command error_t getNeighborIDs(node_id_t* ids, uint8_t maxCount);
-	*/
-	
-#ifdef USE_CTP
 /**
- *  Conditional compilation (define USE_CTP). Used only to determine random neighbor.
+ *  
  *    Is started on init, runs a few seconds (60), sends dummy messages in order to establish valid CTP tree.
  *    Then if parent is still not found, CTP recompute & triggerUpdate is called with message send. If next 60s CTP is turned off (it is possible no valid parent exists).
  */
@@ -205,12 +122,56 @@ implementation{
 		call CtpInitTimer.startOneShot(CTP_TIME_SEND_AFTER_START + (call Random.rand16() % CTP_TIME_SEND_AFTER_START_RND));
 	}
 	
+/* Is this quality measure better than the minimum threshold? */
+    // Implemented assuming quality is EETX
+    bool passLinkEtxThreshold(uint16_t etx) {
+        return (etx < ETX_THRESHOLD);
+    }	
+	
 	task void stopCTP(){
+		combinedData_t* pData = call SharedData.getAllData();
+		uint8_t numNeigh = 0;
+		uint8_t numAboveThreshold=0;
+		
 		pl_log_i(TAG, "CTP termination state...");
 		pl_printfflush();
 		
 		call CtpSendTimer.stop();
 		call FixedTopology.setFixedTopology();
+		
+		
+		//copy parent and neighbor ids to sharedData
+		if (call CtpInfo.getParent(&(pData->routePrivData.parentNodeId)) != FAIL)
+		{ 
+		 	pData->routePrivData.isValid=TRUE;
+		} else {
+			pData->routePrivData.isValid=FALSE;
+		}
+				
+		// Obtain number of neighbors from CTP component.
+		numNeigh = call CtpInfo.numNeighbors();
+	
+		// If zero -> set number of neighbors to zero
+		if (numNeigh != 0)
+		{
+			uint8_t i=0;
+		
+			// Iterate over, neighbors, pick only those with quality above threshold.
+			for(i=0; i<numNeigh && i<MAX_NEIGHBOR_COUNT; i++){
+				uint16_t linkQuality = call CtpInfo.getNeighborLinkQuality(i);
+				if (passLinkEtxThreshold(linkQuality)){
+					pData->savedData[i].nodeId =  call CtpInfo.getNeighborAddr(i);
+					numAboveThreshold++;
+				}
+			}
+			
+			pl_log_d(TAG, "stopCTP, %u neigh above thr\n", numAboveThreshold);
+			
+		}
+
+		//set actual number of neighbors
+		pData->actualNeighborCount = numAboveThreshold;
+		
 		
 		// Signalize dispatcher routing is done.
 		call Dispatcher.serveState();
@@ -244,6 +205,9 @@ implementation{
 #ifdef CTP_DUMP_NEIGHBORS
 	void dumpNeighbors();
 #endif
+	
+
+	
 	
 	/**
 	 * Task for sending CTP messages.
@@ -375,51 +339,22 @@ implementation{
         }
 	}
 	
-	/* Is this quality measure better than the minimum threshold? */
-    // Implemented assuming quality is EETX
-    bool passLinkEtxThreshold(uint16_t etx) {
-        return (etx < ETX_THRESHOLD);
-    }
+	
     
 	command error_t Route.getRandomNeighborIDB(node_id_t * neigh){
-#ifndef THIS_IS_BS	
-		uint8_t numNeigh = 0;
-		
-		// Obtain number of neighbors from CTP component.
-		numNeigh = call CtpInfo.numNeighbors();
-		pl_log_d(TAG, "getRandNeigh, num=%u\n", numNeigh);
-		
-		// If zero -> nothing to do...
-		if (numNeigh == 0){
-			return FAIL;
-		} else {
-			uint8_t i=0;
-			uint8_t numAboveThreshold=0;
-			uint8_t acceptableNeigh[CTP_MAX_RAND_NEIGH];
-			uint8_t chosenOne;
-			for(i=0; i<CTP_MAX_RAND_NEIGH; i++){ 
-				acceptableNeigh[i] = CTP_MAX_NEIGH;
-			}
-			
-			// Iterate over, neighbors, pick only those with quality above threshold.
-			for(i=0; i<numNeigh; i++){
-				uint16_t linkQuality = call CtpInfo.getNeighborLinkQuality(i);
-				if (passLinkEtxThreshold(linkQuality)){
-					acceptableNeigh[numAboveThreshold++] = i;
-				}
-			}
-			
-			pl_log_d(TAG, "getRandNeigh, %u neigh above thr\n", numAboveThreshold);
-			
-			// If 0 above threshold -> fail
-			if (numAboveThreshold==0){
-				return FAIL;
-			}
-			
-			chosenOne = call Random.rand16() % numAboveThreshold;
-			*neigh = call CtpInfo.getNeighborAddr(acceptableNeigh[chosenOne]);
+#ifndef THIS_IS_BS
+		combinedData_t* pData = call SharedData.getAllData();	
+		if (pData->actualNeighborCount > 0)
+		{
+			uint8_t chosenOne = 0;
+			chosenOne = call Random.rand16() % (pData->actualNeighborCount);
+			*neigh = pData->savedData[chosenOne].nodeId;
 			return SUCCESS;
+		} else
+		{
+			return FAIL;
 		}
+		
 #endif
 		return FAIL;
 	}
@@ -443,11 +378,6 @@ implementation{
 			
 			pl_log_d(TAG, "  N[%u] addr=%u etx=%u\n", i, addr, linkQuality);
 		}
-	}
-#endif
-	
-	command error_t Route.getCTPParentIDB(node_id_t * parent){
-		return call CtpInfo.getParent(parent);
 	}
 #endif
 }

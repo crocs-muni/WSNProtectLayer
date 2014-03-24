@@ -99,11 +99,13 @@ implementation {
     // PrivacyLevel interface
     //
     event void PrivacyLevel.privacyLevelChanged(error_t status, PRIVACY_LEVEL newPrivacyLevel){
-        //TODO: check for allowed priv levels
-        if (status == SUCCESS) {
-            m_privData->priv_level = newPrivacyLevel;
-            pl_log_i(TAG, "Privacy.privacyLevelChanged, %d\n",m_privData->priv_level);		
-        }
+        if (newPrivacyLevel < PLEVEL_NUM)
+        {
+		    if (status == SUCCESS) {
+		        m_privData->priv_level = newPrivacyLevel;
+		        pl_log_i(TAG, "Privacy.privacyLevelChanged, %d\n",m_privData->priv_level);		
+		    }
+		}
     }
     
     /**
@@ -216,8 +218,8 @@ implementation {
         }
         
         // Test current privacy level vs. in message. 
-        if (ourHeader->privacyLevel != m_privData->priv_level){
-        	pl_log_w(TAG, "MSG privLevel mismatch, msg=%u vs. current %u\n", ourHeader->privacyLevel, m_privData->priv_level);
+        if (GET_PRIVACY_LEVEL(ourHeader) != m_privData->priv_level){
+        	pl_log_w(TAG, "MSG privLevel mismatch, msg=%u vs. current %u\n", GET_PRIVACY_LEVEL(ourHeader), m_privData->priv_level);
         	
         	// Drop message with different privacy level.
 			goto recv_finish;
@@ -251,7 +253,7 @@ implementation {
         	break;
         }
         default: 
-        	pl_log_e(TAG, "task_receiveMessage: privacy level not recognized %u", ourHeader->privacyLevel);
+        	pl_log_e(TAG, "task_receiveMessage: privacy level not recognized %u", GET_PRIVACY_LEVEL(ourHeader));
         }
 #endif
         
@@ -283,7 +285,6 @@ implementation {
             len = m_receiveBuffer[m_recNextToProcess].len - sizeof(SPHeader_t);
             payload = m_receiveBuffer[m_recNextToProcess].payload + sizeof(SPHeader_t);
 
-            //TODO: test if our message, WTF?
             retMsg = signal MessageReceive.receive[ourHeader->msgType](msg, payload, len);
         }
         
@@ -422,7 +423,7 @@ recv_finish:
 	            // SPHeader already present, just change receiver and sender field.
 	            spHeader =  (SPHeader_t *) call Packet.getPayload(sReq.msg, sReq.len);
 	            // Default routing is to the parent node
-	            spHeader->receiver = call Route.getParentID(); //TODO take care of a case if ID is not valid
+	            spHeader->receiver = call Route.getParentID(); 
 	            // add myself as a sender
 	            spHeader->sender = TOS_NODE_ID;
 	            // leave privacy type and msg type as is
@@ -445,18 +446,16 @@ recv_finish:
 	            spHeader = (SPHeader_t *) call Packet.getPayload(sReq.msg, sReq.len);
 	            // Setting info into our header
 	            spHeader->msgType = m_nextId; 
-	            spHeader->privacyLevel = m_privData->priv_level;
+	            SET_PRIVACY_LEVEL(spHeader,m_privData->priv_level);
 	            //find out who is next hop
-	            spHeader->receiver = call Route.getParentID(); //TODO take care of a case if ID is not valid
+	            spHeader->receiver = call Route.getParentID();
 	            // add myself as a sender
 	            spHeader->sender = TOS_NODE_ID;
 	            
 	            // Init phantom routing if PL is applied and privacy level >= 3.
 	            if (applyPL && m_privData->priv_level == PLEVEL_3){
-	            	spHeader->phantomJumps = PHANTOM_JUMPS;
-	            } else {
-	            	spHeader->phantomJumps = 0;
-	            }
+	            	SET_PHANTOM_WALK(spHeader,TRUE);
+	            } 
 	            
 	            // Debugging, TODO:REMOVE.
 	            // Copies first 8 bytes of the payload before encryption to the SPheader.
@@ -526,22 +525,27 @@ recv_finish:
         //  - Phantom Routing.
         //  - Hop-by-hop PL protection (if applicable).
         if (applyPL){
-        	if (m_privData->priv_level == PLEVEL_3 && spHeader->phantomJumps > 0){
-        		// TODO: If phantom routing, pick random neighbor and decrement
-        		// phantom routing number in SPheader.
-        		// If there are still some jumps to take, change destination in SP header.
-        		// Otherwise the current parent is default destination.
+        	if (m_privData->priv_level == PLEVEL_3 && IS_PHANTOM_WALK(spHeader)){
+        		// If phantom walk, select wheter to continue in phantom walk, if so, pick random neighbor
+        		// and change destination in SP header.
+        		// Otherwise change phantom walk flag in privacyLevel, the current parent is default destination.
         		// Should set destination before encryption & mac happens.
-        		node_id_t randomNeighbor;
-        		error_t hasRandomNeighbor = call Route.getRandomNeighborIDB(&randomNeighbor);
-        		if (hasRandomNeighbor == SUCCESS){
-        			spHeader->phantomJumps -= 1;
-        			spHeader->receiver = randomNeighbor;
-        			
-        			pl_log_d(TAG, "task_sendMessage: phantomJumps=%u, newDestination=%u.\n", spHeader->phantomJumps, spHeader->receiver);
-        		} else {
-        			pl_log_w(TAG, "Cannot determine random neighbor for phantom routing.\n");
-        		}
+        		
+        		// throw a dice, there is a slight bias but it is small and not important in this case
+        		if (call Random.rand16() < (PHANTOM_WALK_PROBABILITY*0xffff)) {
+	        		node_id_t randomNeighbor;
+	        		error_t hasRandomNeighbor = call Route.getRandomNeighborIDB(&randomNeighbor);
+	        		if (hasRandomNeighbor == SUCCESS){
+	        			spHeader->receiver = randomNeighbor;
+	        			
+	        			pl_log_d(TAG, "task_sendMessage: phantom walk, newDestination=%u.\n", spHeader->receiver);
+	        		} else {
+	        			pl_log_w(TAG, "Cannot determine random neighbor for phantom routing.\n");
+	        		}
+	        	} else {
+	        		//phantom walk is over, erase phantom walk flag
+	        		SET_PHANTOM_WALK(spHeader,FALSE);
+	        	}
         	}
         	
         	//
@@ -561,7 +565,6 @@ recv_finish:
 	        	// MAC + ENC.
 	        	// MAC + ENC + Phantom.
 				
-	        	// TODO: finish with new interface, verify len parameter correctness (right usage?)
 	        	rval = call Crypto.protectBufferForNodeB(spHeader->receiver, (uint8_t *)spHeader, sizeof(SPHeader_t), &(sReq.len));
 	            
 	            pl_log_d(TAG, "task_sendMessage, pl23, status=%d l=%u\n", status, sReq.len); 
@@ -790,23 +793,6 @@ recv_finish:
 	    // Return payload offset after our header
 	    return tmp + sizeof(SPHeader_t);
 	}
-    
-/*
-    //
-    // KeyDistrib
-    //
-    event void KeyDistrib.getKeyToBSDone(error_t result, PL_key_t *pBSKey){
-        // TODO Auto-generated method stub
-    }
-    
-    event void KeyDistrib.discoverKeysDone(error_t result){
-        // TODO Auto-generated method stub
-    }
-    
-    event void KeyDistrib.getKeyToNodeDone(error_t result, PL_key_t *pNodeKey){
-        // TODO Auto-generated method stub
-    }
-*/
 
 #else
 	//

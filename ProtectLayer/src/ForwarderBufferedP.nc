@@ -181,7 +181,6 @@ implementation{
 	 if not, try to send/forward. */
       error_t subsendResult;
       fwd_queue_entry_t* qe = call SendQueue.head();
-      //uint8_t payloadLen = call SubPacket.payloadLength(qe->msg);
 	  bool nullMsg = qe->msg==NULL || qe==NULL;
 
       if (nullMsg) {
