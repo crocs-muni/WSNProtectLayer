@@ -138,6 +138,8 @@ implementation{
 		numNeigh = pData->actualNeighborCount;
 		pl_log_d(TAG, "neighbors=%u\n", numNeigh);
 		
+		pl_log_d(TAG, "parent is node %u and is %u valid\n", pData->routePrivData.parentNodeId, pData->routePrivData.isValid);
+		
 		// Iterate over, neighbors, pick only those with quality above threshold.
 		for(i=0; i<numNeigh; i++){
 			pl_log_d(TAG, "  N[%u] addr=%u\n", i, pData->savedData[i].nodeId);
