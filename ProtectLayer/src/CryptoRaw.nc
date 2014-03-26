@@ -71,7 +71,7 @@ interface CryptoRaw {
 		@param[in] key handle for key, that was used for mac calculation
 		@param[in] buffer with original data
 		@param[in] offset of buffer
-		@param[in] pLen length of data in buffer
+		@param[in] pLen length of data in buffer with mac to verify
 		@param[in] mac value that will be verified against supplied data in buffer
 		@return error_t status
 	*/

@@ -56,18 +56,20 @@ implementation{
     command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t** pNodeKey){
         SavedData_t* pSavedData = NULL;
         pl_log_d(TAG, "getKeyToNodeB called for node '%u'\n", nodeID); 
-
+	
         if(nodeID > NODE_MAX_ID || nodeID <= 0){
 	    	pl_log_e(TAG,"KeyDistribP: invalid node ID.\n");
 	    	return FAIL;
         }
+        
         if(pNodeKey == NULL){
 	    	pl_log_e(TAG, "pNodeKey NULL.\n");
 	    	return FAIL;
         }
-
+	
         pSavedData = call SharedData.getNodeState(nodeID);
         if (pSavedData != NULL) {
+            return SUCCESS;
             *pNodeKey =  &((pSavedData->kdcData).shared_key);
             return SUCCESS;
         }

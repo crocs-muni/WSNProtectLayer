@@ -42,12 +42,14 @@ implementation {
         error_t status = SUCCESS;
         
         pl_log_i(TAG,"CryptoP:  macBufferForNodeB called.\n");
-        
+        //return status;
         if((status = call KeyDistrib.getKeyToNodeB( nodeID, &m_key1)) == SUCCESS){
+	    return status;
             status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
             *pLen = *pLen + MAC_LENGTH;
-        } else {
+        } else {        
             pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID); 
+            //return SUCCESS;
         }
         return status;
     }	
@@ -84,8 +86,10 @@ implementation {
         pl_printf("CryptoP:  verifyMacFromBSB called.\n"); 
                 
         if((status = call KeyDistrib.getKeyToBSB( &m_key1)) != SUCCESS){
-	   pl_log_e(TAG,"CryptoP:  macBufferForBSB failed, key to BS not found.\n"); 
+	   pl_log_e(TAG,"CryptoP:  macBufferForBSB failed, key to BS not found.\n");
+	   return status;
 	}
+	
         status = call CryptoRaw.verifyMac(m_key1, buffer,  offset, pLen);
         return status;
     }	
@@ -482,16 +486,17 @@ implementation {
             
             return status;
         }
-        return status;
+        //return status;
         pl_printf("CryptoP:  macBufferForNodeB started.\n"); 
         
         macLength = BLOCK_SIZE;
-        if((status = call Crypto.macBufferForNodeB( 0, m_buffer, 0, &macLength)) != SUCCESS){
+        if((status = call Crypto.macBufferForNodeB( 4, m_buffer, 0, &macLength)) != SUCCESS){
             
             pl_printf("CryptoP:  macBufferForNodeB failed.\n"); 
             
             return status;
         }
+        return status;
         if(macLength != 2 * BLOCK_SIZE){
             
             pl_printf("CryptoP:  macBufferForNodeB failed to append hash.\n"); 
