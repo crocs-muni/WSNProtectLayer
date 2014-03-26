@@ -37,10 +37,15 @@ implementation {
 	components SharedDataC;
 	components KeyDistribC;
     components CryptoC;
-    components ForwarderC;
     components DispatcherC;
     components new TimerMilliC() as RetxmitTimer;
     components RandomC;
+    
+#ifdef USE_BUFFERED_FORWARDER
+	components ForwarderBufferedC;
+#else    
+    components ForwarderC;
+#endif
 
 
 	MainC.SoftwareInit -> PrivacyP.Init; //auto init phase 1

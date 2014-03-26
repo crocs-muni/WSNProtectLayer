@@ -178,28 +178,28 @@ implementation {
         }
         for(i = 0; i < MAX_NEIGHBOR_COUNT; i++){
             m_key1 = call SharedData.getPredistributedKeyForNode(i);
-	    if(m_key1 == NULL){
-		pl_log_e(TAG, "CryptoP:  predistributed key for node %x not retrieved.\n", i); 
-                continue;
-	    }
-            /*
-            calculates derivation data by appending node ID's first lower on, then higher one
-            these are appended to array by memcpy and pointer arithmetics ()
-            */
-            memset(m_buffer, 0, BLOCK_SIZE); //pad whole block with zeros
-            copyId = min(SavedData[i].nodeId, TOS_NODE_ID);	
-            memcpy(m_buffer, &copyId, sizeof(copyId)); 
-            copyId = max(SavedData[i].nodeId, TOS_NODE_ID);
-            memcpy(m_buffer + sizeof(copyId), &copyId, sizeof(copyId)); 
-            
-	    m_key2 = &(SavedData[i].kdcData.shared_key);
-            //derive key from data and predistributed key
-            status = call CryptoRaw.deriveKeyB(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
-            if(status != SUCCESS){                
-                pl_log_e(TAG, "CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData[i].nodeId, status); 
-                continue;
-            }
-            m_key2->counter = 0;
+		    if(m_key1 == NULL){
+			pl_log_e(TAG, "CryptoP:  predistributed key for node %x not retrieved.\n", i); 
+	                continue;
+		    }
+	            /*
+	            calculates derivation data by appending node ID's first lower on, then higher one
+	            these are appended to array by memcpy and pointer arithmetics ()
+	            */
+	            memset(m_buffer, 0, BLOCK_SIZE); //pad whole block with zeros
+	            copyId = min(SavedData[i].nodeId, TOS_NODE_ID);	
+	            memcpy(m_buffer, &copyId, sizeof(copyId)); 
+	            copyId = max(SavedData[i].nodeId, TOS_NODE_ID);
+	            memcpy(m_buffer + sizeof(copyId), &copyId, sizeof(copyId)); 
+	            
+		    m_key2 = &(SavedData[i].kdcData.shared_key);
+	            //derive key from data and predistributed key
+	            status = call CryptoRaw.deriveKeyB(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
+	            if(status != SUCCESS){                
+	                pl_log_e(TAG, "CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData[i].nodeId, status); 
+	                continue;
+	            }
+	            m_key2->counter = 0;
         }
         return status;
     }

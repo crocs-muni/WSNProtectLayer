@@ -15,6 +15,7 @@ typedef nx_struct BlinkToRadioMsg {
 
 #define DEBUG_PRINTF
 #define USE_CTP
+#define CTP_DUMP_NEIGHBORS
 #define ACCEPT_ALL_SIGNATURES
 #define ACCEPT_ALL_MACS
 #define CTP_QUICK_INIT

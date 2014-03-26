@@ -25,7 +25,6 @@ implementation {
 	PLInit = RouteP.PLInit;
 	Route = RouteP.Route;
 	
-#ifdef USE_CTP
 	components CollectionC as Collector, new CollectionSenderC(AM_CTPRESPONSEMSG);
     
     RouteP.ForwardingControl -> Collector.StdControl;
@@ -45,5 +44,4 @@ implementation {
   	RouteP.CtpInitTimer -> CtpInitTimer;
 	
 	
-#endif
 }

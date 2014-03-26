@@ -18,7 +18,6 @@ implementation{
 	components PrivacyC;
 	components RouteC;
 	components SharedDataC;
-	components ForwarderC;
 	components PrivacyLevelC;
 	components IntrusionDetectC;
 	components KeyDistribC;

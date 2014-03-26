@@ -148,7 +148,7 @@ implementation{
         }
         case STATE_MAGIC_RECEIVED:
         {
-        	pl_log_d(TAG, "MP received. Going to init CTP\n"); 
+        	pl_log_d(TAG, "MP received. Going to init RouteP\n"); 
         	
         	// Init Routing component
         	call RouteCInit.init();
@@ -167,8 +167,7 @@ implementation{
         }
         case STATE_READY_FOR_APP:
         {
-            // TODO: init app
-            // call App.init
+         
             
             m_state = STATE_WORKING;
             signal Dispatcher.stateChanged(m_state);
@@ -200,7 +199,9 @@ implementation{
     
     event void MagicPacket.magicPacketReceived(error_t status, PRIVACY_LEVEL newPrivacyLevel){
     	pl_log_i(TAG, "magicPacket received\n"); 
+#ifndef SKIP_MAGIC_PACKET
     	post serveStateTask();
+#endif
     }
 #else
 	// Here node is BS!
