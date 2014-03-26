@@ -545,6 +545,7 @@ recv_finish:
 	        	} else {
 	        		//phantom walk is over, erase phantom walk flag
 	        		SET_PHANTOM_WALK(spHeader,FALSE);
+	        		pl_log_w(TAG, "End of Phantom walk phase.\n");
 	        	}
         	}
         	

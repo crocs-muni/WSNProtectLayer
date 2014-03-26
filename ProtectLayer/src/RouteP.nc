@@ -127,6 +127,23 @@ implementation{
     bool passLinkEtxThreshold(uint16_t etx) {
         return (etx < ETX_THRESHOLD);
     }	
+#ifdef CTP_DUMP_NEIGHBORS
+	void dumpCtpNeighbors();
+#endif
+	void dumpNeighbors(){
+		combinedData_t* pData = call SharedData.getAllData();
+		uint8_t numNeigh = 0;
+		uint8_t i=0;
+	
+		numNeigh = pData->actualNeighborCount;
+		pl_log_d(TAG, "neighbors=%u\n", numNeigh);
+		
+		// Iterate over, neighbors, pick only those with quality above threshold.
+		for(i=0; i<numNeigh; i++){
+			pl_log_d(TAG, "  N[%u] addr=%u\n", i, pData->savedData[i].nodeId);
+		}
+		
+	}
 	
 	task void stopCTP(){
 		combinedData_t* pData = call SharedData.getAllData();
@@ -160,7 +177,7 @@ implementation{
 			for(i=0; i<numNeigh && i<MAX_NEIGHBOR_COUNT; i++){
 				uint16_t linkQuality = call CtpInfo.getNeighborLinkQuality(i);
 				if (passLinkEtxThreshold(linkQuality)){
-					pData->savedData[i].nodeId =  call CtpInfo.getNeighborAddr(i);
+					pData->savedData[numAboveThreshold].nodeId =  call CtpInfo.getNeighborAddr(i);
 					numAboveThreshold++;
 				}
 			}
@@ -172,6 +189,10 @@ implementation{
 		//set actual number of neighbors
 		pData->actualNeighborCount = numAboveThreshold;
 		
+		dumpNeighbors();
+#ifdef CTP_DUMP_NEIGHBORS
+	    dumpCtpNeighbors();
+#endif
 		
 		// Signalize dispatcher routing is done.
 		call Dispatcher.serveState();
@@ -202,9 +223,7 @@ implementation{
 		}
 	}
 	
-#ifdef CTP_DUMP_NEIGHBORS
-	void dumpNeighbors();
-#endif
+
 	
 
 	
@@ -349,6 +368,7 @@ implementation{
 			uint8_t chosenOne = 0;
 			chosenOne = call Random.rand16() % (pData->actualNeighborCount);
 			*neigh = pData->savedData[chosenOne].nodeId;
+			pl_log_d(TAG, "Selected random Neighbor %u\n", *neigh);
 			return SUCCESS;
 		} else
 		{
@@ -360,7 +380,7 @@ implementation{
 	}
 	
 #ifdef CTP_DUMP_NEIGHBORS
-	void dumpNeighbors(){
+	void dumpCtpNeighbors(){
 		uint8_t numNeigh = 0;
 		uint8_t i=0;
 		numNeigh = call CtpInfo.numNeighbors();
@@ -380,4 +400,7 @@ implementation{
 		}
 	}
 #endif
+
+
+
 }

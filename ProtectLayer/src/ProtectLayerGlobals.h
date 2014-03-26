@@ -28,7 +28,7 @@
 #warning " *** WARNING: Hop-by-hop encryption is enabled! ***"
 #endif
 
-
+#define CTP_DUMP_NEIGHBORS
 
 #ifdef CTP_QUICK_INIT
 #warning " *** CTP QUICK INIT is defined, should not be in production! ***"
