@@ -31,7 +31,7 @@ implementation {
     combinedData_t combinedData;
     
 	/** pointer to the currently processed key */
-	nx_uint8_t * currentKey;
+	//uint8_t * currentKey;
 
     /** flag signaling whether the memory is currently busy */
     bool m_busy = FALSE;
@@ -48,37 +48,10 @@ implementation {
      */
     
     command error_t PLInit.init() {
-        int i = 0;
-        int j = 0;
-        uint8_t fixedNeighbors[MAX_NEIGHBOR_COUNT] = {4,5,6,7,10,14,15,17,19,22,25,28,29,30,31,32,33,35,36,37,40,41,42,43,44,46,47,48,50};
-        
-        // 
-        //	Create virtual pre-distributed keys
-        //
-        // Keys to all other nodes
-        for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
-            combinedData.kdcPrivData.preKeys[i].keyType = KEY_TONODE;
-            for (j = 0; j < KEY_LENGTH; j++) combinedData.kdcPrivData.preKeys[i].keyValue[j] = TOS_NODE_ID ^ fixedNeighbors[i] ^ j; // construct unique key value, but deterministic
-            combinedData.kdcPrivData.preKeys[i].dbgKeyID = 0;
-            combinedData.kdcPrivData.preKeys[i].counter = 0;
-        }
-        // Create key to BS
-        combinedData.kdcPrivData.keyToBS.keyType = KEY_TOBS;
-        memset(combinedData.kdcPrivData.keyToBS.keyValue, 0, KEY_LENGTH);
-        combinedData.kdcPrivData.keyToBS.dbgKeyID = 0;
-        combinedData.kdcPrivData.keyToBS.counter  = 0;
-        
-        //
-        // Privacy component
-        //
-        combinedData.ppcPrivData.priv_level = 0;
-        
-        //
-        // Set default values to list of all neighbours		
-        for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
-            combinedData.savedData[i].nodeId = INVALID_NODE_ID;
-            memset(&(combinedData.savedData[i].kdcData), 0, sizeof(combinedData.savedData[i].kdcData));
-            memset(&(combinedData.savedData[i].idsData), 0, sizeof(combinedData.savedData[i].idsData));
+        call ResourceArbiter.restoreCombinedDataFromFlash();
+        if (combinedData.magicWord != MAGIC_WORD) {
+        	memset(&combinedData, 0, sizeof(combinedData));
+        	combinedData.magicWord = MAGIC_WORD;
         }
 
         pl_log_i(TAG, "PLInit.init() finished.\n");
@@ -188,9 +161,9 @@ implementation {
       * @param nodeId id of node
       * @return a handle to predistributed key for node.
       */
-    command PL_key_t* SharedData.getPredistributedKeyForNode(uint16_t nodeId){
-        KDCPrivData_t* KDCPrivData = call SharedData.getKDCPrivData();
-        return &(KDCPrivData->preKeys[nodeId]);
+    command error_t SharedData.getPredistributedKeyForNode(uint16_t nodeId, PL_key_t* predistribKey){
+        return call ResourceArbiter.restoreKeyFromFlash(nodeId, predistribKey);
+
     }
     
 #ifndef TOSSIM
@@ -259,7 +232,7 @@ implementation {
     
     default event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {}
 
-command error_t ResourceArbiter.saveKeyToFlash(nx_uint8_t * key) {
+	command error_t ResourceArbiter.saveKeyToFlash(nx_uint8_t * key) {
 		if (!m_busy) {
 			m_busy = TRUE;
 			if (memPosition == 0) {
@@ -274,10 +247,10 @@ command error_t ResourceArbiter.saveKeyToFlash(nx_uint8_t * key) {
 	
 	default event void ResourceArbiter.saveKeyToFlashDone(error_t result) {}
 
-	command error_t ResourceArbiter.restoreKeyFromFlash(uint8_t neighbourId){
+	command error_t ResourceArbiter.restoreKeyFromFlash(uint16_t neighbourId, PL_key_t* predistribKey){
 		if (!m_busy) {
 			m_busy = TRUE;
-			return call FlashDataRead.read((neighbourId - 1) * KEY_LENGTH, currentKey, KEY_LENGTH);
+			return call FlashDataRead.read((neighbourId - 1) * KEY_LENGTH, predistribKey, KEY_LENGTH);
 		}
 		return EBUSY;
 	}

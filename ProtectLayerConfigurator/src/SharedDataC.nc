@@ -22,7 +22,8 @@ configuration SharedDataC{
 implementation{
 	components SharedDataP;
 	#ifndef TOSSIM
-	components new BlockStorageC(VOLUME_SHAREDDATA) as FlashDataStorage;
+	components new BlockStorageC(VOLUME_KEYS) as KeysDataStorage;
+	components new BlockStorageC(VOLUME_SHAREDDATA) as SharedDataStorage;
 	#endif
 	
 	components MainC;
@@ -32,8 +33,11 @@ implementation{
 	SharedData = SharedDataP.SharedData;
 	#ifndef TOSSIM
 	ResourceArbiter = SharedDataP.ResourceArbiter;
-	SharedDataP.FlashDataRead -> FlashDataStorage.BlockRead;
-	SharedDataP.FlashDataWrite -> FlashDataStorage.BlockWrite;
+	SharedDataP.KeysDataRead -> KeysDataStorage.BlockRead;
+	SharedDataP.KeysDataWrite -> KeysDataStorage.BlockWrite;
+	
+	SharedDataP.SharedDataRead -> SharedDataStorage.BlockRead;
+	SharedDataP.SharedDataWrite -> SharedDataStorage.BlockWrite;
 	#endif
 	
 	MainC.SoftwareInit -> SharedDataP.Init;

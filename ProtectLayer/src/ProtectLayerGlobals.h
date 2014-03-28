@@ -127,6 +127,7 @@ enum {
   MAX_OFFSET = 20,
   NODE_MAX_ID = 50,
   INVALID_NODE_ID = 0xFFFE,
+  MAGIC_WORD = 0x55,
   MAGIC_PACKET_RANDOM_OFFSET = 100,	/** constant offset before re-broadcasting magic packet. */
   MAGIC_PACKET_RANDOM_WINDOW = 200	/** random window before re-broadcasting magic packet. */
 #ifdef PLAINTEXT_DEMO
@@ -373,12 +374,12 @@ typedef struct RoutePrivData {
 typedef struct KDCPrivData {
     PL_key_t	keyToBS;
     PL_key_t    hashKey;
-    PL_key_t	preKeys[MAX_NEIGHBOR_COUNT];
 } KDCPrivData_t;
 /**
  * Structure combining all the data that need to be stored on the node by the protection layer
  */
 typedef struct CombinedData {
+	uint8_t magicWord;
 	SavedData_t savedData[MAX_NEIGHBOR_COUNT]; /**< an array of information about the node's neighbours, first actualNeighborCount items should be valid */ 
 	uint8_t	actualNeighborCount; /**< number of neighbors at the moment */
 	PPCPrivData_t ppcPrivData; /**< private data structure for the PPC component */

@@ -153,16 +153,17 @@ implementation{
         	// Init Routing component
         	call RouteCInit.init();
         	
+        	pl_log_d(TAG, "Route initialized. Going to init KeyDistribP\n"); 
             // init key distribution component
             call KeyDistribCInit.init();
             
-            // TODO: call save state
+            // Save actualized shared data 
+            call ResourceArbiter.saveCombinedDataToFlash();
             
             m_state = STATE_READY_FOR_APP;
             signal Dispatcher.stateChanged(m_state);
-            
-            // Route component will signalize we are ready.
-            pl_log_d(TAG, "Waiting to init route\n"); 
+           
+
             break;
         }
         case STATE_READY_FOR_APP:
