@@ -56,6 +56,7 @@ implementation{
 	DispatcherP.MagicPacket -> PrivacyLevelC.MagicPacket;
 	//DispatcherP.ForwarderCInit -> ForwarderC.Init;
 	//DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
+	DispatcherP.ResourceArbiter -> SharedDataC.ResourceArbiter;
 	
 	Dispatcher = DispatcherP.Dispatcher;
 }

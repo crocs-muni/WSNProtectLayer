@@ -20,7 +20,7 @@ module DispatcherP{
         interface Boot;	
         interface Privacy;
         interface MagicPacket;
-	
+		interface ResourceArbiter;
     }
     provides {
         interface Receive as PL_Receive;
@@ -251,6 +251,9 @@ implementation{
             // init key distribution component
             call KeyDistribCInit.init();
             
+        	// Save actualized shared data 
+            call ResourceArbiter.saveCombinedDataToFlash();
+            
             m_state = STATE_READY_FOR_APP;
             signal Dispatcher.stateChanged(m_state);
             
@@ -274,4 +277,12 @@ implementation{
     	// Magic packet not relevant if BS, we are producing magic packet!
     }
 #endif
+    
+    event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result) {
+    //	pl_log_d(TAG, "saveCombinedDataToFlashDone.\n"); 
+	}
+	
+	event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {}
+	
+	event void ResourceArbiter.restoreKeyFromFlashDone(error_t result) {}
 }

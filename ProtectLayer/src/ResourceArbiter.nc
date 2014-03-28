@@ -41,20 +41,6 @@ interface ResourceArbiter {
 	event void restoreCombinedDataFromFlashDone(error_t result);
 
 	/**
-	 * Store key to flash
-	 * @param key pointer to the memory block of size <i>KEY_LENGTH</i> to be saved
-	 */
-	command error_t saveKeyToFlash(nx_uint8_t * key);
-
-	/**
-	 * Signals the completion of write key operation.
-	 * 
-	 * @param result SUCCESS if the operation was successful, FAIL if
-	 *   it failed
-	 */
-	event void saveKeyToFlashDone(error_t result);
-	
-	/**
 	 * A command to restore the saved combinedData structure form the flash memory
 	 * and rewrite the current data in combinedData.
 	 * 
@@ -65,7 +51,7 @@ interface ResourceArbiter {
 	 *   <li>EINVAL if the parameters are invalid
 	 *   <li>EBUSY if a request is already being processed.
 	 */
-	command error_t restoreKeyFromFlash(uint8_t neighbourId);
+	command error_t restoreKeyFromFlash(uint16_t neighbourId, PL_key_t* predistribKey);
 
 	/**
 	 * Signals the completion of a read operation.
@@ -74,16 +60,4 @@ interface ResourceArbiter {
 	 *   it failed
 	 */
 	event void restoreKeyFromFlashDone(error_t result);
-	
-	/**
-	 * Pointer to the last key read from memory or the first key to be written to memory.
-	 * 
-	 * @return pointer to the last key
-	 */
-	command nx_uint8_t * getCurrentKey();
-	
-	/**
-	 * @return number of keys stored to the flash memory
-	 */
-	command uint32_t getNumberOfStoredKeys();
 }

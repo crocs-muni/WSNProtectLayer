@@ -254,6 +254,7 @@ implementation {
 	
 	event void SharedDataRead.readDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
 		m_busy = FALSE;
+		signal ResourceArbiter.restoreCombinedDataFromFlashDone(err);
 	}
 	
 	/**
@@ -268,7 +269,7 @@ implementation {
 	
 	event void SharedDataWrite.writeDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
     	m_busy = FALSE;
-    	signal ResourceArbiter.restoreCombinedDataFromFlashDone(err);
+    	signal ResourceArbiter.saveCombinedDataToFlashDone(err);
    	}
    	
    	/**

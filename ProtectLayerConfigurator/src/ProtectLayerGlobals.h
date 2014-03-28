@@ -48,6 +48,7 @@ enum {
   KEY_LENGTH = 16,
   MAX_NEIGHBOR_COUNT = 30,
   RECEIVE_BUFFER_LEN = 5,
+  MAGIC_WORD = 0x55,
   LOGGED_SIZE = 20,
   RSSI_THRESHOLD = -73
 };
@@ -262,6 +263,7 @@ typedef nx_struct KDCPrivData {
  * Structure combining all the data that need to be stored on the node by the protection layer
  */
 typedef struct CombinedData {
+	uint8_t magicWord;
 	SavedData_t savedData[MAX_NEIGHBOR_COUNT]; /**< an array of information about the node's neighbours */ 
 	PPCPrivData_t ppcPrivData; /**< private data structure for the PPC component */
     RoutePrivData_t routePrivData;

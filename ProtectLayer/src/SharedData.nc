@@ -55,5 +55,5 @@ interface SharedData {
 	 * @param nodeId id of node
 	 * @return a handle to predistributed key for node.
 	 */
-	command PL_key_t* getPredistributedKeyForNode(uint16_t nodeId);
+	command error_t getPredistributedKeyForNode(uint16_t nodeId, PL_key_t* predistribKey);
 }

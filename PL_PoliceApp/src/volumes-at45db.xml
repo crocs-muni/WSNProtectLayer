@@ -1,4 +1,5 @@
 <volume_table>
+	<volume name="KEYS" size="65536"/>
 	<volume name="SHAREDDATA" size="65536"/>
-	<volume name="LOG" size="458752"/>
+	<volume name="LOG" size="393216"/>
 </volume_table>

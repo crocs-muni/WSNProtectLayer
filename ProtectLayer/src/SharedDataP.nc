@@ -17,8 +17,9 @@ module SharedDataP {
     }
 #ifndef TOSSIM
     uses {
-        interface BlockRead as FlashDataRead;
-        interface BlockWrite as FlashDataWrite;
+        interface BlockRead as KeysDataRead;
+		interface BlockRead as SharedDataRead;
+		interface BlockWrite as SharedDataWrite;
     }
 #endif
 }
@@ -36,12 +37,6 @@ implementation {
     /** flag signaling whether the memory is currently busy */
     bool m_busy = FALSE;
     bool initialized = FALSE;
-
-	/** flag signaling operations regarding combined data storage */
-	bool combDataFlag = FALSE;
-	
-	/** indicator of current position in memory */
-	storage_addr_t memPosition = 0;
 
     /** 
      * Initialize the combinedData structure to initial zeros
@@ -166,7 +161,6 @@ implementation {
 
     }
     
-#ifndef TOSSIM
     /**
      * A command to backup the entire combinedData structure to the flash memory
      * 
@@ -179,37 +173,13 @@ implementation {
 
         if (!m_busy) {
 			m_busy = TRUE;
-			combDataFlag = TRUE;
-			return call FlashDataWrite.erase();			
+			return call SharedDataWrite.erase();			
 		}
 		return EBUSY;
     }
     
     default event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result) {
     	pl_log_d(TAG, "saveCombinedDataToFlashDone.\n"); 
-
-}
-    
-    /**
-     * Signals the completion of a write operation. However, data is not
-     * guaranteed to survive a power-cycle unless a sync operation has
-     * been completed.
-     *
-     * @param addr starting address of write.
-     * @param 'void* COUNT(len) buf' buffer that written data was read from.
-     * @param len number of bytes written.
-     * @param error SUCCESS if the operation was successful, FAIL if
-     *   it failed
-     */
-    event void FlashDataWrite.writeDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
-    	m_busy = FALSE;
-    	if (combDataFlag) {
-	    	signal ResourceArbiter.saveCombinedDataToFlashDone(err);
-	    } else {
-	    	memPosition += len;
-			signal ResourceArbiter.saveKeyToFlashDone(err);
-		}
-    	combDataFlag = FALSE;
 	}
     
     /**
@@ -224,33 +194,17 @@ implementation {
     command error_t ResourceArbiter.restoreCombinedDataFromFlash(){
     if (!m_busy) {
 			m_busy = TRUE;
-			combDataFlag = TRUE;
-			return call FlashDataRead.read(0, &combinedData, sizeof(combinedData_t));
+			return call SharedDataRead.read(0, &combinedData, sizeof(combinedData_t));
 		}
 		return EBUSY;
 	}
     
     default event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {}
 
-	command error_t ResourceArbiter.saveKeyToFlash(nx_uint8_t * key) {
-		if (!m_busy) {
-			m_busy = TRUE;
-			if (memPosition == 0) {
-				currentKey = key;
-				return call FlashDataWrite.erase();
-			} else {
-				return call FlashDataWrite.write(memPosition, key, KEY_LENGTH);
-			}
-		}
-		return EBUSY;
-	}
-	
-	default event void ResourceArbiter.saveKeyToFlashDone(error_t result) {}
-
 	command error_t ResourceArbiter.restoreKeyFromFlash(uint16_t neighbourId, PL_key_t* predistribKey){
 		if (!m_busy) {
 			m_busy = TRUE;
-			return call FlashDataRead.read((neighbourId - 1) * KEY_LENGTH, predistribKey, KEY_LENGTH);
+			return call KeysDataRead.read((neighbourId - 1) * KEY_LENGTH, predistribKey, KEY_LENGTH);
 		}
 		return EBUSY;
 	}
@@ -267,14 +221,10 @@ implementation {
      * @param error SUCCESS if the operation was successful, FAIL if
      *   it failed
      */
-    event void FlashDataRead.readDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
+	event void KeysDataRead.readDone(storage_addr_t addr, void *buf,
+			storage_len_t len, error_t err) {
     	m_busy = FALSE;
-    	if (combDataFlag) {
-	    	signal ResourceArbiter.restoreCombinedDataFromFlashDone(err);
-	    } else {
 	    	signal ResourceArbiter.restoreKeyFromFlashDone(err);
-	    }
-	    combDataFlag = FALSE;
 	}
     
     /**
@@ -286,48 +236,38 @@ implementation {
      * @param error SUCCESS if the operation was successful, FAIL if
      *   it failed
      */
-    event void FlashDataRead.computeCrcDone(storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error){
+    event void KeysDataRead.computeCrcDone(storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error){
 }
     
-    /**
+   
+	event void SharedDataRead.readDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
+		m_busy = FALSE;
+		signal ResourceArbiter.restoreCombinedDataFromFlashDone(err);
+	}
+	
+	/**
+	 * Called after initialize to save the combined data initial values to EEPROM
+	 */
+	event void SharedDataWrite.eraseDone(error_t error){
+		call SharedDataWrite.write(0, &combinedData, sizeof(combinedData_t));
+	}
+	
+	event void SharedDataRead.computeCrcDone(storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error){
+	}
+	
+	event void SharedDataWrite.writeDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
+    	m_busy = FALSE;
+    	signal ResourceArbiter.saveCombinedDataToFlashDone(err);
+   	}
+   	
+   	/**
      * Signals the completion of a sync operation. All written data is
      * flushed to non-volatile storage after this event.
      *
      * @param error SUCCESS if the operation was successful, FAIL if
      *   it failed
      */
-    event void FlashDataWrite.syncDone(error_t error){
-}
-    
-/**
-   	 * Signals the completion of an erase operation.
-   	 *
-   	 * @param error SUCCESS if the operation was successful, FAIL if
-   	 *   it failed
-   	 */
-	event void FlashDataWrite.eraseDone(error_t error){
-		if (error == SUCCESS) {
-			if (combDataFlag) {
-				//TODO possible extension in order not to overwrite combinedData by keys and vice versa
-				//either create a separate memory block in the *.xml config or share the memPosition? 
-				call FlashDataWrite.write(0, &combinedData, sizeof(combinedData_t));
-			} else {
-				call FlashDataWrite.write(memPosition, currentKey, KEY_LENGTH);
-			}
-		} else {
-			combDataFlag = FALSE;
-		}
-	}
-
-	#endif
-
-	command nx_uint8_t * ResourceArbiter.getCurrentKey() {
-		return currentKey;
-	}
-	
-	command uint32_t ResourceArbiter.getNumberOfStoredKeys() {
-		//pl_printf("number of stored keys: %d", (memPosition / KEY_LENGTH));
-		return memPosition / KEY_LENGTH; 
+	event void SharedDataWrite.syncDone(error_t error){
 	}
 }
     

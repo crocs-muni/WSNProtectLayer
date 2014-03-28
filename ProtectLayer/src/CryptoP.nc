@@ -171,7 +171,7 @@ implementation {
             return status;
         }
         for(i = 0; i < MAX_NEIGHBOR_COUNT; i++){
-            m_key1 = call SharedData.getPredistributedKeyForNode(i);
+            call SharedData.getPredistributedKeyForNode(i, m_key1);
 		    if(m_key1 == NULL){
 			pl_log_e(TAG, "CryptoP:  predistributed key for node %x not retrieved.\n", i); 
 	                continue;
