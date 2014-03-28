@@ -1,6 +1,6 @@
 COMPONENT=IntruderAppC
 
 CFLAGS += -I$(TOSDIR)/lib/printf
-CFLAGS += $(INCLUDES)
+CFLAGS += $(INCLUDES) -DCC2420_DEF_CHANNEL=15
 
 include $(MAKERULES)
