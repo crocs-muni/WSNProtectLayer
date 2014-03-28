@@ -69,44 +69,6 @@ implementation {
         combinedData.kdcPrivData.keyToBS.counter  = 0;
         
         //
-        //  Init routing table to BS for current node
-        //	TODO: fixed routing table at the moment, will be replaced by CTP	
-        //		
-        combinedData.routePrivData.isValid = 1;
-        switch (TOS_NODE_ID) {
-        case 4: { combinedData.routePrivData.parentNodeId = 41; break; }
-        case 5: { combinedData.routePrivData.parentNodeId = 40; break; }
-        case 6: { combinedData.routePrivData.parentNodeId = 19; break; }
-        case 7: { combinedData.routePrivData.parentNodeId = 17; break; }
-        case 10: { combinedData.routePrivData.parentNodeId = 25; break; }
-        case 14: { combinedData.routePrivData.parentNodeId = 37; break; }
-        case 15: { combinedData.routePrivData.parentNodeId = 17; break; }
-        case 17: { combinedData.routePrivData.parentNodeId = 37; break; }
-        case 19: { combinedData.routePrivData.parentNodeId = 4; break; }
-        case 22: { combinedData.routePrivData.parentNodeId = 41; break; }
-        case 25: { combinedData.routePrivData.parentNodeId = 44; break; }
-        case 28: { combinedData.routePrivData.parentNodeId = 4; break; }
-        case 29: { combinedData.routePrivData.parentNodeId = 50; break; }
-        case 30: { combinedData.routePrivData.parentNodeId = 35; break; }
-        case 31: { combinedData.routePrivData.parentNodeId = 41; break; }
-        case 32: { combinedData.routePrivData.parentNodeId = 50; break; }
-        case 33: { combinedData.routePrivData.parentNodeId = 41; break; }
-        case 35: { combinedData.routePrivData.parentNodeId = 22; break; }
-        case 36: { combinedData.routePrivData.parentNodeId = 42; break; }
-        case 37: { combinedData.routePrivData.parentNodeId = 41; break; }
-        case 40: { combinedData.routePrivData.parentNodeId = 41; break; }
-        case 41: { combinedData.routePrivData.parentNodeId = 41; break; }
-        case 42: { combinedData.routePrivData.parentNodeId = 22; break; }
-        case 43: { combinedData.routePrivData.parentNodeId = 14; break; }
-        case 44: { combinedData.routePrivData.parentNodeId = 41; break; }
-        case 46: { combinedData.routePrivData.parentNodeId = 33; break; }
-        case 47: { combinedData.routePrivData.parentNodeId = 46; break; }
-        case 48: { combinedData.routePrivData.parentNodeId = 33; break; }
-        case 50: { combinedData.routePrivData.parentNodeId = 31; break; }
-        default: combinedData.routePrivData.isValid = 0;
-        } 
-        
-        //
         // Privacy component
         //
         combinedData.ppcPrivData.priv_level = 0;
@@ -118,16 +80,6 @@ implementation {
             memset(&(combinedData.savedData[i].kdcData), 0, sizeof(combinedData.savedData[i].kdcData));
             memset(&(combinedData.savedData[i].idsData), 0, sizeof(combinedData.savedData[i].idsData));
         }
-		
-	// TODO: substitute in final version by CTP
-        pl_log_d(TAG, "Neighbors of node %d are:", TOS_NODE_ID);
-        for (i = 0; i < MAX_FIXED_NEIGHBOR_COUNT; i++) {
-            if (fixedNeighborsMap[TOS_NODE_ID][i] != 0) {
-		combinedData.savedData[i].nodeId = fixedNeighborsMap[TOS_NODE_ID][i];
-	        pl_printf("%d,", fixedNeighborsMap[TOS_NODE_ID][i]);
-            }
-        }	
-        pl_printf("\n");
 
         pl_log_i(TAG, "PLInit.init() finished.\n");
 

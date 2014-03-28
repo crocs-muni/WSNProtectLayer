@@ -23,11 +23,14 @@ implementation {
   components PoliceAppC as App;
   components new TimerMilliC() as TimerStillAlive;
   components new TimerMilliC() as TimerMSNDetect;
+  components new TimerMilliC() as InitTimer; // init timer (radio init)
   //components ePIRC;
   components IntruderDetectC;
   components CC2420ActiveMessageC;
 
   components PrintfC;
+  components SerialStartC;
+  
   //App.Boot -> MainC;
 
   components ProtectLayerC;
@@ -37,6 +40,7 @@ implementation {
   App.Leds -> LedsC;
   App.TimerStillAlive -> TimerStillAlive;
   App.TimerMSNDetect -> TimerMSNDetect;
+  App.InitTimer -> InitTimer;
 
   App.Packet -> ProtectLayerC.Packet; 
   //App.AMPacket -> PrivacyC; // not used at all

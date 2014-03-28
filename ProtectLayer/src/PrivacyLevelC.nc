@@ -23,6 +23,9 @@ implementation{
 	components CryptoC;
     components DispatcherC;
     components SharedDataC;
+    components RandomC;
+    components new TimerMilliC() as BackoffTimer;
+    components new AMSenderC(AM_CHANGEPL) as AMSender;
 #endif
 	
 	MainC.SoftwareInit -> PrivacyLevelP.Init; // auto init phase 1
@@ -32,9 +35,11 @@ implementation{
 	
 #ifndef THIS_IS_BS	
 	PrivacyLevelP.Privacy->PrivacyC.Privacy;	
-	PrivacyLevelP.AMSend -> PrivacyC.MessageSend[MSG_PLEVEL];
+	PrivacyLevelP.AMSend -> AMSender;
 	PrivacyLevelP.Receive -> DispatcherC.ChangePL_Receive;
 	PrivacyLevelP.SharedData -> SharedDataC.SharedData;
 	PrivacyLevelP.Crypto -> CryptoC.Crypto;
+	PrivacyLevelP.BackoffTimer -> BackoffTimer;
+	PrivacyLevelP.Random ->RandomC;
 #endif
 }

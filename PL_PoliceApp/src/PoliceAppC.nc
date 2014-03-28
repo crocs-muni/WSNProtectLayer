@@ -24,6 +24,7 @@ module PoliceAppC {
   uses interface Leds;
   uses interface Timer<TMilli> as TimerStillAlive;
   uses interface Timer<TMilli> as TimerMSNDetect;
+  uses interface Timer<TMilli> as InitTimer;
   uses interface Packet;
   //uses interface AMPacket;
   uses interface AMSend;
@@ -38,6 +39,11 @@ implementation {
   message_t pkt;
   bool busy = FALSE;
   uint32_t received_packets = 0;
+  
+  // Initialization state of the node;
+  // 0 = after reboot -> start radio
+  // 1= radio started successfully -> start program
+  int initState=0;	
 
   void setLeds(uint16_t val) {
       printf("NodeState, setLeds%u\n", val);
@@ -56,43 +62,58 @@ implementation {
   }
 
   event void Boot.booted() {
-    printf("NodeState, Node has booted.\n");
-	call AMControl.start();
-    
-    //dbg("NodeState", "Node has booted.\n");
+    call Leds.led0On();
 
+    // Prepare initialization TIMER_START ms after boot.
+    // Due to this delay one is able to attach PrintfClient
+    // after node reset so no message is missed.
+	call InitTimer.startOneShot(TIMER_START);
+  }
+  
+ void task startRadio() {      
+      call AMControl.start();
+      call Leds.led1Toggle();
+  }
+  
+  event void InitTimer.fired() {
+      call Leds.led1Toggle();
+      
+      if (initState==0){
+      	post startRadio();
+      	
+      } else {
+      	
+      	// Radio was initialized properly.
+      	call TimerStillAlive.startPeriodic(TIMER_STILL_ALIVE);
+      	
+      	// not used now call TimerMSNDetect.startPeriodic(TIMER_MSN_DETECTED);
+      	printf("NodeState, Radio started successfully.\n");
+      	
+	    call Leds.led2On();
+      }
   }
 
   event void AMControl.startDone(error_t err) {
     if (err == SUCCESS) {
-      call TimerStillAlive.startPeriodic(TIMER_STILL_ALIVE);
-      // not used now call TimerMSNDetect.startPeriodic(TIMER_MSN_DETECTED);
-      printf("NodeState, Radio started successfully.\n");
-
+      initState=1;
     }
-    else {
-      call AMControl.start();
-      printf("NodeState, Radio did not start!\n");
-
-    }
+    
+    call InitTimer.startOneShot(TIMER_FAIL_START);
   }
 
   event void AMControl.stopDone(error_t err) {
   }
-
-  event void TimerStillAlive.fired() {
-    setLeds(2);
-
-    counter++;
-    //printf("NodeState", "TimerStillAlive fired with counter %x %x.\n", counter & 0xff, (counter >> 8) & 0xff);
-    printf("NodeState, TimerStillAlive fired with counter.\n");
+  
+  task void stillAlive(){
+  	counter++;
+    printf("TimerStillAlive fired with counter %u.\n", counter);
 
     if (!busy) {
       PoliceAppMsg_StillAlive* btrpkt = (PoliceAppMsg_StillAlive*)(call Packet.getPayload(&pkt, sizeof(PoliceAppMsg_StillAlive)));
       if (btrpkt == NULL) {
         return;
       }
-      call CC2420Packet.setPower(&pkt, 3);
+      //call CC2420Packet.setPower(&pkt, 3);
 
       btrpkt->messageType = MSGTYPE_STILLALIVE;
       btrpkt->nodeid = TOS_NODE_ID;
@@ -100,12 +121,16 @@ implementation {
       if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PoliceAppMsg_StillAlive)) == SUCCESS) {
         busy = TRUE;
       }
-
-    }
+    } else post stillAlive();
   }
 
-  event void TimerMSNDetect.fired() {
-    setLeds(4);
+  event void TimerStillAlive.fired() {
+    setLeds(2);
+	post stillAlive();
+  }
+
+  task void MSNDetected(){
+  	
     printf("NodeState, TimerMSNDetect fired.\n");
 
     counter++;
@@ -122,12 +147,16 @@ implementation {
           &pkt, sizeof(PoliceAppMsg_MSNDetected)) == SUCCESS) {
         busy = TRUE;
       }
-
-    }
+    } else post MSNDetected();
   }
 
-  event void MovementSensor.movementDetected() {
-    printf("NodeState, movementDetected.\n");
+  event void TimerMSNDetect.fired() {
+    setLeds(4);
+    post MSNDetected();
+  }
+
+  task void movementDetected(){
+  	printf("NodeState, movementDetected.\n");
     //setLeds(1);
 	call Leds.led0Toggle();
     counter++;
@@ -135,7 +164,7 @@ implementation {
       PoliceAppMsg_MovementDetected* btrpkt = (PoliceAppMsg_MovementDetected*)(call Packet.getPayload(&pkt, sizeof(PoliceAppMsg_MovementDetected)));
       if (btrpkt == NULL) return;
 
-      call CC2420Packet.setPower(&pkt, 3);
+      //call CC2420Packet.setPower(&pkt, 3);
 
       btrpkt->messageType = MSGTYPE_MOVEMENTDETECTED;
       btrpkt->nodeid = TOS_NODE_ID;
@@ -143,12 +172,15 @@ implementation {
       if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PoliceAppMsg_MovementDetected)) == SUCCESS) {
            busy = TRUE;
       }
+    } else post movementDetected();
+  }
 
-    }
+  event void MovementSensor.movementDetected() {
+    post movementDetected();
   }
   
-  event void MovementSensor.movementMSNDetected() {
-    printf("NodeState, movementMSNDetected.\n");
+  task void movementMSNDetected(){
+  	printf("NodeState, movementMSNDetected.\n");
     call Leds.led1Toggle();
 //    setLeds(2);
 
@@ -157,7 +189,7 @@ implementation {
       PoliceAppMsg_MovementDetected* btrpkt = (PoliceAppMsg_MovementDetected*)(call Packet.getPayload(&pkt, sizeof(PoliceAppMsg_MovementDetected)));
       if (btrpkt == NULL) return;
 
-      call CC2420Packet.setPower(&pkt, 3);
+      //call CC2420Packet.setPower(&pkt, 3);
 
       btrpkt->messageType = MSGTYPE_MSNDETECTED;
       btrpkt->nodeid = TOS_NODE_ID;
@@ -165,8 +197,11 @@ implementation {
       if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PoliceAppMsg_MovementDetected)) == SUCCESS) {
            busy = TRUE;
       }
-
-    }
+    } else post movementMSNDetected();
+  }
+  
+  event void MovementSensor.movementMSNDetected() {
+    post movementMSNDetected();
   }
 
   event void AMSend.sendDone(message_t* msg, error_t err) {
