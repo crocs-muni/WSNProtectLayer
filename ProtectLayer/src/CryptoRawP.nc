@@ -151,6 +151,7 @@ implementation {
     
     command error_t CryptoRaw.verifyMac(PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         uint8_t mac[MAC_LENGTH];
+        uint8_t macLength = *pLen;
         error_t status = SUCCESS;        
         
         pl_printf("CryptoP:  verifyMac called.\n"); 
@@ -176,8 +177,8 @@ implementation {
             pl_log_e(TAG,"CryptoP; input len smaller than mac length. %u\n", *pLen);
             return FAIL;
         }
-        
-        status = call CryptoRaw.macBuffer(key, buffer, offset, pLen, mac); //calculate new mac	
+        macLength = macLength - MAC_LENGTH;
+        status = call CryptoRaw.macBuffer(key, buffer, offset, &macLength, mac); //calculate new mac	
 	
         if((memcmp(mac, buffer + offset + *pLen - MAC_LENGTH, MAC_LENGTH)) != 0){ //compare new with received
             status = EWRONGMAC;            

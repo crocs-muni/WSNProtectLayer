@@ -15,10 +15,12 @@ implementation {
 	components KeyDistribP;  
 	components CryptoC;
 	components SharedDataC;
-
+        components LedsC;
+        
 	Init = KeyDistribP.PLInit;
 	KeyDistrib = KeyDistribP.KeyDistrib;
 	
 	KeyDistribP.Crypto -> CryptoC.Crypto;
 	KeyDistribP.SharedData -> SharedDataC.SharedData;
+	KeyDistribP.Leds -> LedsC;
 }

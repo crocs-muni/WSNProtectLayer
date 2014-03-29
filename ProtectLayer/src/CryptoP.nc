@@ -24,7 +24,7 @@ implementation {
     
     PL_key_t* 	m_key1;		/**< handle to the key used as first (or only) one in cryptographic operations. Value is set before task is posted. */
     PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
-    uint8_t 	m_buffer[BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */    
+    uint8_t 	m_buffer[2*BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */    
     uint8_t         m_exp[240]; //expanded key
     
     // Logging tag for this component
@@ -42,11 +42,14 @@ implementation {
         error_t status = SUCCESS;
         
         pl_log_i(TAG,"CryptoP:  macBufferForNodeB called.\n");
-        
+        //return status;
         if((status = call KeyDistrib.getKeyToNodeB( nodeID, &m_key1)) == SUCCESS){
+	    //return status;
             status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
-        } else {
+            *pLen = *pLen + MAC_LENGTH;
+        } else {        
             pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID); 
+            //return SUCCESS;
         }
         return status;
     }	
@@ -58,6 +61,7 @@ implementation {
         
         if((status = call KeyDistrib.getKeyToBSB(&m_key1)) == SUCCESS){	
             status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
+            *pLen = *pLen + MAC_LENGTH;
         } else {
             pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to BS not found.\n"); 
         }
@@ -82,8 +86,10 @@ implementation {
         pl_printf("CryptoP:  verifyMacFromBSB called.\n"); 
                 
         if((status = call KeyDistrib.getKeyToBSB( &m_key1)) != SUCCESS){
-	   pl_log_e(TAG,"CryptoP:  macBufferForBSB failed, key to BS not found.\n"); 
+	   pl_log_e(TAG,"CryptoP:  macBufferForBSB failed, key to BS not found.\n");
+	   return status;
 	}
+	
         status = call CryptoRaw.verifyMac(m_key1, buffer,  offset, pLen);
         return status;
     }	
@@ -171,29 +177,28 @@ implementation {
             return status;
         }
         for(i = 0; i < MAX_NEIGHBOR_COUNT; i++){
-            call SharedData.getPredistributedKeyForNode(i, m_key1);
-		    if(m_key1 == NULL){
-			pl_log_e(TAG, "CryptoP:  predistributed key for node %x not retrieved.\n", i); 
-	                continue;
-		    }
-	            /*
-	            calculates derivation data by appending node ID's first lower on, then higher one
-	            these are appended to array by memcpy and pointer arithmetics ()
-	            */
-	            memset(m_buffer, 0, BLOCK_SIZE); //pad whole block with zeros
-	            copyId = min(SavedData[i].nodeId, TOS_NODE_ID);	
-	            memcpy(m_buffer, &copyId, sizeof(copyId)); 
-	            copyId = max(SavedData[i].nodeId, TOS_NODE_ID);
-	            memcpy(m_buffer + sizeof(copyId), &copyId, sizeof(copyId)); 
-	            
-		    m_key2 = &(SavedData[i].kdcData.shared_key);
-	            //derive key from data and predistributed key
-	            status = call CryptoRaw.deriveKeyB(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
-	            if(status != SUCCESS){                
-	                pl_log_e(TAG, "CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData[i].nodeId, status); 
-	                continue;
-	            }
-	            m_key2->counter = 0;
+
+		call SharedData.getPredistributedKeyForNode(i, m_key1);
+		if(m_key1 == NULL){
+		    pl_log_e(TAG, "CryptoP:  predistributed key for node %x not retrieved.\n", i); 
+		    continue;
+		}	            
+		//calculates derivation data by appending node ID's first lower on, then higher one
+		//these are appended to array by memcpy and pointer arithmetics ()	            	            
+		memset(m_buffer, 0, BLOCK_SIZE); //pad whole block with zeros
+		copyId = min(SavedData[i].nodeId, TOS_NODE_ID);	
+		memcpy(m_buffer, &copyId, sizeof(copyId)); 
+		copyId = max(SavedData[i].nodeId, TOS_NODE_ID);
+		memcpy(m_buffer + sizeof(copyId), &copyId, sizeof(copyId)); 
+		
+		m_key2 = &(SavedData[i].kdcData.shared_key);
+		//derive key from data and predistributed key
+		status = call CryptoRaw.deriveKeyB(m_key1, m_buffer, 0, BLOCK_SIZE, m_key2);
+		if(status != SUCCESS){                
+		    pl_log_e(TAG, "CryptoP:  key derivation for nodeID %x completed with status %x.\n", SavedData[i].nodeId, status); 
+		    continue;
+		}
+		m_key2->counter = 0;
         }
         return status;
     }
@@ -255,7 +260,7 @@ implementation {
     command error_t Crypto.hashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t len, uint32_t* hash){
         uint8_t tempHash[HASH_LENGTH];
         uint8_t status;
-        uint8_t i;
+        //uint8_t i;
 
         pl_printf("CryptoP: hashDataShortB called.\n"); 
         if(hash == NULL){
@@ -306,6 +311,7 @@ implementation {
 	uint8_t i;
 	uint8_t tmpSignature[HASH_LENGTH];
 	Signature_t* root;
+	//root from Shared Data podle privacy level
 	PPCPrivData_t* ppcPrivData = NULL;
 	
         pl_log_i(TAG,"CryptoRawP: computeSignatures started.\n");
@@ -415,13 +421,17 @@ implementation {
     
     command error_t Crypto.selfTest(){
         uint8_t status = SUCCESS;
+        /*
         uint8_t hash[BLOCK_SIZE];
         uint32_t halfHash = 0;
         uint8_t macLength = BLOCK_SIZE;
         
+        memset(m_buffer, 1, BLOCK_SIZE);
+        */
+        
         pl_printf("CryptoP:  Self test started.\n"); 
         
-        memset(m_buffer, 1, BLOCK_SIZE);
+        
         
         pl_printf("CryptoP:  hashDataB test started.\n"); 
         
@@ -430,7 +440,8 @@ implementation {
             pl_printf("CryptoP:  hashDataB failed.\n"); 
             
             return status;
-        }		
+        }	
+        
         if((status = call Crypto.verifyHashDataB(m_buffer, 0, BLOCK_SIZE, hash)) != SUCCESS){
             
             pl_printf("CryptoP:  verifyHashDataB failed.\n"); 
@@ -445,7 +456,8 @@ implementation {
             pl_printf("CryptoP:  hashDataShortB failed.\n"); 
             
             return status;		 
-        }		
+        }	
+        
         if((status = call Crypto.verifyHashDataShortB(m_buffer, 0, BLOCK_SIZE, halfHash)) != SUCCESS){
             
             pl_printf("CryptoP:  verifyHashDataShortB failed.\n"); 
@@ -454,7 +466,7 @@ implementation {
         }
         
         pl_printf("CryptoP:  macBufferForBSB started.\n"); 
-        
+        macLength = BLOCK_SIZE;
         if((status = call Crypto.macBufferForBSB(m_buffer, 0, &macLength)) != SUCCESS){
             
             pl_printf("CryptoP:  macBufferForBSB failed.\n"); 
@@ -462,12 +474,14 @@ implementation {
             
             return status;
         }
-        if(macLength != 2 * BLOCK_SIZE){
+        
+        if(macLength != BLOCK_SIZE + MAC_LENGTH){
             
             pl_printf("CryptoP:  macBufferForBSB failed to append hash.\n"); 
             
             return EWRONGHASH;
         }
+        //return status;
         if((status = call Crypto.verifyMacFromBSB(m_buffer, 0, &macLength)) != SUCCESS){
             
             
@@ -476,15 +490,17 @@ implementation {
             return status;
         }
         
+        //return status;
         pl_printf("CryptoP:  macBufferForNodeB started.\n"); 
         
         macLength = BLOCK_SIZE;
-        if((status = call Crypto.macBufferForNodeB( 0, m_buffer, 0, &macLength)) != SUCCESS){
+        if((status = call Crypto.macBufferForNodeB( 4, m_buffer, 0, &macLength)) != SUCCESS){
             
             pl_printf("CryptoP:  macBufferForNodeB failed.\n"); 
             
             return status;
         }
+        //return status;
         if(macLength != 2 * BLOCK_SIZE){
             
             pl_printf("CryptoP:  macBufferForNodeB failed to append hash.\n"); 
@@ -498,6 +514,7 @@ implementation {
             
             return status;
         }
+        */
         return status;
     }
 }
