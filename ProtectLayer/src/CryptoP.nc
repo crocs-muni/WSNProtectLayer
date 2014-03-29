@@ -44,7 +44,7 @@ implementation {
         pl_log_i(TAG,"CryptoP:  macBufferForNodeB called.\n");
         //return status;
         if((status = call KeyDistrib.getKeyToNodeB( nodeID, &m_key1)) == SUCCESS){
-	    return status;
+	    //return status;
             status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
             *pLen = *pLen + MAC_LENGTH;
         } else {        
@@ -177,15 +177,13 @@ implementation {
             return status;
         }
         for(i = 0; i < MAX_NEIGHBOR_COUNT; i++){
-            m_key1 = call SharedData.getPredistributedKeyForNode(i);
+		    call SharedData.getPredistributedKeyForNode(i, m_key1);
 		    if(m_key1 == NULL){
 			pl_log_e(TAG, "CryptoP:  predistributed key for node %x not retrieved.\n", i); 
 	                continue;
-		    }
-	            /*
-	            calculates derivation data by appending node ID's first lower on, then higher one
-	            these are appended to array by memcpy and pointer arithmetics ()
-	            */
+		    }	            
+	            //calculates derivation data by appending node ID's first lower on, then higher one
+	            //these are appended to array by memcpy and pointer arithmetics ()	            	            
 	            memset(m_buffer, 0, BLOCK_SIZE); //pad whole block with zeros
 	            copyId = min(SavedData[i].nodeId, TOS_NODE_ID);	
 	            memcpy(m_buffer, &copyId, sizeof(copyId)); 
@@ -261,7 +259,7 @@ implementation {
     command error_t Crypto.hashDataShortB( uint8_t* buffer, uint8_t offset, uint8_t len, uint32_t* hash){
         uint8_t tempHash[HASH_LENGTH];
         uint8_t status;
-        uint8_t i;
+        //uint8_t i;
 
         pl_printf("CryptoP: hashDataShortB called.\n"); 
         if(hash == NULL){
@@ -312,6 +310,7 @@ implementation {
 	uint8_t i;
 	uint8_t tmpSignature[HASH_LENGTH];
 	Signature_t* root;
+	//root from Shared Data podle privacy level
 	PPCPrivData_t* ppcPrivData = NULL;
 	
         pl_log_i(TAG,"CryptoRawP: computeSignatures started.\n");
@@ -421,14 +420,17 @@ implementation {
     
     command error_t Crypto.selfTest(){
         uint8_t status = SUCCESS;
+        /*
         uint8_t hash[BLOCK_SIZE];
         uint32_t halfHash = 0;
         uint8_t macLength = BLOCK_SIZE;
         
+        memset(m_buffer, 1, BLOCK_SIZE);
+        */
         
         pl_printf("CryptoP:  Self test started.\n"); 
         
-        memset(m_buffer, 1, BLOCK_SIZE);
+        
         
         pl_printf("CryptoP:  hashDataB test started.\n"); 
         
@@ -486,6 +488,7 @@ implementation {
             
             return status;
         }
+        
         //return status;
         pl_printf("CryptoP:  macBufferForNodeB started.\n"); 
         
@@ -496,7 +499,7 @@ implementation {
             
             return status;
         }
-        return status;
+        //return status;
         if(macLength != 2 * BLOCK_SIZE){
             
             pl_printf("CryptoP:  macBufferForNodeB failed to append hash.\n"); 
@@ -510,6 +513,7 @@ implementation {
             
             return status;
         }
+        */
         return status;
     }
 }

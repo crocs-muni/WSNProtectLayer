@@ -69,7 +69,6 @@ implementation{
 	
         pSavedData = call SharedData.getNodeState(nodeID);
         if (pSavedData != NULL) {
-            return SUCCESS;
             *pNodeKey =  &((pSavedData->kdcData).shared_key);
             return SUCCESS;
         }
@@ -124,6 +123,7 @@ implementation{
 
     command error_t KeyDistrib.selfTest(){
         uint8_t status = SUCCESS;
+        
         status = call Crypto.selfTest();
         if(status == SUCCESS){
             call Leds.led1On();
@@ -131,6 +131,7 @@ implementation{
             call Leds.led2On();
         }
         
+        /*
         pl_log_d(TAG, "<Self test>\n"); 
         m_testKey = NULL;
 
@@ -145,6 +146,7 @@ implementation{
             return status;
         }
         pl_log_d(TAG, "</Self test>\n"); 
+        */
         return status;
     }
 }
