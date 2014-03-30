@@ -15,6 +15,7 @@ implementation {
 	components KeyDistribP;  
 	components CryptoC;
 	components SharedDataC;
+	//components ResourceArbiterC;
         components LedsC;
         
 	Init = KeyDistribP.PLInit;
@@ -22,5 +23,6 @@ implementation {
 	
 	KeyDistribP.Crypto -> CryptoC.Crypto;
 	KeyDistribP.SharedData -> SharedDataC.SharedData;
+	KeyDistribP.ResourceArbiter -> SharedDataC.ResourceArbiter;
 	KeyDistribP.Leds -> LedsC;
 }

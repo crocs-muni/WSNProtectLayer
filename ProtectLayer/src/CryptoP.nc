@@ -157,7 +157,7 @@ implementation {
         uint16_t copyId;
         uint8_t i;
         SavedData_t* SavedData = NULL;
-        KDCPrivData_t* KDCPrivData = NULL;
+        //KDCPrivData_t* KDCPrivData = NULL;
         //SavedData_t* SavedDataEnd = NULL;
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
@@ -169,16 +169,16 @@ implementation {
         
         pl_printf("CryptoP:  initCryptoIIB called.\n"); 
         
-        KDCPrivData = call SharedData.getKDCPrivData();
+        //KDCPrivData = call SharedData.getKDCPrivData();
         SavedData = call SharedData.getSavedData();
-        if(SavedData == NULL || KDCPrivData == NULL){
+        if(SavedData == NULL ){
             status = EDATANOTFOUND;
             pl_log_f(TAG, "CryptoP initialization cannot acces predistributed data.\n");
             return status;
         }
         for(i = 0; i < MAX_NEIGHBOR_COUNT; i++){
 
-		call SharedData.getPredistributedKeyForNode(i, m_key1);
+		call KeyDistrib.getPredistributedKey(i, &m_key1);
 		if(m_key1 == NULL){
 		    pl_log_e(TAG, "CryptoP:  predistributed key for node %x not retrieved.\n", i); 
 		    continue;
@@ -428,7 +428,7 @@ implementation {
         
         memset(m_buffer, 1, BLOCK_SIZE);
         */
-        
+        /*
         pl_printf("CryptoP:  Self test started.\n"); 
         
         

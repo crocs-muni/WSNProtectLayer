@@ -11,6 +11,7 @@ module KeyDistribP{
     uses {
         interface Crypto; /**< Crypto interface is used */
         interface SharedData;
+        interface ResourceArbiter;
         interface Leds;
     }
     provides {
@@ -23,7 +24,9 @@ implementation{
 //TODO clean up and add parameters checks
     
     PL_key_t* m_testKey;	/**< handle to key for selfTest */
-
+    PL_key_t preNeighKeys[MAX_NEIGHBOR_COUNT];
+    uint8_t preKeysRetrieved = 0;
+    uint8_t retrieveStatus;
     static const char *TAG = "KeyDistP";
 
     //
@@ -38,10 +41,75 @@ implementation{
         return SUCCESS;
     }
 
+    
+    
     //
     //	KeyDistrib interface
     //
+    
+    command error_t KeyDistrib.getPredistributedKey(uint8_t neighbor, PL_key_t** pNodeKey){
+	if(neighbor > MAX_NEIGHBOR_COUNT || neighbor < 0){
+	    	pl_log_e(TAG,"KeyDistribP: invalid neighbor count.\n");
+	    	return FAIL;
+        }
+        
+        if(pNodeKey == NULL){
+	    	pl_log_e(TAG, "pNodeKey NULL.\n");
+	    	return FAIL;
+        }
+    
+	*pNodeKey =  &preNeighKeys[neighbor];
+	return SUCCESS;
+    }
+    
+    
+    task void retrievePrekeysTask() {
+	uint8_t status;
+	combinedData_t* combData;
+        pl_log_d(TAG, "retrievePrekeysTask posted.\n"); 
+
+	combData = call SharedData.getAllData();
+		
+	if(preKeysRetrieved == combData->actualNeighborCount){
+	      call Crypto.initCryptoIIB();
+	} else {
+	
+	     status = call SharedData.getPredistributedKeyForNode(combData->savedData[preKeysRetrieved].nodeId, &preNeighKeys[preKeysRetrieved]);	      
+	}
+    }
+    
+    event void ResourceArbiter.restoreKeyFromFlashDone(error_t result){
+	if(result == SUCCESS){
+	//key sucessfully retrieved, moving on to next one
+	     preKeysRetrieved++;
+	     retrieveStatus = SUCCESS;
+	     post retrievePrekeysTask();
+	} else {
+	     pl_log_e(TAG, "restoreKeyFromFlashDone failed.\n"); 
+	     if(retrieveStatus == SUCCESS){ 
+	         //second attempt
+	         retrieveStatus = FAIL;
+		 post retrievePrekeysTask();
+	     } else {
+		//second attempt failed, skipping this neighbor
+	         //preNeighKeys[preKeysRetrieved] = NULL;
+	         preKeysRetrieved++;
+	         retrieveStatus = SUCCESS;
+	         post retrievePrekeysTask();
+	     }
+	}
+    }
+    
+    event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result) {}
+	
+    event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {}
+    
     command error_t KeyDistrib.discoverKeys() {
+	//post task for eeprom key retrieval
+	retrieveStatus = SUCCESS;
+	post retrievePrekeysTask();
+	return SUCCESS;
+	/*
         error_t status = SUCCESS;
 
         pl_log_d(TAG, "<discoverKeys>.\n");
@@ -50,7 +118,7 @@ implementation{
             return status;
         }
         pl_log_d(TAG, "</discoverKeys>.\n"); 
-        return status;
+        */
     }
 
     command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t** pNodeKey){

@@ -29,6 +29,14 @@ interface KeyDistrib {
 	command error_t getKeyToBSB(PL_key_t** pBSKey);	
 	
 	/**
+		Command: Get predistributed key, previously retrieved from EEPROM
+		@param[in] neighbor value in range from 0 to MAX_NEIGHBOR_COUNT
+		@param[out] pBSKey handle to key
+		@return error_t status.
+	*/
+	command error_t getPredistributedKey(uint8_t neighbor, PL_key_t** pNodeKey);	
+	
+	/**
 		Command: Get key for AES based hashing function 
 		@param[out] pBSKey handle to key
 		@return error_t status.
