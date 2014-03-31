@@ -154,7 +154,9 @@ implementation {
     
     
     command error_t Crypto.initCryptoIIB(){
+    
         error_t status = SUCCESS;
+        
         uint16_t copyId;
         uint8_t i;
         SavedData_t* SavedData = NULL;
@@ -205,6 +207,7 @@ implementation {
 		}
 		m_key2->counter = 0;
         }
+        
         return status;
     }
     
@@ -377,20 +380,25 @@ implementation {
 	    return FAIL;
         }
 
-
+	
         pl_printf("CryptoP:  verifySignature called.\n");
         ppcPrivData = call SharedData.getPPCPrivData();
         if(ppcPrivData == NULL){
 	    pl_log_e(TAG,"CryptoRawP: verifySignature ppcPrivData not retreived.\n");
 	    return FAIL;
         }
-        
-        if(counter - ppcPrivData->signatures[level].counter < 1){
+                
+
+        if( counter - ppcPrivData->signatures[level].counter   < 1){
 	    pl_log_e(TAG,"CryptoRawP: verifySignatures invalid counter value.\n");
 	    return FAIL;
         }
+        //return status;
+        
         memcpy(tmpSignature, buffer + offset, SIGNATURE_LENGTH);
         for(i = 0; i < counter - ppcPrivData->signatures[level].counter; i++){
+
+
 	    status = call Crypto.hashDataB( tmpSignature, 0, SIGNATURE_LENGTH, tmpSignature);
 	    if (status != SUCCESS){
 	        pl_log_e(TAG,"CryptoRawP: verifySignatures failed.\n");
@@ -428,6 +436,7 @@ implementation {
     
     command error_t Crypto.selfTest(){
         uint8_t status = SUCCESS;
+        /*
         Signature_t signature;
         Signature_t result;
        	PPCPrivData_t* ppcPrivData = NULL;
@@ -436,18 +445,23 @@ implementation {
         memset(signature.signature, 1, SIGNATURE_LENGTH);
         signature.privacyLevel = 0;
         signature.counter = 2;
-        memcpy(&(ppcPrivData->signatures[0]), signature, sizeof(Signature_t));
+        memcpy(&(ppcPrivData->signatures[0]), &signature, sizeof(Signature_t));
         
         if((status = call Crypto.computeSignature( 0, 2, &result)) != SUCCESS){            
             pl_printf("CryptoP:  computeSignature failed.\n");            
             return status;
-        }	
+        }
         
-        if((status = call Crypto.verifySignature( result.signature, 0, 0, 2, null)) != SUCCESS){            
+        memcpy(&(ppcPrivData->signatures[0]), &result, sizeof(Signature_t));
+        //memcpy(&(ppcPrivData->signatures[0]), &signature, sizeof(Signature_t));
+        
+
+        //return status;
+        if((status = call Crypto.verifySignature( signature.signature, 0, 0, 2, NULL)) != SUCCESS){            
             pl_printf("CryptoP:  verifySignature failed.\n");            
             return status;
         }	
-        
+        */
         /*
         uint8_t hash[BLOCK_SIZE];
         uint32_t halfHash = 0;

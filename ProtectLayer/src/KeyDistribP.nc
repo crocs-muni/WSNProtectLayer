@@ -180,14 +180,14 @@ implementation{
 
     command error_t KeyDistrib.selfTest(){
         uint8_t status = SUCCESS;
-        
+        /*
         status = call Crypto.selfTest();
         if(status == SUCCESS){
             call Leds.led1On();
         } else {
             call Leds.led2On();
         }
-        
+        */
         /*
         pl_log_d(TAG, "<Self test>\n"); 
         m_testKey = NULL;
