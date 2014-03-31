@@ -24,7 +24,7 @@ implementation{
 //TODO clean up and add parameters checks
     
     PL_key_t* m_testKey;	/**< handle to key for selfTest */
-    PL_key_t preNeighKeys[MAX_NEIGHBOR_COUNT];
+    //PL_key_t preNeighKeys[MAX_NEIGHBOR_COUNT];
     uint8_t preKeysRetrieved = 0;
     uint8_t retrieveStatus;
     static const char *TAG = "KeyDistP";
@@ -47,36 +47,25 @@ implementation{
     //	KeyDistrib interface
     //
     
-    command error_t KeyDistrib.getPredistributedKey(uint8_t neighbor, PL_key_t** pNodeKey){
-	if(neighbor > MAX_NEIGHBOR_COUNT || neighbor < 0){
-	    	pl_log_e(TAG,"KeyDistribP: invalid neighbor count.\n");
-	    	return FAIL;
-        }
-        
-        if(pNodeKey == NULL){
-	    	pl_log_e(TAG, "pNodeKey NULL.\n");
-	    	return FAIL;
-        }
-    
-	*pNodeKey =  &preNeighKeys[neighbor];
-	return SUCCESS;
-    }
     
     
     task void retrievePrekeysTask() {
 	uint8_t status;
 	combinedData_t* combData;
+	SavedData_t* SavedData = NULL;
+	
         pl_log_d(TAG, "retrievePrekeysTask posted.\n"); 
 
 	combData = call SharedData.getAllData();
-		
+	SavedData = call SharedData.getSavedData();
+	
 	if(preKeysRetrieved == combData->actualNeighborCount){
 	      call Crypto.initCryptoIIB();
 	      
 	      //BUGBUG signal for the dispatcher automaton to forward in state
 	} else {
 	
-	     status = call SharedData.getPredistributedKeyForNode(combData->savedData[preKeysRetrieved].nodeId, &preNeighKeys[preKeysRetrieved]);	      
+	     status = call SharedData.getPredistributedKeyForNode(combData->savedData[preKeysRetrieved].nodeId, &(SavedData[preKeysRetrieved].kdcData.shared_key));	      
 	}
     }
     
@@ -193,14 +182,14 @@ implementation{
 
     command error_t KeyDistrib.selfTest(){
         uint8_t status = SUCCESS;
-        
+        /*
         status = call Crypto.selfTest();
         if(status == SUCCESS){
             call Leds.led1On();
         } else {
             call Leds.led2On();
         }
-        
+        */
         /*
         pl_log_d(TAG, "<Self test>\n"); 
         m_testKey = NULL;
