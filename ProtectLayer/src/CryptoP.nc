@@ -24,6 +24,7 @@ implementation {
     
     PL_key_t* 	m_key1;		/**< handle to the key used as first (or only) one in cryptographic operations. Value is set before task is posted. */
     PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
+    PL_key_t 	m_key_pred;
     uint8_t 	m_buffer[2*BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */    
     uint8_t         m_exp[240]; //expanded key
     
@@ -178,7 +179,11 @@ implementation {
         }
         for(i = 0; i < MAX_NEIGHBOR_COUNT; i++){
 
-		call KeyDistrib.getPredistributedKey(i, &m_key1);
+		//copy predistributed key, so it will not colide with derived key during computation
+		memcpy(&m_key_pred, &(SavedData[i].kdcData.shared_key), sizeof(Signature_t));
+		m_key1 = &m_key_pred;
+		
+		
 		if(m_key1 == NULL){
 		    pl_log_e(TAG, "CryptoP:  predistributed key for node %x not retrieved.\n", i); 
 		    continue;
@@ -311,14 +316,10 @@ implementation {
 	uint8_t i;
 	uint8_t tmpSignature[HASH_LENGTH];
 	Signature_t* root;
-	//root from Shared Data podle privacy level
+	//root from Shared Data acording to privacy level
 	PPCPrivData_t* ppcPrivData = NULL;
 	
-        pl_log_i(TAG,"CryptoRawP: computeSignatures started.\n");
-	 if(root == NULL){
-	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL root.\n");
-	    return FAIL;
-        }
+        
         if(lenFromRoot == 0){
 	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL signature.\n");
 	    return FAIL;
@@ -334,6 +335,12 @@ implementation {
 	    return FAIL;
         }
         root = &(ppcPrivData->signatures[privacyLevel]);
+        
+        pl_log_i(TAG,"CryptoRawP: computeSignatures started.\n");
+	 if(root == NULL){
+	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL root.\n");
+	    return FAIL;
+        }
         
         memcpy(tmpSignature, root->signature, HASH_LENGTH);
         for(i = 0; i < lenFromRoot; i++){
@@ -421,6 +428,26 @@ implementation {
     
     command error_t Crypto.selfTest(){
         uint8_t status = SUCCESS;
+        Signature_t signature;
+        Signature_t result;
+       	PPCPrivData_t* ppcPrivData = NULL;
+
+        ppcPrivData = call SharedData.getPPCPrivData();
+        memset(signature.signature, 1, SIGNATURE_LENGTH);
+        signature.privacyLevel = 0;
+        signature.counter = 2;
+        memcpy(&(ppcPrivData->signatures[0]), signature, sizeof(Signature_t));
+        
+        if((status = call Crypto.computeSignature( 0, 2, &result)) != SUCCESS){            
+            pl_printf("CryptoP:  computeSignature failed.\n");            
+            return status;
+        }	
+        
+        if((status = call Crypto.verifySignature( result.signature, 0, 0, 2, null)) != SUCCESS){            
+            pl_printf("CryptoP:  verifySignature failed.\n");            
+            return status;
+        }	
+        
         /*
         uint8_t hash[BLOCK_SIZE];
         uint32_t halfHash = 0;
