@@ -44,14 +44,10 @@ implementation {
     
     command error_t PLInit.init() {
         call ResourceArbiter.restoreCombinedDataFromFlash();
-        if (combinedData.magicWord != MAGIC_WORD) {
-        	memset(&combinedData, 0, sizeof(combinedData));
-        	combinedData.magicWord = MAGIC_WORD;
-        }
+        
+        pl_log_i(TAG, "PLInit.init() finished, waiting for restoration of combinedData from flash.\n");
 
-        pl_log_i(TAG, "PLInit.init() finished.\n");
-
-        initialized = TRUE;
+        //initialized = TRUE;
         return SUCCESS;
     }
     
@@ -199,7 +195,9 @@ implementation {
 		return EBUSY;
 	}
     
-    default event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {}
+    default event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {
+    	
+    }
 
 	command error_t ResourceArbiter.restoreKeyFromFlash(uint16_t neighbourId, PL_key_t* predistribKey){
 		if (!m_busy) {
@@ -242,6 +240,16 @@ implementation {
    
 	event void SharedDataRead.readDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
 		m_busy = FALSE;
+		
+		pl_log_i(TAG, "ResourceArbiter.restoreCombinedDataFromFlash() finished.\n");
+		if (combinedData.magicWord != MAGIC_WORD) {
+        	memset(&combinedData, 0, sizeof(combinedData));
+        	combinedData.magicWord = MAGIC_WORD;
+        	pl_log_i(TAG, "Magic word was incorrect, setting combinedData to 0.\n");
+        }
+
+        initialized = TRUE;
+        
 		signal ResourceArbiter.restoreCombinedDataFromFlashDone(err);
 	}
 	

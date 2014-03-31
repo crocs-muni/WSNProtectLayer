@@ -11,6 +11,8 @@
 
 #include "message.h"
 
+#define SKIP_MAGIC_PACKET 1
+
 // Define following constant if you want to use buffered forwarder for 
 // hop-by-hop forwarding to base station (Has more slots for messages
 // than default forwarder which has only one slot.).
@@ -137,10 +139,11 @@ enum {
 
 enum {
   STATE_INIT = 0,
-  STATE_READY_TO_DEPLOY = 1,
-  STATE_MAGIC_RECEIVED = 2,
-  STATE_READY_FOR_APP = 3,
-  STATE_WORKING = 4
+  STATE_LOADED_FROM_EEPROM = 1,
+  STATE_READY_TO_DEPLOY = 2,
+  STATE_MAGIC_RECEIVED = 3,
+  STATE_READY_FOR_APP = 4,
+  STATE_WORKING = 5
 }; 
 
 #define PHANTOM_WALK_PROBABILITY (0.5)

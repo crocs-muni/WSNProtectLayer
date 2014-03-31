@@ -113,6 +113,12 @@ implementation{
         {
             //init shared data
             call SharedDataCInit.init();
+            
+            m_state = STATE_LOADED_FROM_EEPROM;
+            break;
+        }
+        case STATE_LOADED_FROM_EEPROM:
+        {
             //crypto init = auto init
             
             //init privacy level
@@ -162,7 +168,6 @@ implementation{
             
             m_state = STATE_READY_FOR_APP;
             signal Dispatcher.stateChanged(m_state);
-           
 
             break;
         }
@@ -217,6 +222,12 @@ implementation{
         {
             //init shared data
             call SharedDataCInit.init();
+            
+            m_state = STATE_LOADED_FROM_EEPROM;
+            break;
+        }
+        case STATE_LOADED_FROM_EEPROM:
+        {
             //crypto init = auto init
             
             //init privacy level
@@ -279,10 +290,16 @@ implementation{
 #endif
     
     event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result) {
-    //	pl_log_d(TAG, "saveCombinedDataToFlashDone.\n"); 
+    	pl_log_d(TAG, "saveCombinedDataToFlashDone.\n");
+    	call Dispatcher.serveState();	
 	}
 	
-	event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {}
+	event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {
+		pl_log_d(TAG, "restoreCombinedDataFromFlashDone.\n");
+		call Dispatcher.serveState();
+	}
 	
-	event void ResourceArbiter.restoreKeyFromFlashDone(error_t result) {}
+	event void ResourceArbiter.restoreKeyFromFlashDone(error_t result) {
+		pl_log_d(TAG, "restoreKeyFromFlashDone.\n");
+	}
 }
