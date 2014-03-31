@@ -57,11 +57,12 @@ implementation {
      * @return a pointer to the combinedData structure
      */
     command combinedData_t * SharedData.getAllData(){
+    	//BUGBUG produces outrageous amount of spam
         if(initialized){
             pl_log_d(TAG, "getAllData called on initialized data.\n");
         } else {
             pl_log_e(TAG, "ERROR, data not initialized.\n");
-        }	
+        }
         return &combinedData;
     }
     
@@ -245,7 +246,11 @@ implementation {
 		if (combinedData.magicWord != MAGIC_WORD) {
         	memset(&combinedData, 0, sizeof(combinedData));
         	combinedData.magicWord = MAGIC_WORD;
-        	pl_log_i(TAG, "Magic word was incorrect, setting combinedData to 0.\n");
+        	pl_log_d(TAG, "Magic word was incorrect, setting combinedData to 0.\n");
+        }
+        if (combinedData.dispatcherState < STATE_LOADED_FROM_EEPROM) {
+        	combinedData.dispatcherState = STATE_LOADED_FROM_EEPROM;
+        	pl_log_d(TAG, "DispatcherState was too small, setting to 1.\n");
         }
 
         initialized = TRUE;

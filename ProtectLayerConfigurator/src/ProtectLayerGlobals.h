@@ -54,6 +54,17 @@ enum {
 };
 // NOTE: constants should be defined as item in enum above (to save space) #define MAX_NEIGHBOR_COUNT 	20 /**< Maximum number of neighbors - used to allocate static arrays */
 
+enum {
+  STATE_INIT = 0,
+  STATE_LOADED_FROM_EEPROM = 1,
+  STATE_READY_TO_DEPLOY = 2,
+  STATE_MAGIC_RECEIVED = 3,
+  STATE_ROUTES_READY = 4,
+  STATE_READY_FOR_SAVE = 5,
+  STATE_READY_FOR_APP = 6,
+  STATE_WORKING = 7
+}; 
+
 #define FLAG_STATE_KDP_DISCOVERKEYS 0x0001	/**< neighbor keys discovery in progress */
 #define FLAG_STATE_KDP_GETKEYTOBS   0x0002	/**< getting key to BS in progress */
 #define FLAG_STATE_KDP_GETKEYTONODE 0x0004	/**< getting key to particular node in progress */
@@ -264,7 +275,9 @@ typedef nx_struct KDCPrivData {
  */
 typedef struct CombinedData {
 	uint8_t magicWord;
-	SavedData_t savedData[MAX_NEIGHBOR_COUNT]; /**< an array of information about the node's neighbours */ 
+	uint8_t dispatcherState;
+	SavedData_t savedData[MAX_NEIGHBOR_COUNT]; /**< an array of information about the node's neighbours, first actualNeighborCount items should be valid */ 
+	uint8_t	actualNeighborCount; /**< number of neighbors at the moment */
 	PPCPrivData_t ppcPrivData; /**< private data structure for the PPC component */
     RoutePrivData_t routePrivData;
     KDCPrivData_t kdcPrivData; /**< private data structure for the key distribution component */

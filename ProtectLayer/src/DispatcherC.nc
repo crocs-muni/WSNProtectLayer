@@ -57,6 +57,7 @@ implementation{
 	//DispatcherP.ForwarderCInit -> ForwarderC.Init;
 	//DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
 	DispatcherP.ResourceArbiter -> SharedDataC.ResourceArbiter;
+	DispatcherP.SharedData -> SharedDataC.SharedData;
 	
 	Dispatcher = DispatcherP.Dispatcher;
 }

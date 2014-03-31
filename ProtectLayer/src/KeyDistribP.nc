@@ -72,6 +72,8 @@ implementation{
 		
 	if(preKeysRetrieved == combData->actualNeighborCount){
 	      call Crypto.initCryptoIIB();
+	      
+	      //BUGBUG signal for the dispatcher automaton to forward in state
 	} else {
 	
 	     status = call SharedData.getPredistributedKeyForNode(combData->savedData[preKeysRetrieved].nodeId, &preNeighKeys[preKeysRetrieved]);	      

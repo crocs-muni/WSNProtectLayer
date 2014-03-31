@@ -13,6 +13,7 @@ interface Dispatcher{
 	
 	command void serveState();
 	
+	//BUGBUG delete unused event/signalling
 	event void stateChanged(uint8_t newState);
 	
 }

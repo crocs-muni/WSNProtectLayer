@@ -11,8 +11,6 @@
 
 #include "message.h"
 
-#define SKIP_MAGIC_PACKET 1
-
 // Define following constant if you want to use buffered forwarder for 
 // hop-by-hop forwarding to base station (Has more slots for messages
 // than default forwarder which has only one slot.).
@@ -142,8 +140,10 @@ enum {
   STATE_LOADED_FROM_EEPROM = 1,
   STATE_READY_TO_DEPLOY = 2,
   STATE_MAGIC_RECEIVED = 3,
-  STATE_READY_FOR_APP = 4,
-  STATE_WORKING = 5
+  STATE_ROUTES_READY = 4,
+  STATE_READY_FOR_SAVE = 5,
+  STATE_READY_FOR_APP = 6,
+  STATE_WORKING = 7
 }; 
 
 #define PHANTOM_WALK_PROBABILITY (0.5)
@@ -383,6 +383,7 @@ typedef struct KDCPrivData {
  */
 typedef struct CombinedData {
 	uint8_t magicWord;
+	uint8_t dispatcherState;
 	SavedData_t savedData[MAX_NEIGHBOR_COUNT]; /**< an array of information about the node's neighbours, first actualNeighborCount items should be valid */ 
 	uint8_t	actualNeighborCount; /**< number of neighbors at the moment */
 	PPCPrivData_t ppcPrivData; /**< private data structure for the PPC component */
