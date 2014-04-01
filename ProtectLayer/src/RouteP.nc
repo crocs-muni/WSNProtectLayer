@@ -77,7 +77,7 @@ implementation{
 	
 	
 	
-	event void Dispatcher.stateChanged(uint8_t newState){ }
+	
 	
 /**
  *  
@@ -138,7 +138,7 @@ implementation{
 		numNeigh = pData->actualNeighborCount;
 		pl_log_d(TAG, "neighbors=%u\n", numNeigh);
 		
-		pl_log_d(TAG, "parent is node %u and is %u valid\n", pData->routePrivData.parentNodeId, pData->routePrivData.isValid);
+		pl_log_d(TAG, "parent is %u and is %u valid\n", pData->routePrivData.parentNodeId, pData->routePrivData.isValid);
 		
 		// Iterate over, neighbors, pick only those with quality above threshold.
 		for(i=0; i<numNeigh; i++){
@@ -152,7 +152,7 @@ implementation{
 		uint8_t numNeigh = 0;
 		uint8_t numAboveThreshold=0;
 		
-		pl_log_i(TAG, "CTP termination state...");
+		pl_log_i(TAG, "CTP term state...\n");
 		pl_printfflush();
 		
 		call CtpSendTimer.stop();
@@ -195,9 +195,10 @@ implementation{
 #ifdef CTP_DUMP_NEIGHBORS
 	    dumpCtpNeighbors();
 #endif
-		
+	pl_log_d(TAG, "##.\n");
+
 		// Signalize dispatcher routing is done.
-		call Dispatcher.serveState();
+		call Dispatcher.stateFinished(STATE_ROUTES_IN_PROGRESS);
 	}
 
 	event void CtpInitTimer.fired(){
@@ -266,7 +267,7 @@ implementation{
 			
 			// Try to help CTP somehow sometimes...
 			if ((findRootCnt % 5) == 0){
-				pl_log_d(TAG, "CTP route update\n");
+				pl_log_d(TAG, "CTP update\n");
 				call CtpInfo.triggerImmediateRouteUpdate();
 				call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
 				return;
@@ -295,7 +296,7 @@ implementation{
 			
 			parentStatus = call CtpInfo.getParent(&parent);
 			if (parentStatus==SUCCESS){
-				pl_log_i(TAG, "Parent found: [%u]. Terminating CTP\n", parent);
+				pl_log_i(TAG, "Parent found: [%u]. CTP End\n", parent);
 				ctp_init_state=CTP_STATE_TERMINATE;
 				parentFound=TRUE;
 				
@@ -305,7 +306,7 @@ implementation{
 #endif				
 				return;
 			} else {
-				pl_log_w(TAG, "Parent NOT found. Err [%u]. Try again\n", parentStatus);
+				pl_log_w(TAG, "Parent NOT found. Err [%u]\n", parentStatus);
 				findRootCnt += 1;
 				
 				// Try to help CTP somehow sometimes...
@@ -328,11 +329,11 @@ implementation{
         sendResult = call CtpSend.send(&ctpPkt, sizeof(CtpResponseMsg));
         if (sendResult == SUCCESS) {
             ctpBusy=TRUE;
-            pl_log_d(TAG, "CTPSendTask, sending\n");
+            pl_log_d(TAG, "CTPSendTask\n");
             
         } else {
         	// log fail
-        	pl_log_w(TAG, "CTPSendTask, send failed, %u\n", sendResult);
+        	pl_log_w(TAG, "CTPSendTask,failed, %u\n", sendResult);
         	
         	// start re-tx timer
 			call CtpSendTimer.startOneShot(CTP_TIME_SEND_FAIL + (call Random.rand16() % CTP_TIME_SEND_FAIL_RND));
@@ -370,7 +371,7 @@ implementation{
 			uint8_t chosenOne = 0;
 			chosenOne = call Random.rand16() % (pData->actualNeighborCount);
 			*neigh = pData->savedData[chosenOne].nodeId;
-			pl_log_d(TAG, "Selected random Neighbor %u\n", *neigh);
+			pl_log_d(TAG, "random Neighbor %u\n", *neigh);
 			return SUCCESS;
 		} else
 		{
@@ -402,7 +403,7 @@ implementation{
 		}
 	}
 #endif
-
+	
 
 
 }

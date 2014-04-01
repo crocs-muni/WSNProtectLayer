@@ -20,6 +20,8 @@ module SharedDataP {
         interface BlockRead as KeysDataRead;
 		interface BlockRead as SharedDataRead;
 		interface BlockWrite as SharedDataWrite;
+	interface Dispatcher;
+	interface Boot;
     }
 #endif
 }
@@ -38,6 +40,10 @@ implementation {
     bool m_busy = FALSE;
     bool initialized = FALSE;
 
+      event void Boot.booted() {
+	  memset(&combinedData, 0, sizeof(combinedData));
+      }
+    
     /** 
      * Initialize the combinedData structure to initial zeros
      */
@@ -59,7 +65,7 @@ implementation {
     command combinedData_t * SharedData.getAllData(){
     	//BUGBUG produces outrageous amount of spam
         if(initialized){
-            pl_log_d(TAG, "getAllData called on initialized data.\n");
+            //pl_log_d(TAG, "getAllData called on initialized data.\n");
         } else {
             pl_log_e(TAG, "ERROR, data not initialized.\n");
         }
@@ -73,7 +79,7 @@ implementation {
      */
     command SavedData_t * SharedData.getSavedData(){
         if(initialized){
-            pl_log_d(TAG, "getSavedData called on initialized data.\n");
+            //pl_log_d(TAG, "getSavedData called on initialized data.\n");
         } else {
             pl_log_e(TAG, "ERROR, data not initialized.\n");
         }
@@ -90,7 +96,7 @@ implementation {
         int i;
         
         if(initialized){
-            pl_log_d(TAG, "getNodeState called on initialized data for node %u.\n", nodeId);
+            //pl_log_d(TAG, "getNodeState called on initialized data for node %u.\n", nodeId);
         } else {
             pl_log_e(TAG, "ERROR, getNodeState called but data not initialized yet.\n");
         }
@@ -110,7 +116,7 @@ implementation {
      */
     command PPCPrivData_t* SharedData.getPPCPrivData() {
         if(initialized){
-            pl_log_d(TAG, "getPPCPrivData called on initialized data.\n"); 
+            //pl_log_d(TAG, "getPPCPrivData called on initialized data.\n"); 
         } else {
             pl_log_d(TAG, "getPPCPrivData called.\n"); 
             pl_log_e(TAG, "ERROR, data not initialized.\n"); 
@@ -125,7 +131,7 @@ implementation {
      */
     command RoutePrivData_t* SharedData.getRPrivData() {
         if(initialized){
-            pl_log_d(TAG, "getRPrivData called on initialized data.\n");
+            //pl_log_d(TAG, "getRPrivData called on initialized data.\n");
         } else {
             pl_log_d(TAG, "getRPrivData called.\n");
             pl_log_e(TAG, "ERROR, data not initialized.\n");
@@ -140,7 +146,7 @@ implementation {
      */
     command KDCPrivData_t* SharedData.getKDCPrivData() {
         if(initialized){
-            pl_log_d(TAG, "getKDCPrivData called on initialized data.\n"); 
+            //pl_log_d(TAG, "getKDCPrivData called on initialized data.\n"); 
         } else {
             pl_log_d(TAG, "getKDCPrivData called.\n"); 
             pl_log_e(TAG, "ERROR, data not initialized.\n"); 
@@ -177,8 +183,10 @@ implementation {
     
     default event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result) {
     	pl_log_d(TAG, "saveCombinedDataToFlashDone.\n"); 
+    	call Dispatcher.stateFinished(STATE_READY_FOR_APP);
 	}
     
+        
     /**
      * A command to restore the saved combinedData structure form the flash memory
      * and rewrite the current data in combinedData.
@@ -282,5 +290,7 @@ implementation {
      */
 	event void SharedDataWrite.syncDone(error_t error){
 	}
+	
+	
 }
     

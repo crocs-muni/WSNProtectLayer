@@ -43,22 +43,22 @@ implementation {
         uint8_t plainCounter[BLOCK_SIZE];			
         uint8_t encCounter[BLOCK_SIZE];
 
-        pl_log_d(TAG,"CryptoRawP: encryptBufferB(buffer = '0x%x', 1 = '0x%x', 2 = '0x%x'.\n", buffer[0],buffer[1],buffer[2]);
+        pl_log_d( TAG," encryptBufferB(buffer = '0x%x', 1 = '0x%x', 2 = '0x%x'.\n", buffer[0],buffer[1],buffer[2]);
 
         if(key == NULL){
-	    pl_log_e(TAG,"CryptoRawP: encryptBufferB NULL key.\n");
+	    pl_log_e( TAG," encryptBufferB NULL key.\n");
 	    return FAIL;	    
         }
         if(buffer == NULL){
-	    pl_log_e(TAG,"CryptoRawP: encryptBufferB NULL buffer.\n");
+	    pl_log_e( TAG," encryptBufferB NULL buffer.\n");
 	    return FAIL;	    
         }
         if(offset > MAX_OFFSET){
-	    pl_log_e(TAG,"CryptoRawP: encryptBufferB offset is larger than max.\n");
+	    pl_log_e( TAG," encryptBufferB offset is larger than max.\n");
 	    return FAIL;	    
         }
         if(len == 0){
-	    pl_log_e(TAG,"CryptoRawP: encryptBufferB pLen = 0.\n");
+	    pl_log_e( TAG," encryptBufferB pLen = 0.\n");
 	    return FAIL;	    
         }
         
@@ -83,7 +83,7 @@ implementation {
             (key->counter)++;
             if((key->counter) == 0){
                 
-                pl_log_i(TAG,"CryptoRawP:  encryptBufferB counter overflow, generate new key requiered.\n"); 
+                pl_log_i( TAG,"  encryptBufferB counter overflow, generate new key requiered.\n"); 
                 
                 //deal with new key and counter value reset
             }
@@ -102,25 +102,25 @@ implementation {
         uint8_t xor[BLOCK_SIZE];
         error_t status = SUCCESS;
         
-        pl_log_d(TAG,"CryptoRawP: macBuffer called.\n");
+        pl_log_d( TAG," macBuffer called.\n");
         if(key == NULL){
-	    pl_log_e(TAG,"CryptoRawP: macBuffer NULL key.\n");
+	    pl_log_e( TAG," macBuffer NULL key.\n");
 	    return FAIL;	    
         }
         if(buffer == NULL){
-	    pl_log_e(TAG,"CryptoRawP: macBuffer NULL buffer.\n");
+	    pl_log_e( TAG," macBuffer NULL buffer.\n");
 	    return FAIL;	    
         }
         if(offset > MAX_OFFSET){
-	    pl_log_e(TAG,"CryptoRawP: macBuffer offset is larger than max.\n");
+	    pl_log_e( TAG," macBuffer offset is larger than max.\n");
 	    return FAIL;	    
         }
         if(pLen == NULL || *pLen == 0){
-	    pl_log_e(TAG,"CryptoRawP: macBuffer NULL pLen or *pLen = 0.\n");
+	    pl_log_e( TAG," macBuffer NULL pLen or *pLen = 0.\n");
 	    return FAIL;	    
         }
         if(mac == NULL){
-	    pl_log_e(TAG,"CryptoRawP: macBuffer NULL output mac.\n");
+	    pl_log_e( TAG," macBuffer NULL output mac.\n");
 	    return FAIL;	    
         }
         
@@ -158,19 +158,19 @@ implementation {
         
         // Check sanity of the input parameters
          if(key == NULL){
-	    pl_log_e(TAG,"CryptoP: verifyMac NULL key.\n");
+	    pl_log_e( TAG," verifyMac NULL key.\n");
 	    return FAIL;
         }
         if(buffer == NULL){
-	    pl_log_e(TAG,"CryptoP: verifyMac NULL buffer.\n");
+	    pl_log_e( TAG," verifyMac NULL buffer.\n");
 	    return FAIL;
         }
         if(offset > MAX_OFFSET){
-	    pl_log_e(TAG,"CryptoP: verifyMac offset is larger than max.\n");
+	    pl_log_e( TAG," verifyMac offset is larger than max.\n");
 	    return FAIL;
         }
         if(pLen == NULL){
-	    pl_log_e(TAG,"CryptoP: verifyMac pLen NULL.\n");
+	    pl_log_e( TAG," verifyMac pLen NULL.\n");
 	    return FAIL;
         }
         if (*pLen < MAC_LENGTH){
@@ -182,7 +182,7 @@ implementation {
 	
         if((memcmp(mac, buffer + offset + *pLen - MAC_LENGTH, MAC_LENGTH)) != 0){ //compare new with received
             status = EWRONGMAC;            
-            pl_log_e(TAG,"CryptoP:  verifyMacFromNodeB message MAC does not match.\n"); 
+            pl_log_e( TAG,"  verifyMacFromNodeB message MAC does not match.\n"); 
             return status;
         }
         return status;
@@ -194,23 +194,23 @@ implementation {
          pl_log_d(TAG, "CryptoRawP: deriveKeyB called.\n"); 
         
         if(masterKey == NULL){
-	    pl_log_e(TAG,"CryptoRawP: deriveKeyB NULL masterKey.\n");
+	    pl_log_e( TAG," deriveKeyB NULL masterKey.\n");
 	    return FAIL;	    
         }
         if(derivationData == NULL){
-	    pl_log_e(TAG,"CryptoRawP: deriveKeyB NULL derivationData.\n");
+	    pl_log_e( TAG," deriveKeyB NULL derivationData.\n");
 	    return FAIL;	    
         }        
         if(offset > MAX_OFFSET){
-	    pl_log_e(TAG,"CryptoRawP: deriveKeyB offset is larger than max.\n");
+	    pl_log_e( TAG," deriveKeyB offset is larger than max.\n");
 	    return FAIL;	    
         }        
         if(len != BLOCK_SIZE){
-	    pl_log_e(TAG,"CryptoRawP: deriveKeyB len != BLOCK_SIZE.\n");
+	    pl_log_e( TAG," deriveKeyB len != BLOCK_SIZE.\n");
 	    return FAIL;	    
         }        
         if(derivedKey == NULL){
-	    pl_log_e(TAG,"CryptoRawP: deriveKeyB NULL derivedKey.\n");
+	    pl_log_e( TAG," deriveKeyB NULL derivedKey.\n");
 	    return FAIL;	    
         }
         
@@ -224,22 +224,22 @@ implementation {
         error_t status = SUCCESS;		
         uint8_t i;
         
-        pl_log_d(TAG,"CryptoRawP:  hashDataBlockB called.\n");
+        pl_log_d( TAG,"  hashDataBlockB called.\n");
 
         if(buffer == NULL){
-	    pl_log_e(TAG,"CryptoRawP: hashDataBlockB NULL buffer.\n");
+	    pl_log_e( TAG," hashDataBlockB NULL buffer.\n");
 	    return FAIL;	    
         }
         if(offset > MAX_OFFSET){
-	    pl_log_e(TAG,"CryptoRawP: hashDataBlockB offset is larger than max.\n");
+	    pl_log_e( TAG," hashDataBlockB offset is larger than max.\n");
 	    return FAIL;	    
         }
         if(key == NULL){
-	    pl_log_e(TAG,"CryptoRawP: hashDataBlockB NULL key.\n");
+	    pl_log_e( TAG," hashDataBlockB NULL key.\n");
 	    return FAIL;	    
         }
         if(hash == NULL){
-	    pl_log_e(TAG,"CryptoRawP: hashDataBlockB NULL hash.\n");
+	    pl_log_e( TAG," hashDataBlockB NULL hash.\n");
 	    return FAIL;	    
         }
        
@@ -256,19 +256,19 @@ implementation {
     command error_t CryptoRaw.protectBufferB( PL_key_t* key, uint8_t* buffer, uint8_t offset, uint8_t* pLen){
         error_t status = SUCCESS;
         if(key == NULL){
-	    pl_log_e(TAG,"CryptoRawP: protectBufferB NULL key.\n");
+	    pl_log_e( TAG," protectBufferB NULL key.\n");
 	    return FAIL;	    
         }
         if(buffer == NULL){
-	    pl_log_e(TAG,"CryptoRawP: protectBufferB NULL buffer.\n");
+	    pl_log_e( TAG," protectBufferB NULL buffer.\n");
 	    return FAIL;	    
         }
         if(offset > MAX_OFFSET){
-	    pl_log_e(TAG,"CryptoRawP: protectBufferB offset is larger than max.\n");
+	    pl_log_e( TAG," protectBufferB offset is larger than max.\n");
 	    return FAIL;	    
         }
         if(pLen == NULL || *pLen == 0){
-	    pl_log_e(TAG,"CryptoRawP: protectBufferB NULL pLen || *pLen == 0.\n");
+	    pl_log_e( TAG," protectBufferB NULL pLen || *pLen == 0.\n");
 	    return FAIL;	    
         }
         

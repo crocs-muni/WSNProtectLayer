@@ -49,10 +49,7 @@ implementation {
 
 	}
 
-	default event void Dispatcher.stateChanged(uint8_t newState) {
-
-	}
-
+	
 #ifndef THIS_IS_BS 
 	void passToIDS(message_t * msg, void * payload, uint8_t len) {
 		if(msg == NULL || payload == NULL) {
@@ -113,22 +110,24 @@ implementation {
 		switch(*pState) {
 			case STATE_INIT : {
 				//init shared data
+				//BUGBUG not blocking
 				call SharedDataCInit.init();
 
-				*pState = STATE_LOADED_FROM_EEPROM;
+				*pState = STATE_INIT_IN_PROGRESS;
+				//*pState = transitionTable[*pState];
 				break;
 			}
 			case STATE_LOADED_FROM_EEPROM : {
 				//crypto init = auto init 
 
-				//init privacy level
+				//init privacy level, BLOCKING			
 				call PrivacyLevelCInit.init();
 
-				//privacy init
+				//privacy init, BLOCKING
 				call PrivacyCInit.init(); //mem init
 				//Forwarder init = auto init 
 
-				//IDS init
+				//IDS init, BLOCKING
 				call IntrusionDetectCInit.init();
 				//PrivacyLevel init = auto init 
 
@@ -142,9 +141,11 @@ implementation {
 #endif
 
 				*pState = STATE_READY_TO_DEPLOY;
-				signal Dispatcher.stateChanged(*pState);
-
-				//BUGBUG no break!!! break;
+				//*pState = transitionTable[*pState];
+				
+				
+				//BUGBUG no break!!! break; IF enabled, waiting for magic packet will be done
+				
 #ifdef THIS_IS_BS
 				break;
 #endif
@@ -153,9 +154,11 @@ implementation {
 #ifdef THIS_IS_BS
 				//no code
 #else
-				// Wait for MAGIC PAKET - PrivacyLevel will signalize received magic packet.
+				//BUGBUG if serve state called and magic packet not received (assumption, now is serve state called only if magic packet arrived)
+				// MAGIC PAKET - PrivacyLevel signalized received magic packet.
+				//*pState = transitionTable[*pState];
 				*pState = STATE_MAGIC_RECEIVED;
-				signal Dispatcher.stateChanged(*pState);
+				
 
 				pl_log_d(TAG, "<waitingForPacket>\n");
 				pl_printfflush();
@@ -173,27 +176,28 @@ implementation {
 				// Init Routing component
 				call RouteCInit.init();
 				
-				*pState = STATE_ROUTES_READY;
-				signal Dispatcher.stateChanged(*pState);
-				break;
-				//BUGBUG signal required to forward in the automaton
+				*pState = STATE_ROUTES_IN_PROGRESS;
+				
+				break;				
 			}
 			case STATE_ROUTES_READY : {
 				pl_log_d(TAG, "Route initialized. Going to init KeyDistribP\n");
 				// init key distribution component
 				call KeyDistribCInit.init();
 				
-				*pState = STATE_READY_FOR_SAVE;
-				signal Dispatcher.stateChanged(*pState);
-				break;
-				//BUGBUG signal required to forward in the automaton
+				*pState = STATE_KEYDISTRIB_IN_PROGRESS;
+				//*pState = STATE_READY_FOR_SAVE;
+				
+				break;				
 			}
 			case STATE_READY_FOR_SAVE : {
 				// Save actualized shared data 
+				
+				//
 				*pState = STATE_READY_FOR_APP;
 				call ResourceArbiter.saveCombinedDataToFlash();
-
-				signal Dispatcher.stateChanged(*pState);
+				
+				
 
 				break;
 			}
@@ -203,8 +207,7 @@ implementation {
 #else
 
 				*pState = STATE_WORKING;
-				signal Dispatcher.stateChanged(*pState);
-
+				
 				//BUGBUG no break!!! break;
 #endif
 			}
@@ -218,15 +221,51 @@ implementation {
 				// 
 				call Privacy.startApp(SUCCESS);
 #endif
-				signal Dispatcher.stateChanged(*pState);
-
+				
 				break;
+			}
+			default :{
+				pl_log_e(TAG, "state %x not explicitly served\n", *pState);
 			}
 		}
 
 		pl_log_d(TAG, "</serveState(%x)>\n", *pState);
 		pl_printfflush();
 	}
+	
+	command void Dispatcher.stateFinished(uint8_t finishedState){
+	
+	    uint8_t * pState = &((call SharedData.getAllData())->dispatcherState);
+	    pl_log_d(TAG, "stateFinished(%x) called\n", *pState);
+
+	    if(*pState == finishedState){
+	        switch(finishedState){
+		    case STATE_ROUTES_IN_PROGRESS: {
+			*pState = STATE_ROUTES_READY;
+			break;
+		    }
+		    case STATE_KEYDISTRIB_IN_PROGRESS: {
+			*pState = STATE_READY_FOR_SAVE;
+			break;
+		    }
+		    case STATE_SAVE_IN_PROGRESS:{
+			*pState = STATE_READY_FOR_APP;
+			break;
+		    }
+		    default: {
+			pl_log_f(TAG, "state %x not defined in stateFinished event\n", *pState);
+			return;
+		    }
+		
+	        }        
+	        
+		call Dispatcher.serveState();
+	    } else {
+		pl_log_e(TAG, "current state %x signalized finished state %x, not matched \n", *pState, finishedState);
+	    }
+	    
+	}
+	
 
 #ifndef THIS_IS_BS
 	task void serveStateTask() {

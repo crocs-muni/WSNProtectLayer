@@ -42,14 +42,14 @@ implementation {
     command error_t Crypto.macBufferForNodeB( node_id_t nodeID, uint8_t* buffer, uint8_t offset, uint8_t* pLen){        
         error_t status = SUCCESS;
         
-        pl_log_i(TAG,"CryptoP:  macBufferForNodeB called.\n");
+        pl_log_i( TAG,"  macBufferForNodeB called.\n");
         //return status;
         if((status = call KeyDistrib.getKeyToNodeB( nodeID, &m_key1)) == SUCCESS){
 	    //return status;
             status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
             *pLen = *pLen + MAC_LENGTH;
         } else {        
-            pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID); 
+            pl_log_e( TAG," macBufferForNodeB failed, key to nodeID %X not found.\n", nodeID); 
             //return SUCCESS;
         }
         return status;
@@ -58,13 +58,13 @@ implementation {
     command error_t Crypto.macBufferForBSB( uint8_t* buffer, uint8_t offset, uint8_t* pLen){		
         error_t status = SUCCESS;
         
-        pl_log_i(TAG,"CryptoP:  macBufferForBSB called.\n"); 
+        pl_log_i( TAG,"  macBufferForBSB called.\n"); 
         
         if((status = call KeyDistrib.getKeyToBSB(&m_key1)) == SUCCESS){	
             status = call CryptoRaw.macBuffer(m_key1, buffer, offset, pLen, buffer + offset + *pLen);
             *pLen = *pLen + MAC_LENGTH;
         } else {
-            pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to BS not found.\n"); 
+            pl_log_e( TAG,"  macBufferForNodeB failed, key to BS not found.\n"); 
         }
         return status;        
     }
@@ -75,7 +75,7 @@ implementation {
         pl_printf("CryptoP:  verifyMacFromNodeB called.\n"); 
                 
         if((status = call KeyDistrib.getKeyToNodeB(nodeID, &m_key1)) != SUCCESS){
-	   pl_log_e(TAG,"CryptoP:  macBufferForNodeB failed, key to node not found.\n"); 
+	   pl_log_e( TAG,"  macBufferForNodeB failed, key to node not found.\n"); 
 	}
         status = call CryptoRaw.verifyMac(m_key1, buffer,  offset, pLen);
         return status;
@@ -87,7 +87,7 @@ implementation {
         pl_printf("CryptoP:  verifyMacFromBSB called.\n"); 
                 
         if((status = call KeyDistrib.getKeyToBSB( &m_key1)) != SUCCESS){
-	   pl_log_e(TAG,"CryptoP:  macBufferForBSB failed, key to BS not found.\n");
+	   pl_log_e( TAG,"  macBufferForBSB failed, key to BS not found.\n");
 	   return status;
 	}
 	
@@ -180,16 +180,16 @@ implementation {
             return status;
         }
         for(i = 0; i < MAX_NEIGHBOR_COUNT; i++){
-
+				
+		if(SavedData[i].nodeId == INVALID_NODE_ID){
+		    pl_log_e(TAG, "node %x not neighbor.\n", i); 
+		    continue;
+		}	            
 		//copy predistributed key, so it will not colide with derived key during computation
 		memcpy(&m_key_pred, &(SavedData[i].kdcData.shared_key), sizeof(Signature_t));
 		m_key1 = &m_key_pred;
 		
 		
-		if(m_key1 == NULL){
-		    pl_log_e(TAG, "CryptoP:  predistributed key for node %x not retrieved.\n", i); 
-		    continue;
-		}	            
 		//calculates derivation data by appending node ID's first lower on, then higher one
 		//these are appended to array by memcpy and pointer arithmetics ()	            	            
 		memset(m_buffer, 0, BLOCK_SIZE); //pad whole block with zeros
@@ -221,11 +221,11 @@ implementation {
         pl_printf("CryptoP:  hashDataB called.\n");
 	//check arguments
         if(len == 0){
-	    pl_log_e(TAG,"CryptoRawP: hashDataB len == 0.\n");
+	    pl_log_e( TAG," hashDataB len == 0.\n");
 	    return FAIL;	    
         }
         if(hash == NULL){
-	    pl_log_e(TAG,"CryptoRawP: hashDataB NULL hash.\n");
+	    pl_log_e( TAG," hashDataB NULL hash.\n");
 	    return FAIL;	    
         }
         
@@ -272,7 +272,7 @@ implementation {
 
         pl_printf("CryptoP: hashDataShortB called.\n"); 
         if(hash == NULL){
-	    pl_log_e(TAG,"CryptoRawP: hashDataShortB NULL hash.\n");
+	    pl_log_e( TAG," hashDataShortB NULL hash.\n");
 	    return FAIL;	    
         }
         if((status = call Crypto.hashDataB(buffer, offset, len, tempHash)) != SUCCESS){
@@ -324,24 +324,24 @@ implementation {
 	
         
         if(lenFromRoot == 0){
-	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL signature.\n");
+	    pl_log_e( TAG," computeSignatures NULL signature.\n");
 	    return FAIL;
         }
         if(signature == NULL){
-	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL signature.\n");
+	    pl_log_e( TAG," computeSignatures NULL signature.\n");
 	    return FAIL;
         }
 
         ppcPrivData = call SharedData.getPPCPrivData();
         if(ppcPrivData == NULL){
-	    pl_log_e(TAG,"CryptoRawP: verifySignature ppcPrivData not retreived.\n");
+	    pl_log_e( TAG," verifySignature ppcPrivData not retreived.\n");
 	    return FAIL;
         }
         root = &(ppcPrivData->signatures[privacyLevel]);
         
-        pl_log_i(TAG,"CryptoRawP: computeSignatures started.\n");
+        pl_log_i( TAG," computeSignatures started.\n");
 	 if(root == NULL){
-	    pl_log_e(TAG,"CryptoRawP: computeSignatures NULL root.\n");
+	    pl_log_e( TAG," computeSignatures NULL root.\n");
 	    return FAIL;
         }
         
@@ -349,14 +349,14 @@ implementation {
         for(i = 0; i < lenFromRoot; i++){
 	    status = call Crypto.hashDataB( tmpSignature, 0, HASH_LENGTH, tmpSignature);
 	    if (status != SUCCESS){
-	        pl_log_e(TAG,"CryptoRawP: computeSignatures failed.\n");
+	        pl_log_e( TAG," computeSignatures failed.\n");
 	        return FAIL;
 	    }
         }
         memcpy(signature->signature, tmpSignature, HASH_LENGTH);
         signature->privacyLevel = privacyLevel;
         signature->counter = root->counter - lenFromRoot;
-        pl_log_i(TAG,"CryptoRawP: computeSignatures succesfully finished.\n");
+        pl_log_i( TAG," computeSignatures succesfully finished.\n");
 	return status;
     }
     
@@ -368,15 +368,15 @@ implementation {
         PPCPrivData_t* ppcPrivData = NULL;
 
 	if(buffer == NULL){
-	    pl_log_e(TAG,"CryptoRawP: verifySignatures NULL buffer.\n");
+	    pl_log_e( TAG," verifySignatures NULL buffer.\n");
 	    return FAIL;
         }
         if(level < 0 || level >= 5){
-	    pl_log_e(TAG,"CryptoRawP: verifySignatures invalid level.\n");
+	    pl_log_e( TAG," verifySignatures invalid level.\n");
 	    return FAIL;
         }
         if(counter < 1){
-	    pl_log_e(TAG,"CryptoRawP: verifySignatures invalid counter.\n");
+	    pl_log_e( TAG," verifySignatures invalid counter.\n");
 	    return FAIL;
         }
 
@@ -384,13 +384,13 @@ implementation {
         pl_printf("CryptoP:  verifySignature called.\n");
         ppcPrivData = call SharedData.getPPCPrivData();
         if(ppcPrivData == NULL){
-	    pl_log_e(TAG,"CryptoRawP: verifySignature ppcPrivData not retreived.\n");
+	    pl_log_e( TAG," verifySignature ppcPrivData not retreived.\n");
 	    return FAIL;
         }
                 
 
         if( counter - ppcPrivData->signatures[level].counter   < 1){
-	    pl_log_e(TAG,"CryptoRawP: verifySignatures invalid counter value.\n");
+	    pl_log_e( TAG," verifySignatures invalid counter value.\n");
 	    return FAIL;
         }
         //return status;
@@ -401,7 +401,7 @@ implementation {
 
 	    status = call Crypto.hashDataB( tmpSignature, 0, SIGNATURE_LENGTH, tmpSignature);
 	    if (status != SUCCESS){
-	        pl_log_e(TAG,"CryptoRawP: verifySignatures failed.\n");
+	        pl_log_e( TAG," verifySignatures failed.\n");
 	        return FAIL;
 	    }
         }
@@ -415,19 +415,19 @@ implementation {
            return SUCCESS;
         }
             
-        pl_log_e(TAG,"CryptoRawP: verifySignature not succesfull.\n");
+        pl_log_e( TAG," verifySignature not succesfull.\n");
 	return FAIL;
     }
     
     command void Crypto.updateSignature( Signature_t* signature){
         PPCPrivData_t* ppcPrivData = NULL;
         if(signature == NULL){
-	    pl_log_e(TAG,"CryptoRawP: updateSignature NULL signature.\n");
+	    pl_log_e( TAG," updateSignature NULL signature.\n");
 	    return;
         }
         ppcPrivData = call SharedData.getPPCPrivData();
         if(ppcPrivData == NULL){
-	    pl_log_e(TAG,"CryptoRawP: updateSignature ppcPrivData not retreived.\n");
+	    pl_log_e( TAG," updateSignature ppcPrivData not retreived.\n");
 	    return;	    
         }
         ppcPrivData->signatures[signature->privacyLevel] = *signature;

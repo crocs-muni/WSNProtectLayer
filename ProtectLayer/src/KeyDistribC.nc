@@ -17,6 +17,7 @@ implementation {
 	components SharedDataC;
 	//components ResourceArbiterC;
         components LedsC;
+        components DispatcherC;
         
 	Init = KeyDistribP.PLInit;
 	KeyDistrib = KeyDistribP.KeyDistrib;
@@ -25,4 +26,5 @@ implementation {
 	KeyDistribP.SharedData -> SharedDataC.SharedData;
 	KeyDistribP.ResourceArbiter -> SharedDataC.ResourceArbiter;
 	KeyDistribP.Leds -> LedsC;
+	KeyDistribP.Dispatcher -> DispatcherC;
 }

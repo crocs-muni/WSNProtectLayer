@@ -220,7 +220,7 @@ implementation {
         
         // Test current privacy level vs. in message. 
         if (GET_PRIVACY_LEVEL(ourHeader) != m_privData->priv_level){
-        	pl_log_w(TAG, "MSG privLevel mismatch, msg=%u vs. current %u\n", GET_PRIVACY_LEVEL(ourHeader), m_privData->priv_level);
+        	//pl_log_w(TAG, "MSG privLevel mismatch, msg=%u vs. current %u\n", GET_PRIVACY_LEVEL(ourHeader), m_privData->priv_level);
         	
         	// Drop message with different privacy level.
 			goto recv_finish;
@@ -239,7 +239,7 @@ implementation {
         	// The whole message is MACed (including SPHeader), so offset is zero.
         	status = call Crypto.verifyMacFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, 0, &(m_receiveBuffer[m_recNextToProcess].len));
         	
-        	pl_log_d(TAG, "task_receiveMessage, pl1, status=%d l=%u\n", status, m_receiveBuffer[m_recNextToProcess].len); 
+        	//pl_log_d(TAG, "task_receiveMessage, pl1, status=%d l=%u\n", status, m_receiveBuffer[m_recNextToProcess].len); 
             break;
         }
         case PLEVEL_2:		// MAC + ENC
@@ -250,7 +250,7 @@ implementation {
             status = call Crypto.unprotectBufferFromNodeB(ourHeader->sender, (uint8_t*) ourHeader, sizeof(SPHeader_t), &decLen);
             m_receiveBuffer[m_recNextToProcess].len = decLen + sizeof(SPHeader_t);
             
-            pl_log_d(TAG, "task_receiveMessage, pl23, status=%d l=%u ln=%u\n", status, m_receiveBuffer[m_recNextToProcess].len, decLen); 
+            //pl_log_d(TAG, "task_receiveMessage, pl23, status=%d l=%u ln=%u\n", status, m_receiveBuffer[m_recNextToProcess].len, decLen); 
         	break;
         }
         default: 
@@ -279,7 +279,7 @@ implementation {
             retMsg = signal MessageReceive.receive[MSG_FORWARD](msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);	
         } 
         else {   	
-            pl_log_d(TAG, "task_receiveMessage, ourHeader->msgType[%x] != MSG_APP\n", ourHeader->msgType); 
+            //pl_log_d(TAG, "task_receiveMessage, ourHeader->msgType[%x] != MSG_APP\n", ourHeader->msgType); 
             
             // Payload is now including SPheader header. 
             // Stripe SPheader, provide offseted pointer and decrease payload length.
@@ -330,7 +330,7 @@ recv_finish:
             m_recNextToStore = (m_recNextToStore+1)%RECEIVE_BUFFER_LEN; // update pointer to next position to which next msg will be stored
             }
             
-            pl_log_d(TAG, " 1 LowerREceive.receive, buffer #%u,p=%p\n", m_recNextToStore, msg);//  
+            //pl_log_d(TAG, " 1 LowerREceive.receive, buffer #%u,p=%p\n", m_recNextToStore, msg);//  
         }
         else
         {
@@ -770,7 +770,7 @@ recv_finish:
 	    return SUCCESS;	
 	}
     default event void MessageAMControl.startDone(error_t err) {} 
-    event void Dispatcher.stateChanged(uint8_t newState){ }
+    
     
     //
     //	MessagePacket
@@ -850,7 +850,7 @@ recv_finish:
     	return SUCCESS;	
 	}
 	
-	event void Dispatcher.stateChanged(uint8_t newState){ }
+	
 	command error_t Init.init() { return SUCCESS; }
     command error_t PLInit.init() { return SUCCESS; }
     command PRIVACY_LEVEL Privacy.getCurrentPrivacyLevel(){ return 0; }
@@ -872,5 +872,6 @@ recv_finish:
     command uint8_t MessagePacket.maxPayloadLength() { return 0; }
     command void* MessagePacket.getPayload(message_t* msg, uint8_t len) { return NULL; 	}
 #endif
+    
 } 
     

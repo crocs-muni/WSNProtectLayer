@@ -13,6 +13,7 @@ module KeyDistribP{
         interface SharedData;
         interface ResourceArbiter;
         interface Leds;
+        interface Dispatcher;
     }
     provides {
         interface Init as PLInit;
@@ -47,8 +48,7 @@ implementation{
     //	KeyDistrib interface
     //
     
-    
-    
+        
     task void retrievePrekeysTask() {
 	uint8_t status;
 	combinedData_t* combData;
@@ -61,8 +61,8 @@ implementation{
 	
 	if(preKeysRetrieved == combData->actualNeighborCount){
 	      call Crypto.initCryptoIIB();
+	      call Dispatcher.stateFinished(STATE_KEYDISTRIB_IN_PROGRESS);
 	      
-	      //BUGBUG signal for the dispatcher automaton to forward in state
 	} else {
 	
 	     status = call SharedData.getPredistributedKeyForNode(combData->savedData[preKeysRetrieved].nodeId, &(SavedData[preKeysRetrieved].kdcData.shared_key));	      
@@ -84,6 +84,7 @@ implementation{
 	     } else {
 		//second attempt failed, skipping this neighbor
 	         //preNeighKeys[preKeysRetrieved] = NULL;
+	         //TODO change variable name
 	         preKeysRetrieved++;
 	         retrieveStatus = SUCCESS;
 	         post retrievePrekeysTask();
