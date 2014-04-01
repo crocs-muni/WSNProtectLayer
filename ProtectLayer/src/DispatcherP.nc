@@ -193,7 +193,7 @@ implementation {
 			case STATE_READY_FOR_SAVE : {
 				// Save actualized shared data 
 				
-				//
+				//WARNING: state changed to STATE_READY_FOR_APP, so that this state will be saved to EEPROM
 				*pState = STATE_READY_FOR_APP;
 				call ResourceArbiter.saveCombinedDataToFlash();
 				
