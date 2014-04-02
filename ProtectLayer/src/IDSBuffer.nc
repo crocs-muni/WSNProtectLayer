@@ -12,6 +12,7 @@ interface IDSBuffer{
 	
 	event void packetForwarded(uint16_t sender, uint16_t receiver);	
 	
-//	command void insertOrUpdate(idsBufferedPacket_t idsBP);
 	command void insertOrUpdate(uint16_t* sender, uint16_t* receiver, uint32_t* hashedPacket);
+	
+	command void resetBuffer();
 }

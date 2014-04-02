@@ -264,12 +264,10 @@ typedef struct AppMsg {
 */
 typedef struct IDSMsg {
 /*@{*/
-	// currently all broadcasted (reason for sender and receiver)
-	// AM headers may be used instead, it's privacy question...
 	uint16_t source;	/**< node that detected dropping and initiated this alert */
 	uint16_t sender;	/**< sender (TOS_NODE_ID) */
 	uint16_t receiver;	/**< receiver of this message */
-	uint16_t nodeID;	/**< ID of a node we send the reputation about */
+	uint16_t nodeID;	/**< ID of a node we send the alert about */
 	uint16_t dropping;
 //	uint8_t reputation;	/**< reputation */
 /*@}*/	
@@ -461,7 +459,7 @@ typedef struct intrusion_msg {
 } intrusion_msg_t;
 
 /**
-	Type for reputation of a neighbor
+	Type for reputation of a neighbor - not used in this version because of memory limitations
 */
 typedef uint8_t NODE_REPUTATION;
 
@@ -469,9 +467,8 @@ typedef uint8_t NODE_REPUTATION;
  * Enumeration of IDS status
  */
  typedef enum _IDS_STATUS {
-	IDS_RESET = 0, //no security
-	IDS_ON = 1, //
-	IDS_OFF = 2  //
+	IDS_ON = 0, // IDS is on - packets are buffered, alerts produced etc.
+	IDS_OFF = 1  // IDS is off
 } IDS_STATUS;
 
 /**

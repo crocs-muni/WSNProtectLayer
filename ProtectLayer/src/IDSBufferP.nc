@@ -21,6 +21,11 @@ implementation{
 	void removeForwardedPacket(uint16_t* sender, uint16_t* receiver, uint32_t* hashedPacket, uint8_t id);
 	void removeOldestPacket();
 
+	command void IDSBuffer.resetBuffer() {
+		oldestPacketIndex = 0;
+		counter = 0;
+	}
+
 	command void IDSBuffer.insertOrUpdate(uint16_t* sender, uint16_t* receiver, uint32_t* hashedPacket){
 
 		uint8_t i;
@@ -81,7 +86,7 @@ implementation{
 		
 			
 		// Remove the gap after the forwarded packet!
-		// Effectiveness can be improved here:
+		// Effectiveness could be improved here, but we are limited in memory for the code:
         counter--;
 		for(i = id; i < counter; i++) {
         	memcpy(&idsBuffer[i], &idsBuffer[i + 1], sizeof(idsBufferedPacket_t));

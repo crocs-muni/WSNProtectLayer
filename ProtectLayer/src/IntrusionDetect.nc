@@ -6,7 +6,6 @@
 
 #include "ProtectLayerGlobals.h"
 interface IntrusionDetect {
-	// TODO: add other methods that may provide finer control over Intrusion detection component
 	
 	/**
 	 * Command that returns reputation of node "nodeId"
@@ -15,20 +14,19 @@ interface IntrusionDetect {
 	 * 
 	 * @returns NODE_REPUTATION reputation of a node.
 	 */
-//	command NODE_REPUTATION getNodeReputation(uint8_t nodeId);
 	
 	/**
-	 * Command that switch the IDS off
+	 * Command that switches the IDS off.
 	 */
 	command void switchIDSoff();
 	
 	/**
-	 * Command that switch the IDS on
+	 * Command that switches the IDS on.
 	 */
 	command void switchIDSon();
 	
 	/**
-	 * Command that reset the IDS
+	 * Command that resets the IDS - it erases the IDS Buffer. 
 	 */
 	command void resetIDS();
 }
