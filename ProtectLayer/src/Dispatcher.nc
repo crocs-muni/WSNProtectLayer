@@ -15,4 +15,7 @@ interface Dispatcher{
 	
 	command void stateFinished(uint8_t finishedState);
 	
+#ifdef THIS_IS_BS
+	event void stateChanged(uint8_t newState);
+#endif
 }

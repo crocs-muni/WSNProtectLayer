@@ -115,6 +115,11 @@ implementation {
 
 				*pState = STATE_INIT_IN_PROGRESS;
 				//*pState = transitionTable[*pState];
+
+#ifdef THIS_IS_BS				
+				signal Dispatcher.stateChanged(*pState);
+#endif
+				
 				break;
 			}
 			case STATE_LOADED_FROM_EEPROM : {
@@ -147,6 +152,7 @@ implementation {
 				//BUGBUG no break!!! break; IF enabled, waiting for magic packet will be done
 				
 #ifdef THIS_IS_BS
+				signal Dispatcher.stateChanged(*pState);
 				break;
 #endif
 			}
@@ -177,6 +183,10 @@ implementation {
 				call RouteCInit.init();
 				
 				*pState = STATE_ROUTES_IN_PROGRESS;
+
+#ifdef THIS_IS_BS				
+				signal Dispatcher.stateChanged(*pState);
+#endif
 				
 				break;				
 			}
@@ -187,6 +197,10 @@ implementation {
 				
 				*pState = STATE_KEYDISTRIB_IN_PROGRESS;
 				//*pState = STATE_READY_FOR_SAVE;
+
+#ifdef THIS_IS_BS				
+				signal Dispatcher.stateChanged(*pState);
+#endif
 				
 				break;				
 			}
@@ -197,7 +211,9 @@ implementation {
 				*pState = STATE_READY_FOR_APP;
 				call ResourceArbiter.saveCombinedDataToFlash();
 				
-				
+#ifdef THIS_IS_BS				
+				signal Dispatcher.stateChanged(*pState);
+#endif
 
 				break;
 			}
@@ -215,7 +231,9 @@ implementation {
 			case STATE_WORKING : {
 				*pState = STATE_WORKING;
 
-#ifndef THIS_IS_BS
+#ifdef THIS_IS_BS
+				signal Dispatcher.stateChanged(*pState);
+#else
 				// Signalize to the ProtectLayer that initialization is
 				// completed. PL will pass this information to the application.
 				// 
@@ -267,7 +285,11 @@ implementation {
 	}
 	
 
-#ifndef THIS_IS_BS
+#ifdef THIS_IS_BS
+	default event void stateChanged(uint8_t newState) {
+		//no code
+	}
+#else	
 	task void serveStateTask() {
 		call Dispatcher.serveState();
 	}
