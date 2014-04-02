@@ -27,7 +27,7 @@ implementation{
     PL_key_t* m_testKey;	/**< handle to key for selfTest */
     //PL_key_t preNeighKeys[MAX_NEIGHBOR_COUNT];
     uint8_t preKeysRetrieved = 0;
-    uint8_t retrieveStatus;
+    uint8_t previousRetrieveStatus;
     static const char *TAG = "KeyDistP";
 
     //
@@ -50,7 +50,7 @@ implementation{
     
         
     task void retrievePrekeysTask() {
-	uint8_t status;
+	//uint8_t status;
 	combinedData_t* combData;
 	SavedData_t* SavedData = NULL;
 	
@@ -65,7 +65,7 @@ implementation{
 	      
 	} else {
 	
-	     status = call SharedData.getPredistributedKeyForNode(combData->savedData[preKeysRetrieved].nodeId, &(SavedData[preKeysRetrieved].kdcData.shared_key));	      
+	     call SharedData.getPredistributedKeyForNode(combData->savedData[preKeysRetrieved].nodeId, &(SavedData[preKeysRetrieved].kdcData.shared_key));	      
 	}
     }
     
@@ -73,20 +73,20 @@ implementation{
 	if(result == SUCCESS){
 	//key sucessfully retrieved, moving on to next one
 	     preKeysRetrieved++;
-	     retrieveStatus = SUCCESS;
+	     previousRetrieveStatus = SUCCESS;
 	     post retrievePrekeysTask();
 	} else {
 	     pl_log_e(TAG, "restoreKeyFromFlashDone failed.\n"); 
-	     if(retrieveStatus == SUCCESS){ 
+	     if(previousRetrieveStatus == SUCCESS){ 
 	         //second attempt
-	         retrieveStatus = FAIL;
+	         previousRetrieveStatus = FAIL;
 		 post retrievePrekeysTask();
 	     } else {
 		//second attempt failed, skipping this neighbor
 	         //preNeighKeys[preKeysRetrieved] = NULL;
 	         //TODO change variable name
 	         preKeysRetrieved++;
-	         retrieveStatus = SUCCESS;
+	         previousRetrieveStatus = SUCCESS;
 	         post retrievePrekeysTask();
 	     }
 	}
@@ -98,7 +98,7 @@ implementation{
     
     command error_t KeyDistrib.discoverKeys() {
 	//post task for eeprom key retrieval
-	retrieveStatus = SUCCESS;
+	previousRetrieveStatus = SUCCESS;
 	post retrievePrekeysTask();
 	return SUCCESS;
 	/*
