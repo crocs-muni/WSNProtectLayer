@@ -41,7 +41,6 @@ implementation{
 	// Logging tag for this component
     static const char *TAG = "RouteP";
 	
-
 	//
 	//	Init interface
 	//
@@ -404,6 +403,10 @@ implementation{
 	}
 #endif
 	
-
+#ifdef THIS_IS_BS
+	event void Dispatcher.stateChanged(uint8_t newState) {
+		//no code
+	}
+#endif
 
 }

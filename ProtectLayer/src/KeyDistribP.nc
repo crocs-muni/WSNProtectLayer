@@ -209,4 +209,10 @@ implementation{
         */
         return status;
     }
+    
+#ifdef THIS_IS_BS
+	event void Dispatcher.stateChanged(uint8_t newState) {
+		//no code
+	}
+#endif
 }

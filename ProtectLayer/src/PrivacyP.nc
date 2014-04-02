@@ -871,6 +871,10 @@ recv_finish:
     command void MessagePacket.setPayloadLength(message_t* msg, uint8_t len) { }
     command uint8_t MessagePacket.maxPayloadLength() { return 0; }
     command void* MessagePacket.getPayload(message_t* msg, uint8_t len) { return NULL; 	}
+    
+	event void Dispatcher.stateChanged(uint8_t newState) {
+		//no code
+	}
 #endif
     
 } 

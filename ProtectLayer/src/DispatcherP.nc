@@ -22,6 +22,7 @@ module DispatcherP {
 		interface MagicPacket;
 		interface SharedData;
 		interface ResourceArbiter;
+		interface Timer<TMilli> as BackupCombinedDataTimer;
 	}
 	provides {
 		interface Receive as PL_Receive;
@@ -81,7 +82,7 @@ implementation {
 
 	event message_t * Lower_IDS_Receive.receive(message_t * msg, void * payload,
 			uint8_t len) {
-		if((call SharedData.getAllData())->dispatcherState < STATE_READY_FOR_APP) {
+		if((call SharedData.getAllData())->dispatcherState < STATE_WORKING) {
 			return msg;
 		}
 
@@ -93,7 +94,7 @@ implementation {
 
 	event message_t * Lower_PL_Receive.receive(message_t * msg, void * payload,
 			uint8_t len) {
-		if((call SharedData.getAllData())->dispatcherState < STATE_READY_FOR_APP) {
+		if((call SharedData.getAllData())->dispatcherState < STATE_WORKING) {
 			return msg;
 		}
 
@@ -207,8 +208,8 @@ implementation {
 			case STATE_READY_FOR_SAVE : {
 				// Save actualized shared data 
 				
-				//WARNING: state changed to STATE_READY_FOR_APP, so that this state will be saved to EEPROM
-				*pState = STATE_READY_FOR_APP;
+				//WARNING: state changed to STATE_WORKING, so that this state will be saved to EEPROM
+				*pState = STATE_WORKING;
 				call ResourceArbiter.saveCombinedDataToFlash();
 				
 #ifdef THIS_IS_BS				
@@ -217,20 +218,12 @@ implementation {
 
 				break;
 			}
-			case STATE_READY_FOR_APP : {
-#ifdef THIS_IS_BS
-				//no code
-#else
-
-				*pState = STATE_WORKING;
-				
-				//BUGBUG no break!!! break;
-#endif
-			}
 
 			case STATE_WORKING : {
 				*pState = STATE_WORKING;
-
+				
+				call BackupCombinedDataTimer.startOneShot(BACKUP_COMBINEDDATA_TIMER_MILLI);
+				
 #ifdef THIS_IS_BS
 				signal Dispatcher.stateChanged(*pState);
 #else
@@ -258,35 +251,30 @@ implementation {
 
 	    if(*pState == finishedState){
 	        switch(finishedState){
-		    case STATE_ROUTES_IN_PROGRESS: {
-			*pState = STATE_ROUTES_READY;
-			break;
-		    }
-		    case STATE_KEYDISTRIB_IN_PROGRESS: {
-			*pState = STATE_READY_FOR_SAVE;
-			break;
-		    }
-		    case STATE_SAVE_IN_PROGRESS:{
-			*pState = STATE_READY_FOR_APP;
-			break;
-		    }
-		    default: {
-			pl_log_f(TAG, "state %x not defined in stateFinished event\n", *pState);
-			return;
-		    }
-		
+			    case STATE_ROUTES_IN_PROGRESS: {
+				*pState = STATE_ROUTES_READY;
+				break;
+			    }
+			    case STATE_KEYDISTRIB_IN_PROGRESS: {
+				*pState = STATE_READY_FOR_SAVE;
+				break;
+			    }
+			    default: {
+				pl_log_f(TAG, "state %x not defined in stateFinished event\n", *pState);
+				return;
+			    }
 	        }        
 	        
-		call Dispatcher.serveState();
+			call Dispatcher.serveState();
 	    } else {
-		pl_log_e(TAG, "current state %x signalized finished state %x, not matched \n", *pState, finishedState);
+			pl_log_e(TAG, "current state %x signalized finished state %x, not matched \n", *pState, finishedState);
 	    }
 	    
 	}
 	
 
 #ifdef THIS_IS_BS
-	default event void stateChanged(uint8_t newState) {
+	default event void Dispatcher.stateChanged(uint8_t newState) {
 		//no code
 	}
 #else	
@@ -310,15 +298,21 @@ implementation {
 
 	event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result) {
 		pl_log_d(TAG, "saveCombinedDataToFlashDone.\n");
-		call Dispatcher.serveState();
+		call Dispatcher.stateFinished(STATE_WORKING);
 	}
 
 	event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {
 		pl_log_d(TAG, "restoreCombinedDataFromFlashDone.\n");
-		call Dispatcher.serveState();
+		call Dispatcher.stateFinished(STATE_LOADED_FROM_EEPROM);
 	}
 
 	event void ResourceArbiter.restoreKeyFromFlashDone(error_t result) {
 		pl_log_d(TAG, "restoreKeyFromFlashDone.\n");
+	}
+	
+	event void BackupCombinedDataTimer.fired() {
+		pl_log_d(TAG, "BackupCombinedDataTimer.fired().\n");
+		
+		call BackupCombinedDataTimer.startOneShot(BACKUP_COMBINEDDATA_TIMER_MILLI);
 	}
 }

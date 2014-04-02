@@ -21,6 +21,7 @@ implementation{
 	components PrivacyLevelC;
 	components IntrusionDetectC;
 	components KeyDistribC;
+	components new TimerMilliC() as BackupCombinedDataTimer;
 	
 #ifndef THIS_IS_BS	
 	components new AMReceiverC(AM_PROTECTLAYERRADIO) as PL_ReceiverC;
@@ -58,6 +59,7 @@ implementation{
 	//DispatcherP.PrivacyLevelCInit -> PrivacyLevelC.Init;
 	DispatcherP.ResourceArbiter -> SharedDataC.ResourceArbiter;
 	DispatcherP.SharedData -> SharedDataC.SharedData;
+	DispatcherP.BackupCombinedDataTimer -> BackupCombinedDataTimer;
 	
 	Dispatcher = DispatcherP.Dispatcher;
 }

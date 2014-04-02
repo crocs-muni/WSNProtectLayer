@@ -24,7 +24,6 @@ implementation{
 	#ifndef TOSSIM
 	components new BlockStorageC(VOLUME_SHAREDDATA) as SharedDataStorage;
 	components new BlockStorageC(VOLUME_KEYS) as KeysDataStorage;
-	components DispatcherC;
 	components MainC;
 
 	#endif
@@ -39,6 +38,5 @@ implementation{
 	SharedDataP.Boot -> MainC;
 	SharedDataP.SharedDataRead -> SharedDataStorage.BlockRead;
 	SharedDataP.SharedDataWrite -> SharedDataStorage.BlockWrite;
-	SharedDataP.Dispatcher -> DispatcherC;
 	#endif
 }

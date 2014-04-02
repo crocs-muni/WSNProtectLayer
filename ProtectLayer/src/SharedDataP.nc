@@ -20,7 +20,6 @@ module SharedDataP {
         interface BlockRead as KeysDataRead;
 		interface BlockRead as SharedDataRead;
 		interface BlockWrite as SharedDataWrite;
-	interface Dispatcher;
 	interface Boot;
     }
 #endif
@@ -183,7 +182,6 @@ implementation {
     
     default event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result) {
     	pl_log_d(TAG, "saveCombinedDataToFlashDone.\n"); 
-    	call Dispatcher.stateFinished(STATE_READY_FOR_APP);
 	}
     
         
