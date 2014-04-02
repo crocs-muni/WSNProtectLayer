@@ -177,11 +177,18 @@ implementation {
   }
   
   event void AMControl.startDone(error_t err) {
+  	BS_PRINTF(pl_log_d(TAG, "<startDone>\n"));
     if (err == SUCCESS) {
-      initState=1;
+      	initState=1;
+  		sendState=3;
+  		blinkState=0;
+  		
+  		call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+    	
     }
-    
-    call InitTimer.startOneShot(TIMER_FAIL_START);
+    else {   
+      call InitTimer.startOneShot(TIMER_FAIL_START);
+    }
   }
 	
   /**
@@ -234,8 +241,10 @@ implementation {
   }
 	
   event void AMControl.stopDone(error_t err) { }
+  
   event void Timer0.fired() {
 	BS_PRINTF(pl_log_d(TAG, "fired, sendState=%u, blink=%u lvl=%d ctr=%d\n", sendState, blinkState, curPrivLvl, plvlCounter));
+	BS_PRINTFFLUSH();
   	if (sendState==0){
   		// Blicking state.
   		if (blinkState >= 2*TIMER_BLINK_COUNT){
@@ -271,17 +280,11 @@ implementation {
   		// Privacy level state changed.
   		// If it was magic packet, init routing.
   		setLeds(curPrivLvl+1);
-  		if (plvlCounter==0){
-  			BS_PRINTF(pl_log_d(TAG, "serveState(), magicPacket\n"));
-  			call Dispatcher.serveState();
-  			
-  		} else {
-  			blinkState=0;
-  			sendState=3;
-  			call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
-  			
-  		}
   		
+		blinkState=0;
+		sendState=3;
+		call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+  		  		
   		BS_PRINTFFLUSH();
   	} else if (sendState==3){
   		// finished signalization
@@ -307,10 +310,13 @@ implementation {
   		// React on button released event. 
 		if (state == BUTTON_RELEASED && sendState!=3){		// BUTTON_PRESSED
 			BS_PRINTF(pl_log_d(TAG, "buttonReleased\n"));
+			BS_PRINTF(pl_log_d(TAG, "initState %x\n", initState));
 			BS_PRINTFFLUSH();
 			
 			// If radio is not started yet, we have to wait for it.
-			if (initState==0) return;
+			if (initState==0) {
+				return;
+			}
 			
 			// Increment privacy level modulo NUM.
 			curPrivLvl = (curPrivLvl + 1) % PLEVEL_NUM;
@@ -324,6 +330,7 @@ implementation {
   }
   
   event void Dispatcher.stateChanged(uint8_t newState){ 
+/*  
   	if (newState==STATE_WORKING){
   		sendState=3;
   		blinkState=0;
@@ -333,6 +340,7 @@ implementation {
   		
   		call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
   	}
+  	*/
   }
   
   event void PrivChangeSend.sendDone(message_t * msg, error_t error){

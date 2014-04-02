@@ -153,10 +153,10 @@ implementation{
 		
 		pl_log_i(TAG, "CTP term state...\n");
 		pl_printfflush();
-		
 		call CtpSendTimer.stop();
+#ifndef THIS_IS_BS		
 		call FixedTopology.setFixedTopology();
-		
+#endif		
 		
 		//copy parent and neighbor ids to sharedData
 		if (call CtpInfo.getParent(&(pData->routePrivData.parentNodeId)) != FAIL)
@@ -214,14 +214,21 @@ implementation{
 			
 		} else if (ctp_init_state==CTP_STATE_SENDING){
 			// Move to the next state -> finish as soon as parent is found.
+			
+//#ifdef THIS_IS_BS
+//no code
+//#else			
 			ctp_init_state = CTP_STATE_FIND_PARENT;
 			call CtpInitTimer.startOneShot(CTP_TIME_STOP_NO_PARENT);
+//#endif
 			call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
 			
 		} else if(ctp_init_state==CTP_STATE_FIND_PARENT || ctp_init_state==CTP_STATE_TERMINATE){
 			// Stopping CTP - move to fixed topology.
+//#ifndef THIS_IS_BS
 			ctp_init_state=CTP_STATE_TERMINATE;
 			post stopCTP();
+//#endif
 		}
 	}
 	

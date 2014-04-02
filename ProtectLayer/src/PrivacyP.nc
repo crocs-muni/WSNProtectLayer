@@ -747,6 +747,7 @@ recv_finish:
     // AMControl interface
     //
     event void AMControl.startDone(error_t err) {
+    	pl_log_d(TAG, "startDone err?\n");
 	    radioStartDone(err);
     }
     	
@@ -839,6 +840,7 @@ recv_finish:
     }
     
     event void AMControl.startDone(error_t err) {
+    	pl_log_d(TAG, "<AMControl.startDone()>\n");
 	    radioStartDone(err);
     }
     	

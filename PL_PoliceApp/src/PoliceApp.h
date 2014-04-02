@@ -11,7 +11,7 @@
 //#define ACCEPT_ALL_SIGNATURES
 //#define ACCEPT_ALL_MACS
 #define CTP_QUICK_INIT
-#define SKIP_MAGIC_PACKET
+//#define SKIP_MAGIC_PACKET
 
 enum {
   AM_POLICEAPP = 7,

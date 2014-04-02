@@ -110,6 +110,7 @@ implementation {
 		pl_log_i(TAG, "<serveState(%x)>\n", *pState);
 		switch(*pState) {
 			case STATE_INIT : {
+				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
 				//init shared data
 				//BUGBUG not blocking
 				call SharedDataCInit.init();
@@ -124,6 +125,7 @@ implementation {
 				break;
 			}
 			case STATE_LOADED_FROM_EEPROM : {
+				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
 				//crypto init = auto init 
 
 				//init privacy level, BLOCKING			
@@ -137,27 +139,20 @@ implementation {
 				call IntrusionDetectCInit.init();
 				//PrivacyLevel init = auto init 
 
-#ifdef THIS_IS_BS 
-				// Signalize to the ProtectLayer that initialization is
-				// completed. PL will pass this information to the application.
-				// 
-				// In basestation mode, further initialization is responsibility of the app.
-				// 
-				call Privacy.startApp(SUCCESS);
-#endif
-
 				*pState = STATE_READY_TO_DEPLOY;
 				//*pState = transitionTable[*pState];
 				
 				
-				//BUGBUG no break!!! break; IF enabled, waiting for magic packet will be done
 				
 #ifdef THIS_IS_BS
 				signal Dispatcher.stateChanged(*pState);
+#else
+				//BUGBUG no break!!! break; IF enabled, waiting for magic packet will be done
 				break;
-#endif
+#endif //THIS_IS_BS				
 			}
 			case STATE_READY_TO_DEPLOY : {
+				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
 #ifdef THIS_IS_BS
 				//no code
 #else
@@ -173,11 +168,13 @@ implementation {
 #ifdef SKIP_MAGIC_PACKET
 				pl_log_d(TAG, "<magicPacketSkipped>\n");
 #else
+
 				break;
-#endif
-#endif
+#endif //SKIP_MAGIC_PACKET
+#endif //THIS_IS_BS
 			}
 			case STATE_MAGIC_RECEIVED : {
+				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
 				pl_log_d(TAG, "MP received. Going to init RouteP\n");
 
 				// Init Routing component
@@ -192,6 +189,7 @@ implementation {
 				break;				
 			}
 			case STATE_ROUTES_READY : {
+				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
 				pl_log_d(TAG, "Route initialized. Going to init KeyDistribP\n");
 				// init key distribution component
 				call KeyDistribCInit.init();
@@ -206,32 +204,35 @@ implementation {
 				break;				
 			}
 			case STATE_READY_FOR_SAVE : {
+				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
 				// Save actualized shared data 
 				
 				//WARNING: state changed to STATE_WORKING, so that this state will be saved to EEPROM
 				*pState = STATE_WORKING;
-				call ResourceArbiter.saveCombinedDataToFlash();
 				
-#ifdef THIS_IS_BS				
-				signal Dispatcher.stateChanged(*pState);
-#endif
+				call ResourceArbiter.saveCombinedDataToFlash();
+
+//BUGBUG probably should not be here due to the BS, where it is changing some other state				
+//#ifdef THIS_IS_BS				
+//				signal Dispatcher.stateChanged(*pState);
+//#endif
 
 				break;
 			}
 
 			case STATE_WORKING : {
+				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
 				*pState = STATE_WORKING;
 				
 				call BackupCombinedDataTimer.startOneShot(BACKUP_COMBINEDDATA_TIMER_MILLI);
 				
 #ifdef THIS_IS_BS
 				signal Dispatcher.stateChanged(*pState);
-#else
+#endif
 				// Signalize to the ProtectLayer that initialization is
 				// completed. PL will pass this information to the application.
 				// 
 				call Privacy.startApp(SUCCESS);
-#endif
 				
 				break;
 			}
@@ -251,6 +252,11 @@ implementation {
 
 	    if(*pState == finishedState){
 	        switch(finishedState){
+	        	//after loading initial state from eeprom, continue initializing the node
+	        	case STATE_INIT_IN_PROGRESS: {
+	        		*pState = STATE_LOADED_FROM_EEPROM;
+	        		break;
+	        	}
 			    case STATE_ROUTES_IN_PROGRESS: {
 				*pState = STATE_ROUTES_READY;
 				break;
@@ -259,6 +265,11 @@ implementation {
 				*pState = STATE_READY_FOR_SAVE;
 				break;
 			    }
+			    //after loading a successfull STATE_WORKING from eeprom, continue from working
+			    case STATE_WORKING: {
+				*pState = STATE_WORKING;
+				break;
+				}
 			    default: {
 				pl_log_f(TAG, "state %x not defined in stateFinished event\n", *pState);
 				return;
@@ -269,7 +280,7 @@ implementation {
 	    } else {
 			pl_log_e(TAG, "current state %x signalized finished state %x, not matched \n", *pState, finishedState);
 	    }
-	    
+	    pl_printfflush();
 	}
 	
 
@@ -302,8 +313,13 @@ implementation {
 	}
 
 	event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {
+		uint8_t * pState = &((call SharedData.getAllData())->dispatcherState);
 		pl_log_d(TAG, "restoreCombinedDataFromFlashDone.\n");
-		call Dispatcher.stateFinished(STATE_LOADED_FROM_EEPROM);
+		if (*pState == STATE_INIT) {
+        	*pState = STATE_INIT_IN_PROGRESS;
+        	pl_log_d(TAG, "dispatcherState was too small, setting to STATE_LOADED_FROM_EEPROM.\n");
+        }
+		call Dispatcher.stateFinished(*pState);
 	}
 
 	event void ResourceArbiter.restoreKeyFromFlashDone(error_t result) {

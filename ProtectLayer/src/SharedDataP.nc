@@ -50,7 +50,7 @@ implementation {
     command error_t PLInit.init() {
         call ResourceArbiter.restoreCombinedDataFromFlash();
         
-        pl_log_i(TAG, "PLInit.init() finished, waiting for restoration of combinedData from flash.\n");
+        pl_log_i(TAG, "PLInit.init() finished, waiting for combinedData.\n");
 
         //initialized = TRUE;
         return SUCCESS;
@@ -248,15 +248,11 @@ implementation {
 	event void SharedDataRead.readDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
 		m_busy = FALSE;
 		
-		pl_log_i(TAG, "ResourceArbiter.restoreCombinedDataFromFlash() finished.\n");
+		pl_log_i(TAG, "restoreCombinedDataFromFlash() finished.\n");
 		if (combinedData.magicWord != MAGIC_WORD) {
         	memset(&combinedData, 0, sizeof(combinedData));
         	combinedData.magicWord = MAGIC_WORD;
         	pl_log_d(TAG, "Magic word was incorrect, setting combinedData to 0.\n");
-        }
-        if (combinedData.dispatcherState < STATE_LOADED_FROM_EEPROM) {
-        	combinedData.dispatcherState = STATE_LOADED_FROM_EEPROM;
-        	pl_log_d(TAG, "DispatcherState was too small, setting to 1.\n");
         }
 
         initialized = TRUE;

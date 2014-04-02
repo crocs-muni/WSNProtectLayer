@@ -48,11 +48,7 @@ implementation {
 		memset(&combinedData, 0, sizeof(combinedData));
 		combinedData.magicWord = MAGIC_WORD;
 		
-		if (!m_busy) {
-			m_busy = TRUE;
-			return call ResourceArbiter.saveCombinedDataToFlash();
-		}
-        return FAIL;
+		return call ResourceArbiter.saveCombinedDataToFlash();
 	}
 
 	/**
