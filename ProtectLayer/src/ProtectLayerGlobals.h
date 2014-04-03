@@ -36,7 +36,8 @@
 
 // Default base station node ID
 #ifndef TOS_BS_NODE_ID
-#define TOS_BS_NODE_ID 41
+#define TOS_BS_NODE_ID 19
+#warning " *** Warning! Base station node ID was undefined, defined now as 19 !!! ***"
 #endif
 
 // Should be defined in application using this PL.
