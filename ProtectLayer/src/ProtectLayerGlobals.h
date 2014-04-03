@@ -73,6 +73,10 @@
 #warning " *** Warning! Crypto operations are disabled !!! ***"
 #endif
 
+#ifdef SKIP_EEPROM_RESTORE
+#warning " *** Warning! EEPROM restore is skipped !!! ***"
+#endif
+
 // Define to supress warning from printf function
 #ifndef PL_LOG_MAX_LEVEL 
 #define PL_LOG_MAX_LEVEL 4

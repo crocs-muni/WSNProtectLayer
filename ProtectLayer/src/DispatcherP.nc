@@ -115,18 +115,33 @@ implementation {
 				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
 				
 #ifndef THIS_IS_BS
+#ifndef SKIP_EEPROM_RESTORE
+
 				// Init shared data (restore state from EEPROM).
 				// Should be done only for regular nodes, not for BS. 
 				call SharedDataCInit.init();
-#endif
+				
+#endif // ifndef SKIP_EEPROM_RESTORE 
+#endif // ifndef THIS_IS_BS
+
 
 				*pState = STATE_INIT_IN_PROGRESS;
+				
+				
 #ifdef THIS_IS_BS				
 				signal Dispatcher.stateChanged(*pState);
-				// No break here, BS falls through this state to the next one.
-#else  
+				// No break here, BS falls through this state to the next one,
+				// since no EEPROM restore is performed.
+#else	  
+//
+// For non-BaseStation nodes.
+//
+
+// If EEPROM restore is skipped, fall through this state (since no restore done callback is called).
+#ifndef SKIP_EEPROM_RESTORE
 				break;
-#endif
+#endif				
+#endif // THIS_IS_BS
 			}
 			case STATE_LOADED_FROM_EEPROM : {
 				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
