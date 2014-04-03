@@ -111,18 +111,20 @@ implementation {
 		switch(*pState) {
 			case STATE_INIT : {
 				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
-				//init shared data
-				//BUGBUG not blocking
+				
+#ifndef THIS_IS_BS
+				// Init shared data (restore state from EEPROM).
+				// Should be done only for regular nodes, not for BS. 
 				call SharedDataCInit.init();
+#endif
 
 				*pState = STATE_INIT_IN_PROGRESS;
-				//*pState = transitionTable[*pState];
-
 #ifdef THIS_IS_BS				
 				signal Dispatcher.stateChanged(*pState);
-#endif
-				
+				// No break here, BS falls through this state to the next one.
+#else  
 				break;
+#endif
 			}
 			case STATE_LOADED_FROM_EEPROM : {
 				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
@@ -147,14 +149,13 @@ implementation {
 #ifdef THIS_IS_BS
 				signal Dispatcher.stateChanged(*pState);
 #else
-				//BUGBUG no break!!! break; IF enabled, waiting for magic packet will be done
-				break;
+				// No break here, waiting for magic packet in next state.
 #endif //THIS_IS_BS				
 			}
 			case STATE_READY_TO_DEPLOY : {
 				pl_log_i(TAG, "<serveState(%x)>\n", *pState);
 #ifdef THIS_IS_BS
-				//no code
+				// Base station does not wait for magic packet since it creates it.
 #else
 				//BUGBUG if serve state called and magic packet not received (assumption, now is serve state called only if magic packet arrived)
 				// MAGIC PAKET - PrivacyLevel signalized received magic packet.
@@ -168,7 +169,6 @@ implementation {
 #ifdef SKIP_MAGIC_PACKET
 				pl_log_d(TAG, "<magicPacketSkipped>\n");
 #else
-
 				break;
 #endif //SKIP_MAGIC_PACKET
 #endif //THIS_IS_BS
@@ -210,13 +210,10 @@ implementation {
 				//WARNING: state changed to STATE_WORKING, so that this state will be saved to EEPROM
 				*pState = STATE_WORKING;
 				
+#ifndef THIS_IS_BS
+				// Saving data to EEPROM makes some sense only in case of ordinary nodes, not for BS. 
 				call ResourceArbiter.saveCombinedDataToFlash();
-
-//BUGBUG probably should not be here due to the BS, where it is changing some other state				
-//#ifdef THIS_IS_BS				
-//				signal Dispatcher.stateChanged(*pState);
-//#endif
-
+#endif
 				break;
 			}
 
@@ -270,6 +267,11 @@ implementation {
 				*pState = STATE_WORKING;
 				break;
 				}
+				// after magic packet was received.
+				case STATE_MAGIC_RECEIVED: {
+				*pState = STATE_MAGIC_RECEIVED;
+				break;	
+				}
 			    default: {
 				pl_log_f(TAG, "state %x not defined in stateFinished event\n", *pState);
 				return;
@@ -289,20 +291,18 @@ implementation {
 		//no code
 	}
 #else	
-	task void serveStateTask() {
-		call Dispatcher.serveState();
+	task void magicPacketReceivedTask() {
+		call Dispatcher.stateFinished(STATE_MAGIC_RECEIVED);
 	}
 #endif
 
-	event void MagicPacket.magicPacketReceived(error_t status,
-			PRIVACY_LEVEL newPrivacyLevel) {
+	event void MagicPacket.magicPacketReceived(error_t status, PRIVACY_LEVEL newPrivacyLevel) {
 #ifdef THIS_IS_BS
-		//no code
 		// Magic packet not relevant if BS, we are producing magic packet!
 #else
 		pl_log_i(TAG, "magicPacket received\n");
 #ifndef SKIP_MAGIC_PACKET
-		post serveStateTask();
+		post magicPacketReceivedTask();
 #endif
 #endif
 	}

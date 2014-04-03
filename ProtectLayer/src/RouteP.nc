@@ -56,6 +56,7 @@ implementation{
 	// Route interface
 	//
 	command node_id_t Route.getParentID(){
+#ifndef THIS_IS_BS
 		combinedData_t* pData = call SharedData.getAllData();
 		if (pData->routePrivData.isValid)
 		{
@@ -64,19 +65,21 @@ implementation{
 		}
 		else
 		{
-			//try to find random neighbor, otherwise return INVALID_NODE_ID
+			// Try to find random neighbor, otherwise return INVALID_NODE_ID.
 			node_id_t neighbor = INVALID_NODE_ID;
 			if (call Route.getRandomNeighborIDB(&neighbor) == SUCCESS)
 			{
 				return neighbor;
 			}	
 		}
-		return INVALID_NODE_ID;	
+		
+		return INVALID_NODE_ID;
+#else
+		// Base station case, alternative would be to return own ID, but
+		// in order to avoid accidental infinite loops, return invalid ID. 
+		return INVALID_NODE_ID;
+#endif	// THIS_IS_BS
 	}
-	
-	
-	
-	
 	
 /**
  *  
@@ -121,11 +124,14 @@ implementation{
 		call CtpInitTimer.startOneShot(CTP_TIME_SEND_AFTER_START + (call Random.rand16() % CTP_TIME_SEND_AFTER_START_RND));
 	}
 	
-/* Is this quality measure better than the minimum threshold? */
-    // Implemented assuming quality is EETX
+    /**
+     * Is this quality measure better than the minimum threshold?
+     * Implemented assuming quality is EETX 
+     */
     bool passLinkEtxThreshold(uint16_t etx) {
         return (etx < ETX_THRESHOLD);
     }	
+    
 #ifdef CTP_DUMP_NEIGHBORS
 	void dumpCtpNeighbors();
 #endif
@@ -147,20 +153,27 @@ implementation{
 	}
 	
 	task void stopCTP(){
+		pl_log_i(TAG, "CTP term state\n");
+		pl_printfflush();
+		
+		call CtpSendTimer.stop();
+		
+#ifndef THIS_IS_BS
+		{
 		combinedData_t* pData = call SharedData.getAllData();
 		uint8_t numNeigh = 0;
 		uint8_t numAboveThreshold=0;
 		
-		pl_log_i(TAG, "CTP term state...\n");
-		pl_printfflush();
-		call CtpSendTimer.stop();
-#ifndef THIS_IS_BS		
+		// In case of Base Station, CTP is kept running.
+		// Currently, the whole PL stack is started in one call 
+		// (no waiting for button press to transmit magic packet),
+		// thus CTP has to be running since network is still not started by magic packet.
+		// After BS sends magic packet, nodes will need CTP root to init
+		// routing tree. 
 		call FixedTopology.setFixedTopology();
-#endif		
 		
-		//copy parent and neighbor ids to sharedData
-		if (call CtpInfo.getParent(&(pData->routePrivData.parentNodeId)) != FAIL)
-		{ 
+		// Copy parent and neighbor ids to sharedData.
+		if (call CtpInfo.getParent(&(pData->routePrivData.parentNodeId)) != FAIL){ 
 		 	pData->routePrivData.isValid=TRUE;
 		} else {
 			pData->routePrivData.isValid=FALSE;
@@ -170,8 +183,7 @@ implementation{
 		numNeigh = call CtpInfo.numNeighbors();
 	
 		// If zero -> set number of neighbors to zero
-		if (numNeigh != 0)
-		{
+		if (numNeigh != 0){
 			uint8_t i=0;
 		
 			// Iterate over, neighbors, pick only those with quality above threshold.
@@ -194,7 +206,9 @@ implementation{
 #ifdef CTP_DUMP_NEIGHBORS
 	    dumpCtpNeighbors();
 #endif
-	pl_log_d(TAG, "##.\n");
+		pl_log_d(TAG, "##.\n");
+		}
+#endif // THIS_IS_BS
 
 		// Signalize dispatcher routing is done.
 		call Dispatcher.stateFinished(STATE_ROUTES_IN_PROGRESS);
@@ -209,34 +223,24 @@ implementation{
 			call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
 			// Move to the next state
 			ctp_init_state = CTP_STATE_SENDING;
-			// Start CTP init timer for CTP stabilizing to fixed topology
+			// Start CTP init timer for CTP stabilizing to fixed topology.
+			// Init timer will keep CTP running only some amount of time.
 			call CtpInitTimer.startOneShot(CTP_TIME_STOP_AFTER_BOOT);
 			
 		} else if (ctp_init_state==CTP_STATE_SENDING){
-			// Move to the next state -> finish as soon as parent is found.
-			
-//#ifdef THIS_IS_BS
-//no code
-//#else			
+			// Move to the next state -> finish as soon as parent is found.		
 			ctp_init_state = CTP_STATE_FIND_PARENT;
 			call CtpInitTimer.startOneShot(CTP_TIME_STOP_NO_PARENT);
-//#endif
 			call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
 			
 		} else if(ctp_init_state==CTP_STATE_FIND_PARENT || ctp_init_state==CTP_STATE_TERMINATE){
-			// Stopping CTP - move to fixed topology.
-//#ifndef THIS_IS_BS
+			// Stopping CTP - moving to fixed topology & stopping CTP sending.
 			ctp_init_state=CTP_STATE_TERMINATE;
 			post stopCTP();
-//#endif
+			
 		}
 	}
-	
 
-	
-
-	
-	
 	/**
 	 * Task for sending CTP messages.
 	 * Used after boot to initialize CTP component - real TCP traffic.
@@ -245,8 +249,36 @@ implementation{
 #ifndef THIS_IS_BS	
         error_t sendResult = SUCCESS;
 #endif
+
+		// Terminate if CTP is not in use anymore.
+		if (ctp_init_state>=CTP_STATE_TERMINATE){
+			// CTP ended
+			return;
+		}
 		
-		// CTP didn't returned a response
+		pl_log_d(TAG, "CTPsendTask()\n");
+
+#ifdef THIS_IS_BS
+		if (ctp_init_state==CTP_STATE_FIND_PARENT){
+			findRootCnt += 1;
+			if ((findRootCnt % 5) == 0){
+				
+				// Trigger updateRouteTask(); and sendBeaconTask() inside CTP 
+				pl_log_d(TAG, "CTP update\n");
+				call CtpInfo.triggerImmediateRouteUpdate();
+				call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
+				return;
+			}
+				
+			return;
+		}
+		
+		// If a BS, nothing t
+		call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
+		
+#else	// Only if given node is not a base station.
+		//
+		// Check if CTP managed to send some packet to the base station.
 		if (ctpBusy){
 			ctpBusyCount+=1;
 			pl_log_w(TAG, "CTPSendTask, busy[%u]\n", ctpBusyCount);
@@ -259,40 +291,6 @@ implementation{
 			return;
 		}
 		
-		// Terminate if CTP is not in use anymore.
-		if (ctp_init_state>=CTP_STATE_TERMINATE){
-			// CTP ended
-			return;
-		}
-		
-		pl_log_d(TAG, "CTPsendTask()\n");
-
-#ifdef THIS_IS_BS
-		if (ctp_init_state==CTP_STATE_FIND_PARENT){
-			findRootCnt += 1;
-			
-			// Try to help CTP somehow sometimes...
-			if ((findRootCnt % 5) == 0){
-				pl_log_d(TAG, "CTP update\n");
-				call CtpInfo.triggerImmediateRouteUpdate();
-				call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
-				return;
-				
-			} else if ((findRootCnt % 5) == 2) {
-				pl_log_d(TAG, "CTP recompute\n");
-				call CtpInfo.recomputeRoutes();
-				call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
-				return;
-			}
-					
-			return;
-		}
-		
-		// If a BS, nothing to do.
-		call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
-		
-#else	
-		// Only if given node is not a base station.
 		// If we are trying to find root...
 		// Helping CTP by triggering route recomputation (if parent was not found till now, something is wrong).
 		if (ctp_init_state==CTP_STATE_FIND_PARENT && parentFound==FALSE){
@@ -317,12 +315,18 @@ implementation{
 				
 				// Try to help CTP somehow sometimes...
 				if ((findRootCnt % 5) == 0){
+					
+					// Trigger updateRouteTask(); and sendBeaconTask() inside CTP.
+					// New beacon is important here to retransmit current routing state
+					// to neighbors and to force others to beacon also.
 					pl_log_d(TAG, "CTP route update\n");
 					call CtpInfo.triggerImmediateRouteUpdate();
 					call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
 					return;
 					
 				} else if ((findRootCnt % 5) == 2) {
+					
+					// Trigger updateRouteTask() inside CTP, just picks best node/path to the root.
 					pl_log_d(TAG, "CTP recompute\n");
 					call CtpInfo.recomputeRoutes();
 					call CtpSendTimer.startOneShot(CTP_TIME_SENDING + (call Random.rand16() % CTP_TIME_SENDING_RND));
@@ -344,7 +348,8 @@ implementation{
         	// start re-tx timer
 			call CtpSendTimer.startOneShot(CTP_TIME_SEND_FAIL + (call Random.rand16() % CTP_TIME_SEND_FAIL_RND));
         }
-#endif
+        
+#endif // #ifdef THIS_IS_BS
 	}
 	
 	event void CtpSendTimer.fired(){

@@ -33,7 +33,7 @@ implementation {
   components MainC;
   components LedsC;
   components BaseStationC as App;
-  components new TimerMilliC() as Timer0;
+  components new TimerMilliC() as BlinkAndSendTimer;
   components new TimerMilliC() as InitTimer; // init timer (radio init)
   components UserButtonC;
   
@@ -52,7 +52,7 @@ implementation {
   
   App.Boot -> MainC;
   App.Leds -> LedsC;
-  App.Timer0 -> Timer0;
+  App.BlinkAndSendTimer -> BlinkAndSendTimer;
   App.InitTimer -> InitTimer;
   App.AMControl -> ProtectLayerC.AMControl;
   
