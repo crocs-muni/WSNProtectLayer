@@ -191,7 +191,7 @@ implementation {
     
     command error_t CryptoRaw.deriveKeyB(PL_key_t* masterKey, uint8_t* derivationData, uint8_t offset, uint8_t len, PL_key_t* derivedKey) {
         
-         pl_log_d(TAG, "CryptoRawP: deriveKeyB called.\n"); 
+         pl_log_d(TAG, " deriveKeyB called.\n"); 
         
         if(masterKey == NULL){
 	    pl_log_e( TAG," deriveKeyB NULL masterKey.\n");

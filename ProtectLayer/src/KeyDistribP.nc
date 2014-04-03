@@ -60,7 +60,9 @@ implementation{
 	SavedData = call SharedData.getSavedData();
 	
 	if(preKeysRetrieved == combData->actualNeighborCount){
+#ifndef NO_CRYPTO
 	      call Crypto.initCryptoIIB();
+#endif
 	      call Dispatcher.stateFinished(STATE_KEYDISTRIB_IN_PROGRESS);
 	      
 	} else {

@@ -90,7 +90,7 @@ implementation{
 			Signature_t sig;
 #endif
     		
-    		//check if new priv level is valid
+    		// Check if new priv level is valid.
     		if (pkt->newPLevel >= PLEVEL_NUM) {
     			pl_log_w(TAG, "privacy level not recognized [%x]\n", pkt->newPLevel);
     			return msg;
@@ -159,6 +159,8 @@ implementation{
 				pl_log_d(TAG, "re-bcast add; 2send=%p, free=%p\n", m_lastMsg, m_msg);
 				return m_msg;
 			}
+		} else {
+			pl_log_e(TAG, "invalid PLchange len\n");
 		}
 		
 		return msg;	

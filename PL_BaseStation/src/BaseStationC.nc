@@ -197,8 +197,9 @@ implementation {
   		call BlinkAndSendTimer.startOneShot(TIMER_BLINK_PAUSE_SHORT);
     	
     }
-    else {   
-      call InitTimer.startOneShot(TIMER_FAIL_START);
+    else {
+   		BS_PRINTF(pl_log_e(TAG, "Radio start err: %x\n", err));
+        call InitTimer.startOneShot(TIMER_FAIL_START);
     }
   }
 	
@@ -222,13 +223,15 @@ implementation {
 				Signature_t signature;
 				plvlMsg->newPLevel = curPrivLvl;
 				plvlMsg->counter = plvlCounter + 1;
-				
 				BS_PRINTF(pl_log_d(TAG, "2computeSig;ctr[%d]\n", plvlCounter));
-				
-				call Crypto.computeSignature(curPrivLvl, HASH_KEYS - plvlCounter - 1, &signature);
-				memcpy((uint8_t*) &(plvlMsg->signature), (uint8_t*) &(signature.signature), SIGNATURE_LENGTH);
 				BS_PRINTFFLUSH();
 				
+#ifndef NO_CRYPTO
+				call Crypto.computeSignature(curPrivLvl, HASH_KEYS - plvlCounter - 1, &signature);
+				memcpy((uint8_t*) &(plvlMsg->signature), (uint8_t*) &(signature.signature), SIGNATURE_LENGTH);
+#endif
+
+				BS_PRINTFFLUSH();
 				BS_PRINTF(pl_log_d(TAG, "signature generated %x %x %x %x\n", 
 					plvlMsg->signature[0],
 					plvlMsg->signature[1],
@@ -349,6 +352,7 @@ implementation {
 			
 			// If radio is not started yet, we have to wait for it.
 			if (initState==INIT_STATE_BOOTED) {
+				BS_PRINTF(pl_log_e(TAG, "Cannot send PL change, not booted yet\n"));
 				return;
 			}
 			

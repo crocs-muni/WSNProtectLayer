@@ -68,6 +68,10 @@
 #warning " *** Warning! Magic packet is skipped !!! ***"
 #endif
 
+#ifdef NO_CRYPTO
+#warning " *** Warning! Crypto operations are disabled !!! ***"
+#endif
+
 // Define to supress warning from printf function
 #ifndef PL_LOG_MAX_LEVEL 
 #define PL_LOG_MAX_LEVEL 4
