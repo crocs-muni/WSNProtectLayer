@@ -24,6 +24,7 @@
 
 #include "BaseStation.h"
 
+
 #include <Timer.h>
 #define NEW_PRINTF_SEMANTICS
 
@@ -43,6 +44,7 @@ implementation {
   components SerialStartC;
   
   components DispatcherC;
+  components SharedDataC;
   components CryptoP;
   components new AMSenderC(AM_CHANGEPL);
   
@@ -60,6 +62,7 @@ implementation {
   App.Notify -> UserButtonC;
   
   App.Dispatcher -> DispatcherC;
+  App.SharedData -> SharedDataC;
   App.Crypto -> CryptoP;
   
   App.PrivChangeSend -> AMSenderC;

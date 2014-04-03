@@ -8,11 +8,12 @@
 //#define USE_CTP
 #define DEBUG_PRINTF
 
-#define ACCEPT_ALL_SIGNATURES
-#define ACCEPT_ALL_MACS
+//#define ACCEPT_ALL_SIGNATURES
+//#define ACCEPT_ALL_MACS
 #define CTP_QUICK_INIT
 #define TOS_BS_NODE_ID TOS_NODE_ID
 //#define NO_CRYPTO
+#define SKIP_EEPROM_RESTORE
 
 #include "../../ProtectLayer/src/ProtectLayerGlobals.h"
 

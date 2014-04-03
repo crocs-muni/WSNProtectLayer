@@ -42,6 +42,7 @@
 #include <Timer.h>
 #include "BaseStation.h"
 #include <UserButton.h>
+#include "../../ProtectLayer/src/ProtectLayerGlobals.h"
 
 module BaseStationC {
   uses interface Boot;
@@ -56,6 +57,7 @@ module BaseStationC {
   uses interface Notify<button_state_t>;
   
   uses interface Dispatcher;
+  uses interface SharedData;
   uses interface Crypto;
   
   uses interface AMSend as PrivChangeSend;
@@ -140,6 +142,11 @@ implementation {
 
   event void Boot.booted() {
     uint8_t i;
+    uint8_t k;
+    Signature_t* root;
+    Signature_t signature;
+    PPCPrivData_t* ppcPrivData;
+
     for (i = 0; i < UART_QUEUE_LEN; i++){
       uartQueue[i] = &uartQueueBufs[i];
     }
@@ -156,6 +163,30 @@ implementation {
     radioBusy = FALSE;
     radioFull = FALSE;
 	call Leds.led0On();
+   
+    // Prepare privacy levels
+    ppcPrivData = call SharedData.getPPCPrivData(); 
+    // Compute initial version of PRIVACY_LEVEL chain roots for nodes
+
+    for (i = 0; i < PLEVEL_NUM; i++) {   
+      root = &(ppcPrivData->signatures[i]); 
+      // Set initial random values for privacy level roots (view of BS, not node)
+      //BUGBUG: now set to fixed value, should be random in production
+      memset(root->signature, i, SIGNATURE_LENGTH);
+    }	
+
+    for (i = 0; i < PLEVEL_NUM; i++) {   
+      root = &(ppcPrivData->signatures[i]); 
+      // compute maximum number of hash iteration to obtain root value for ordinary nodes
+      call Crypto.computeSignature(i, HASH_KEYS, &signature);
+      // Dump resulting value to output 
+      BS_PRINTF(pl_log_d(TAG, "root for privacy level = %d: ", i));
+      for (k = 0; k < SIGNATURE_LENGTH; k++) {
+	printf("%2x ", signature.signature[k]);
+      }	
+      printf("\n");
+    }
+
 	
     // Prepare initialization TIMER_START ms after boot.
     // Due to this delay one is able to attach PrintfClient
@@ -228,7 +259,7 @@ implementation {
 				
 #ifndef NO_CRYPTO
 				call Crypto.computeSignature(curPrivLvl, HASH_KEYS - plvlCounter - 1, &signature);
-				memcpy((uint8_t*) &(plvlMsg->signature), (uint8_t*) &(signature.signature), SIGNATURE_LENGTH);
+				memcpy((uint8_t*) &(plvlMsg->signature), (uint8_t*) signature.signature, SIGNATURE_LENGTH);
 #endif
 
 				BS_PRINTFFLUSH();

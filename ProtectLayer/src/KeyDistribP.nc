@@ -117,10 +117,10 @@ implementation{
 
     command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t** pNodeKey){
         SavedData_t* pSavedData = NULL;
-        pl_log_d(TAG, "getKeyToNodeB called for node '%u'\n", nodeID); 
+        //pl_log_d(TAG, "getKeyToNodeB called for node '%u'\n", nodeID); 
 	
         if(nodeID > NODE_MAX_ID || nodeID <= 0){
-	    	pl_log_e(TAG,"KeyDistribP: invalid node ID.\n");
+	    	pl_log_e(TAG, " invalid node ID.\n");
 	    	return FAIL;
         }
         
@@ -135,7 +135,7 @@ implementation{
             return SUCCESS;
         }
         else {
-            pl_log_e(TAG, "Failed to obtain SharedData.getNodeState.\n"); 
+            //pl_log_e(TAG, "Failed to obtain SharedData.getNodeState.\n"); 
             return EKEYNOTFOUND;
         }
     }
@@ -144,14 +144,14 @@ implementation{
         KDCPrivData_t* KDCPrivData = NULL;
 
         if(pBSKey == NULL){
-	    pl_log_e(TAG, "pBSKey NULL.\n");
+	    //pl_log_e(TAG, "pBSKey NULL.\n");
 	    return FAIL;
         }
 
-        pl_log_d(TAG, "getKeyToBSB called.\n"); 
+        //pl_log_d(TAG, "getKeyToBSB called.\n"); 
         KDCPrivData = call SharedData.getKDCPrivData();
         if(KDCPrivData == NULL){
-            pl_log_w(TAG, "getKeyToBSB key not received\n"); 
+            //pl_log_w(TAG, "getKeyToBSB key not received\n"); 
             return EKEYNOTFOUND;
         } else {		
             *pBSKey = &(KDCPrivData->keyToBS);
@@ -174,6 +174,7 @@ implementation{
             return EKEYNOTFOUND;
         } else {		
 	    // set hash value to fixed initial value
+            // BUGBUG: should be unknown to an attacker, now only zeroes
 	    memset(KDCPrivData->hashKey.keyValue, 0, sizeof(KDCPrivData->hashKey.keyValue));
 	    KDCPrivData->hashKey.counter = 0;
 	    // return ptr to hash key structure	

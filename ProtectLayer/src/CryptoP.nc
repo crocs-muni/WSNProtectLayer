@@ -26,7 +26,7 @@ implementation {
     PL_key_t* 	m_key2;		/**< handle to the key used as second one in cryptographic operations (e.g., deriveKey). Value is set before task is posted. */
     PL_key_t 	m_key_pred;
     uint8_t 	m_buffer[2*BLOCK_SIZE];	/**< buffer for subsequent encryption or decryption operation. Value is set before task is posted.  */    
-    uint8_t         m_exp[240]; //expanded key
+    uint8_t     m_exp[240]; //expanded key
     
     // Logging tag for this component
     static const char *TAG = "CryptoP";
@@ -368,7 +368,7 @@ implementation {
         PPCPrivData_t* ppcPrivData = NULL;
 
 	if(buffer == NULL){
-	    pl_log_e( TAG," verifySignatures NULL buffer.\n");
+	    //pl_log_e( TAG," verifySignatures NULL buffer.\n");
 	    return FAIL;
         }
         if(level < 0 || level >= 5){
@@ -393,8 +393,9 @@ implementation {
 	    pl_log_e( TAG," verifySignatures invalid counter value.\n");
 	    return FAIL;
         }
-        //return status;
         
+        pl_log_d( TAG," counter=%x, ppcPrivData->signatures[level].counter = %x", counter,ppcPrivData->signatures[level].counter);
+
         memcpy(tmpSignature, buffer + offset, SIGNATURE_LENGTH);
         for(i = 0; i < counter - ppcPrivData->signatures[level].counter; i++){
 
@@ -405,7 +406,12 @@ implementation {
 	        return FAIL;
 	    }
         }
+
+
         
+        pl_log_d( TAG," tmpSignature = %2x%2x%2x%2x.\n", tmpSignature[0], tmpSignature[1], tmpSignature[2], tmpSignature[3]);
+        pl_log_d( TAG," ppcPrivData->signatures[level]).signature = %2x%2x%2x%2x.\n", (ppcPrivData->signatures[level]).signature[0], (ppcPrivData->signatures[level]).signature[1], (ppcPrivData->signatures[level]).signature[2], (ppcPrivData->signatures[level]).signature[3]);
+
         if(memcmp((ppcPrivData->signatures[level]).signature, tmpSignature, SIGNATURE_LENGTH) == 0){
            if (signature != NULL){ //if optional parameter is present, then copy verified signature there
 	      memcpy(signature->signature, tmpSignature, SIGNATURE_LENGTH);
@@ -414,8 +420,11 @@ implementation {
 	   }
            return SUCCESS;
         }
+        else  {
+           //pl_log_e( TAG," verifySignature compare not succesfull.\n");
+        }
             
-        pl_log_e( TAG," verifySignature not succesfull.\n");
+        pl_log_e( TAG," verifySignature fail.\n");
 	return FAIL;
     }
     
