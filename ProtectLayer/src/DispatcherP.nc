@@ -213,8 +213,9 @@ implementation {
 #ifndef THIS_IS_BS
 				// Saving data to EEPROM makes some sense only in case of ordinary nodes, not for BS. 
 				call ResourceArbiter.saveCombinedDataToFlash();
-#endif
 				break;
+#endif
+				// No break for BS since there was no EEPROM restore.
 			}
 
 			case STATE_WORKING : {
