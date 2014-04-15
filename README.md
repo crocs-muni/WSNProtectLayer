@@ -6,13 +6,13 @@ TinyOS layer for configurable protection of message privacy, intrusion detection
 Design and implementation was supported by project VG20102014031 of Ministry of Interior, Czech Republic
 "Experimentální vývoj bezpečnostní softwarové platformy se systémem detekce průniku a režimy ochrany soukromí pro bezdrátové senzorové sítě" (in Czech)
 
-===============
+
 ##How to get ProtectLayer##
 - Fork your own repository (at Github)
 - or create local clone of repository (desktop)
 - or download all sources in single zip file (Download ZIP)
 
-===============
+
 ##What you will get##
 
 **Core components**
@@ -36,7 +36,7 @@ Design and implementation was supported by project VG20102014031 of Ministry of 
 - rssi_csv_to_tossim ... application usable for testing signal propagation and RSSI 
 - BlinkNodeIDApp ... testing application without any network communication. Node blinks its own ID
 
-===============
+
 ##How to use it##
 
 - Compile and upload Base station node: 
