@@ -7,13 +7,14 @@ Design and implementation was supported by project VG20102014031 of Ministry of 
 "Experimentální vývoj bezpečnostní softwarové platformy se systémem detekce průniku a režimy ochrany soukromí pro bezdrátové senzorové sítě" (in Czech)
 
 ===============
-**How to get ProtectLayer:**
+##How to get ProtectLayer##
 - Fork your own repository (at Github)
 - or create local clone of repository (desktop)
 - or download all sources in single zip file (Download ZIP)
 
 ===============
-**What you will get:**
+##What you will get##
+
 **Core components**
 - ProtectLayer ... implementation of ProtectLayer middleware with all core functions. Other applications are wired against this implementation
 - ProtectLayerConfigurator ... configuration application responsible for storage of cryptographic keys into flash memory during predistribution
@@ -36,7 +37,7 @@ Design and implementation was supported by project VG20102014031 of Ministry of 
 - BlinkNodeIDApp ... testing application without any network communication. Node blinks its own ID
 
 ===============
-**How to use it:**
+##How to use it##
 
 - Compile and upload Base station node: 
 ```
