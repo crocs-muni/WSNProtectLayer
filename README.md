@@ -7,36 +7,36 @@ Design and implementation was supported by project VG20102014031 of Ministry of 
 "Experimentální vývoj bezpečnostní softwarové platformy se systémem detekce průniku a režimy ochrany soukromí pro bezdrátové senzorové sítě" (in Czech)
 
 ===============
-How to get ProtectLayer:
+**How to get ProtectLayer:**
 - Fork your own repository (at Github)
 - or create local clone of repository (desktop)
 - or download all sources in single zip file (Download ZIP)
 
 ===============
-What you will get:
-* Core components *
+**What you will get:**
+**Core components**
 - ProtectLayer ... implementation of ProtectLayer middleware with all core functions. Other applications are wired against this implementation
 - ProtectLayerConfigurator ... configuration application responsible for storage of cryptographic keys into flash memory during predistribution
 - Uploader ... server side Java application communicating with ProtectLayerConfigurator and providing predistributed keys
 
-* Scenario-specific applications *
+**Scenario-specific applications**
 - PL_BaseStation ... base station node with ProtectLayer middleware 
 - PL_BlinkToRadio ... testing application with network communication with ProtectLayer middleware 
 - PL_PoliceApp ... application for ordinary nodes inside network. Supports detection of MSNs, emitting still alive packets
 - IntruderApp ... application used for special nodes used as mobile beacon reported to BS (MSN, virtual attacker)   
 
-* Hardware extensions *
+**Hardware extensions**
 - Zilog ... application with ability to sample and respond on movement detection sensor Zilog ePir
 - rfid ... application with ability to sample and respond on wireless card close to connected RFID reader
 
-* Management applications * 
+**Management and statistics gathering applications** 
 - ManagementApp ... set of server-side scripts for batch control of nodes 
 - TOSCTP ... application usable for testing CTP routing discover protocol performance
 - rssi_csv_to_tossim ... application usable for testing signal propagation and RSSI 
 - BlinkNodeIDApp ... testing application without any network communication. Node blinks its own ID
 
 ===============
-How to use it:
+**How to use it:**
 
 - Compile and upload Base station node: 
 ```
