@@ -20,12 +20,36 @@ interface GeneralRFIDI{
 	 * @param uint8_t data	byte to send
 	 * @return bool true | false
 	 */
-	asnyc command bool sendData(uint8_t data);
+	async command bool sendData(uint8_t data);
 	
 	/**
-	 * get recieved data from reader
+	 * get received data from reader
 	 * 
 	 * @return uint16_t 
 	 */
-	async command uint16_t getData();
+	async command uint8_t * getData();
+	
+	/**
+	 * compute data checksum and compare it with given checksum
+	 * 
+	 * if checksum is correct, then true is returned
+	 * 
+	 * @return true | false
+	 */
+	async command bool checkChecksum();
+	
+	/**
+	 * informs about new card
+	 */
+	event void cardDetected();
+	
+	/**
+	 * shutdown reader or change state to sleep
+	 */
+	async command void sleep();
+	
+	/**
+	 * wanble / wake up reader
+	 */
+	async command void wake();
 }

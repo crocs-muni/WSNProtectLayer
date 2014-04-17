@@ -21,7 +21,7 @@ msp430_uart_union_config_t uart9600 = {
     	urxse : 0, 
       	urxeie : 1, 
       	urxwie : 0,
-      	utxe : 1,
+      	utxe : 0,
       	urxe : 1
   	} 
 };
