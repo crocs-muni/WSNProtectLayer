@@ -27,7 +27,7 @@ implementation{
     PL_key_t* m_testKey;	/**< handle to key for selfTest */
     //PL_key_t preNeighKeys[MAX_NEIGHBOR_COUNT];
     uint8_t preKeysRetrieved = 0;
-    uint8_t retrieveStatus;
+    uint8_t previousRetrieveStatus;
     static const char *TAG = "KeyDistP";
 
     //
@@ -50,7 +50,7 @@ implementation{
     
         
     task void retrievePrekeysTask() {
-	uint8_t status;
+	//uint8_t status;
 	combinedData_t* combData;
 	SavedData_t* SavedData = NULL;
 	
@@ -60,12 +60,14 @@ implementation{
 	SavedData = call SharedData.getSavedData();
 	
 	if(preKeysRetrieved == combData->actualNeighborCount){
+#ifndef NO_CRYPTO
 	      call Crypto.initCryptoIIB();
+#endif
 	      call Dispatcher.stateFinished(STATE_KEYDISTRIB_IN_PROGRESS);
 	      
 	} else {
 	
-	     status = call SharedData.getPredistributedKeyForNode(combData->savedData[preKeysRetrieved].nodeId, &(SavedData[preKeysRetrieved].kdcData.shared_key));	      
+	     call SharedData.getPredistributedKeyForNode(combData->savedData[preKeysRetrieved].nodeId, &(SavedData[preKeysRetrieved].kdcData.shared_key));	      
 	}
     }
     
@@ -73,20 +75,20 @@ implementation{
 	if(result == SUCCESS){
 	//key sucessfully retrieved, moving on to next one
 	     preKeysRetrieved++;
-	     retrieveStatus = SUCCESS;
+	     previousRetrieveStatus = SUCCESS;
 	     post retrievePrekeysTask();
 	} else {
 	     pl_log_e(TAG, "restoreKeyFromFlashDone failed.\n"); 
-	     if(retrieveStatus == SUCCESS){ 
+	     if(previousRetrieveStatus == SUCCESS){ 
 	         //second attempt
-	         retrieveStatus = FAIL;
+	         previousRetrieveStatus = FAIL;
 		 post retrievePrekeysTask();
 	     } else {
 		//second attempt failed, skipping this neighbor
 	         //preNeighKeys[preKeysRetrieved] = NULL;
 	         //TODO change variable name
 	         preKeysRetrieved++;
-	         retrieveStatus = SUCCESS;
+	         previousRetrieveStatus = SUCCESS;
 	         post retrievePrekeysTask();
 	     }
 	}
@@ -98,7 +100,7 @@ implementation{
     
     command error_t KeyDistrib.discoverKeys() {
 	//post task for eeprom key retrieval
-	retrieveStatus = SUCCESS;
+	previousRetrieveStatus = SUCCESS;
 	post retrievePrekeysTask();
 	return SUCCESS;
 	/*
@@ -115,10 +117,10 @@ implementation{
 
     command error_t KeyDistrib.getKeyToNodeB(uint8_t nodeID, PL_key_t** pNodeKey){
         SavedData_t* pSavedData = NULL;
-        pl_log_d(TAG, "getKeyToNodeB called for node '%u'\n", nodeID); 
+        //pl_log_d(TAG, "getKeyToNodeB called for node '%u'\n", nodeID); 
 	
         if(nodeID > NODE_MAX_ID || nodeID <= 0){
-	    	pl_log_e(TAG,"KeyDistribP: invalid node ID.\n");
+	    	pl_log_e(TAG, " invalid node ID.\n");
 	    	return FAIL;
         }
         
@@ -133,7 +135,7 @@ implementation{
             return SUCCESS;
         }
         else {
-            pl_log_e(TAG, "Failed to obtain SharedData.getNodeState.\n"); 
+            //pl_log_e(TAG, "Failed to obtain SharedData.getNodeState.\n"); 
             return EKEYNOTFOUND;
         }
     }
@@ -142,14 +144,14 @@ implementation{
         KDCPrivData_t* KDCPrivData = NULL;
 
         if(pBSKey == NULL){
-	    pl_log_e(TAG, "pBSKey NULL.\n");
+	    //pl_log_e(TAG, "pBSKey NULL.\n");
 	    return FAIL;
         }
 
-        pl_log_d(TAG, "getKeyToBSB called.\n"); 
+        //pl_log_d(TAG, "getKeyToBSB called.\n"); 
         KDCPrivData = call SharedData.getKDCPrivData();
         if(KDCPrivData == NULL){
-            pl_log_w(TAG, "getKeyToBSB key not received\n"); 
+            //pl_log_w(TAG, "getKeyToBSB key not received\n"); 
             return EKEYNOTFOUND;
         } else {		
             *pBSKey = &(KDCPrivData->keyToBS);
@@ -172,6 +174,7 @@ implementation{
             return EKEYNOTFOUND;
         } else {		
 	    // set hash value to fixed initial value
+            // BUGBUG: should be unknown to an attacker, now only zeroes
 	    memset(KDCPrivData->hashKey.keyValue, 0, sizeof(KDCPrivData->hashKey.keyValue));
 	    KDCPrivData->hashKey.counter = 0;
 	    // return ptr to hash key structure	

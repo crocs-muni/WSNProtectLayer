@@ -106,7 +106,7 @@ implementation {
   
   task void stillAlive(){
   	counter++;
-    printf("TimerStillAlive fired with counter %u.\n", counter);
+    //printf("TimerStillAlive fired with counter %u.\n", counter);
 
     if (!busy) {
       PoliceAppMsg_StillAlive* btrpkt = (PoliceAppMsg_StillAlive*)(call Packet.getPayload(&pkt, sizeof(PoliceAppMsg_StillAlive)));

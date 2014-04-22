@@ -43,7 +43,17 @@ implementation {
 	 * Initial memory erase to make sure combinedData are empty.
 	 */
     event void Boot.booted() {
-		memset(&combinedData, 0, sizeof(combinedData));
+	    memset(&combinedData, 0, sizeof(combinedData));
+#ifdef SKIP_EEPROM_RESTORE
+        initialized = TRUE;
+#endif
+
+		// initial values for privacy level roots
+        memcpy(&(combinedData.ppcPrivData.signatures[0].signature), PRIVLEVEL_0_SIGNATURE_ROOT, SIGNATURE_LENGTH);
+        memcpy(&(combinedData.ppcPrivData.signatures[1].signature), PRIVLEVEL_1_SIGNATURE_ROOT, SIGNATURE_LENGTH);
+        memcpy(&(combinedData.ppcPrivData.signatures[2].signature), PRIVLEVEL_2_SIGNATURE_ROOT, SIGNATURE_LENGTH);
+        memcpy(&(combinedData.ppcPrivData.signatures[3].signature), PRIVLEVEL_3_SIGNATURE_ROOT, SIGNATURE_LENGTH);
+ 
     }
     
     /** 
@@ -54,7 +64,7 @@ implementation {
         
         pl_log_i(TAG, "PLInit.init() finished, waiting for combinedData.\n");
 
-        //initialized = TRUE;
+
         return SUCCESS;
     }
     
@@ -64,8 +74,8 @@ implementation {
      * @return a pointer to the combinedData structure
      */
     command combinedData_t * SharedData.getAllData(){
-    	//BUGBUG produces outrageous amount of spam
         if(initialized){
+    	//BUGBUG produces outrageous amount of spam
             //pl_log_d(TAG, "getAllData called on initialized data.\n");
         } else {
             pl_log_e(TAG, "ERROR, data not initialized.\n");
@@ -274,15 +284,15 @@ implementation {
      */
 	event void SharedDataRead.readDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
 		m_busy = FALSE;
-		
+
 		pl_log_i(TAG, "restoreCombinedDataFromFlash() finished.\n");
 		if (combinedData.magicWord != MAGIC_WORD) {
-        	memset(&combinedData, 0, sizeof(combinedData));
-        	combinedData.magicWord = MAGIC_WORD;
-        	pl_log_d(TAG, "Magic word was incorrect, setting combinedData to 0.\n");
-        }
+			memset(&combinedData, 0, sizeof(combinedData));
+			combinedData.magicWord = MAGIC_WORD;
+			pl_log_d(TAG, "Magic word was incorrect, setting combinedData to 0.\n");
+		}
 
-        initialized = TRUE;
+		initialized = TRUE;
         
 		signal ResourceArbiter.restoreCombinedDataFromFlashDone(err);
 	}

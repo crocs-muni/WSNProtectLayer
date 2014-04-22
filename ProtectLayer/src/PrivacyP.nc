@@ -209,7 +209,7 @@ implementation {
         	// Even if encrypted, I don't have hop-by-hop keys so I cannot decrypt it for IDS.
         	// WARNING! Thus in privacy level >= 2 IDS cannot detect dropper since hashes are 
         	// always different in each hop. 
-        	pl_log_d(TAG, "task_receiveMessage, ourHeader->receiver != TOS_NODE_ID\n"); 
+        	//pl_log_d(TAG, "task_receiveMessage, ourHeader->receiver != TOS_NODE_ID\n"); 
 
             // It is not for me, pass copy to IDS
             passToIDS(msg, m_receiveBuffer[m_recNextToProcess].payload, m_receiveBuffer[m_recNextToProcess].len);
@@ -539,9 +539,9 @@ recv_finish:
 	        		if (hasRandomNeighbor == SUCCESS){
 	        			spHeader->receiver = randomNeighbor;
 	        			
-	        			pl_log_d(TAG, "task_sendMessage: phantom walk, newDestination=%u.\n", spHeader->receiver);
+	        			//pl_log_d(TAG, "task_sendMessage: phantom walk, newDestination=%u.\n", spHeader->receiver);
 	        		} else {
-	        			pl_log_w(TAG, "Cannot determine random neighbor for phantom routing.\n");
+	        			//pl_log_w(TAG, "Cannot determine random neighbor for phantom routing.\n");
 	        		}
 	        	} else {
 	        		//phantom walk is over, erase phantom walk flag
@@ -747,7 +747,7 @@ recv_finish:
     // AMControl interface
     //
     event void AMControl.startDone(error_t err) {
-    	pl_log_d(TAG, "startDone err?\n");
+    	pl_log_d(TAG, "startDone[%x]\n", err);
 	    radioStartDone(err);
     }
     	

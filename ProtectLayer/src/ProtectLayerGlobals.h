@@ -36,7 +36,8 @@
 
 // Default base station node ID
 #ifndef TOS_BS_NODE_ID
-#define TOS_BS_NODE_ID 41
+#define TOS_BS_NODE_ID 19
+#warning " *** Warning! Base station node ID was undefined, defined now as 19 !!! ***"
 #endif
 
 // Should be defined in application using this PL.
@@ -66,6 +67,14 @@
 
 #ifdef SKIP_MAGIC_PACKET
 #warning " *** Warning! Magic packet is skipped !!! ***"
+#endif
+
+#ifdef NO_CRYPTO
+#warning " *** Warning! Crypto operations are disabled !!! ***"
+#endif
+
+#ifdef SKIP_EEPROM_RESTORE
+#warning " *** Warning! EEPROM restore is skipped !!! ***"
 #endif
 
 // Define to supress warning from printf function
@@ -137,16 +146,16 @@ enum {
 };
 
 enum {
-  STATE_INIT = 0,
-  STATE_INIT_IN_PROGRESS,
-  STATE_LOADED_FROM_EEPROM,
-  STATE_READY_TO_DEPLOY,
-  STATE_MAGIC_RECEIVED,
-  STATE_ROUTES_IN_PROGRESS,
-  STATE_ROUTES_READY,
-  STATE_KEYDISTRIB_IN_PROGRESS,
-  STATE_READY_FOR_SAVE,
-  STATE_WORKING
+  STATE_INIT = 0,				// 0
+  STATE_INIT_IN_PROGRESS,		// 1
+  STATE_LOADED_FROM_EEPROM,		// 2
+  STATE_READY_TO_DEPLOY,		// 3
+  STATE_MAGIC_RECEIVED,			// 4
+  STATE_ROUTES_IN_PROGRESS,		// 5
+  STATE_ROUTES_READY,			// 6
+  STATE_KEYDISTRIB_IN_PROGRESS,	// 7
+  STATE_READY_FOR_SAVE,			// 8
+  STATE_WORKING					// 9
 }; 
 
 //uint8_t transitionTable[] = {STATE_INIT_IN_PROGRESS, STATE_LOADED_FROM_EEPROM, STATE_READY_TO_DEPLOY, STATE_MAGIC_RECEIVED}
@@ -353,6 +362,15 @@ typedef struct Signature {
         PRIVACY_LEVEL privacyLevel; /** privacy Level associated with this hash */
 	uint16_t counter; /** distance from start of hash chain */
 } Signature_t;
+
+uint8_t PRIVLEVEL_0_SIGNATURE_ROOT[] = {0x3c, 0x8b, 0x70, 0xf9, 0xeb, 0x5e, 0x51, 0x2a, 0x53, 0x73, 0x03, 0xcb, 0x21, 0xc6, 0x01, 0x3b};
+uint8_t PRIVLEVEL_1_SIGNATURE_ROOT[] = {0x49, 0x6b, 0x3f, 0x21, 0x24, 0xd3, 0xc0, 0x57, 0x99, 0x86, 0xbe, 0x41, 0x49, 0x72, 0x1c, 0xea}; 
+uint8_t PRIVLEVEL_2_SIGNATURE_ROOT[] = {0x6d, 0x6d, 0x68, 0x0b, 0xcd, 0xa2, 0x5f, 0x9d, 0x43, 0x2f, 0xba, 0x51, 0x86, 0x47, 0x53, 0xb8};
+uint8_t PRIVLEVEL_3_SIGNATURE_ROOT[] = {0xe9, 0xaf, 0xda, 0x87, 0x1e, 0x8e, 0xa4, 0x5c, 0x3c, 0x30, 0xe1, 0x80, 0x3d, 0x2f, 0x5d, 0xc3}; 
+
+
+
+
 
 /**
  * Private data structure for the PPC component about this node

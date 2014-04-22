@@ -8,9 +8,12 @@
 //#define USE_CTP
 #define DEBUG_PRINTF
 
-#define ACCEPT_ALL_SIGNATURES
-#define ACCEPT_ALL_MACS
+//#define ACCEPT_ALL_SIGNATURES
+//#define ACCEPT_ALL_MACS
 #define CTP_QUICK_INIT
+#define TOS_BS_NODE_ID TOS_NODE_ID
+//#define NO_CRYPTO
+#define SKIP_EEPROM_RESTORE
 
 #include "../../ProtectLayer/src/ProtectLayerGlobals.h"
 
@@ -24,14 +27,30 @@ enum {
   TIMER_PERIOD_MILLI = 2000,
   TIMER_BLINK_PAUSE = 500,
   TIMER_BLINK_PAUSE_SHORT = 250,
-  TIMER_BLINK_COUNT = 10,
-  PLEVEL_MSGS = 3,
-  PLEVEL_WAIT = 1000
+  TIMER_BLINK_COUNT = 10,			// Number of warning blinks before PL change.
+  TIMER_BLINK_SUCCESS_COUNT = 2,	// Number of blinks in case of success.
+  PLEVEL_MSGS = 3,					// How many PL change packets should be sent in one row.
+  PLEVEL_WAIT = 1000				// Pause between two PL change packets.
 };
 
 enum {
     UART_QUEUE_LEN = 32,
     RADIO_QUEUE_LEN = 4,
+};
+
+// Init state
+enum { 
+	INIT_STATE_BOOTED = 0,
+	INIT_STATE_RUNNING = 1
+};
+
+// Sending state
+enum {
+	SEND_STATE_BLINKING = 0,
+	SEND_STATE_SENDING = 1,
+	SEND_STATE_SENT = 2,
+	SEND_STATE_SIGNALIZE_SUCCESS = 3,
+	SEND_STATE_END = 4,
 };
 
 typedef nx_struct BlinkToRadioMsg {

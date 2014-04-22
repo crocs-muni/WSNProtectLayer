@@ -42,12 +42,13 @@
 #include <Timer.h>
 #include "BaseStation.h"
 #include <UserButton.h>
+#include "../../ProtectLayer/src/ProtectLayerGlobals.h"
 
 module BaseStationC {
   uses interface Boot;
   uses interface Leds;
   uses interface Timer<TMilli> as InitTimer;
-  uses interface Timer<TMilli> as Timer0;
+  uses interface Timer<TMilli> as BlinkAndSendTimer;
   uses interface Packet;
 
   uses interface SplitControl as AMControl;
@@ -56,6 +57,7 @@ module BaseStationC {
   uses interface Notify<button_state_t>;
   
   uses interface Dispatcher;
+  uses interface SharedData;
   uses interface Crypto;
   
   uses interface AMSend as PrivChangeSend;
@@ -82,21 +84,28 @@ implementation {
   static const char *TAG = "BS";
   
   // Initialization state of the node;
-  // 0 = after reboot -> start radio
-  // 1= radio started successfully -> start program
-  int initState=0;	
+  // INIT_STATE_BOOTED  = after reboot -> start radio
+  // INIT_STATE_RUNNING = radio started successfully -> start program
+  int initState = INIT_STATE_BOOTED;	
   
   // Current privacy level, is initialized to -1 at the beginning
   // since the network waits for the "magic packet" after deployment.
   int8_t curPrivLvl = -1;
+  
   // Counter for privacy level change signatures.
   int8_t plvlCounter = -1;
   
-  // Represents current blick status. 
+  // Represents current blink status. 
+  // Counts number of LED events (blinks, toggles).
+  // E.g., if we want to blink 10 times, this counter is used to 
+  // represent the current blinking state (current counter).
+  // Usually is multiplied by 2 since two blinking events are considered as a separate events
+  // e.g., ledOn, ledOff.
   int16_t blinkState = 0;
   
   // Sending state for privacy level change.
-  uint8_t sendState = 0; 
+  // Represents main state for BlinkAndSendTimer.
+  uint8_t sendState = SEND_STATE_BLINKING; 
   
   // Number of sent privacy level change messages in one state.
   uint8_t plevelMsgs = 0;
@@ -133,6 +142,11 @@ implementation {
 
   event void Boot.booted() {
     uint8_t i;
+    uint8_t k;
+    Signature_t* root;
+    Signature_t signature;
+    PPCPrivData_t* ppcPrivData;
+
     for (i = 0; i < UART_QUEUE_LEN; i++){
       uartQueue[i] = &uartQueueBufs[i];
     }
@@ -149,6 +163,30 @@ implementation {
     radioBusy = FALSE;
     radioFull = FALSE;
 	call Leds.led0On();
+   
+    // Prepare privacy levels
+    ppcPrivData = call SharedData.getPPCPrivData(); 
+    // Compute initial version of PRIVACY_LEVEL chain roots for nodes
+
+    for (i = 0; i < PLEVEL_NUM; i++) {   
+      root = &(ppcPrivData->signatures[i]); 
+      // Set initial random values for privacy level roots (view of BS, not node)
+      //BUGBUG: now set to fixed value, should be random in production
+      memset(root->signature, i, SIGNATURE_LENGTH);
+    }	
+
+    for (i = 0; i < PLEVEL_NUM; i++) {   
+      root = &(ppcPrivData->signatures[i]); 
+      // compute maximum number of hash iteration to obtain root value for ordinary nodes
+      call Crypto.computeSignature(i, HASH_KEYS, &signature);
+      // Dump resulting value to output 
+      BS_PRINTF(pl_log_d(TAG, "root for privacy level = %d: ", i));
+      for (k = 0; k < SIGNATURE_LENGTH; k++) {
+	printf("%2x ", signature.signature[k]);
+      }	
+      printf("\n");
+    }
+
 	
     // Prepare initialization TIMER_START ms after boot.
     // Due to this delay one is able to attach PrintfClient
@@ -166,11 +204,11 @@ implementation {
   event void InitTimer.fired() {
       call Leds.led1Toggle();
       
-      if (initState==0){
-      	// State 0  -> start radio (& underlying PL).
+      if (initState==INIT_STATE_BOOTED){
+      	// State INIT_STATE_BOOTED -> start radio (& underlying PL).
       	post startRadio();
       } else {
-      	// State 1+ -> node is prepared.
+      	// Else -> node is prepared.
 	    call Leds.led2On();
 		BS_PRINTF(pl_log_d(TAG, "</radioStart>\n"));
       }
@@ -179,15 +217,20 @@ implementation {
   event void AMControl.startDone(error_t err) {
   	BS_PRINTF(pl_log_d(TAG, "<startDone>\n"));
     if (err == SUCCESS) {
-      	initState=1;
-  		sendState=3;
+    	// Radio started successfully - wait for user button press
+    	// to change the privacy level.
+    	// Signalize successful radio start by LEDs.
+      	initState=INIT_STATE_RUNNING;
+  		sendState=SEND_STATE_SIGNALIZE_SUCCESS;
   		blinkState=0;
   		
-  		call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+  		// Blink timer oneShot to signalize sucess radio start.
+  		call BlinkAndSendTimer.startOneShot(TIMER_BLINK_PAUSE_SHORT);
     	
     }
-    else {   
-      call InitTimer.startOneShot(TIMER_FAIL_START);
+    else {
+   		BS_PRINTF(pl_log_e(TAG, "Radio start err: %x\n", err));
+        call InitTimer.startOneShot(TIMER_FAIL_START);
     }
   }
 	
@@ -211,13 +254,15 @@ implementation {
 				Signature_t signature;
 				plvlMsg->newPLevel = curPrivLvl;
 				plvlMsg->counter = plvlCounter + 1;
-				
 				BS_PRINTF(pl_log_d(TAG, "2computeSig;ctr[%d]\n", plvlCounter));
-				
-				call Crypto.computeSignature(curPrivLvl, HASH_KEYS - plvlCounter - 1, &signature);
-				memcpy((uint8_t*) &(plvlMsg->signature), (uint8_t*) &(signature.signature), SIGNATURE_LENGTH);
 				BS_PRINTFFLUSH();
 				
+#ifndef NO_CRYPTO
+				call Crypto.computeSignature(curPrivLvl, HASH_KEYS - plvlCounter - 1, &signature);
+				memcpy((uint8_t*) &(plvlMsg->signature), (uint8_t*) signature.signature, SIGNATURE_LENGTH);
+#endif
+
+				BS_PRINTFFLUSH();
 				BS_PRINTF(pl_log_d(TAG, "signature generated %x %x %x %x\n", 
 					plvlMsg->signature[0],
 					plvlMsg->signature[1],
@@ -242,65 +287,88 @@ implementation {
 	
   event void AMControl.stopDone(error_t err) { }
   
-  event void Timer0.fired() {
+  event void BlinkAndSendTimer.fired() {
 	BS_PRINTF(pl_log_d(TAG, "fired, sendState=%u, blink=%u lvl=%d ctr=%d\n", sendState, blinkState, curPrivLvl, plvlCounter));
 	BS_PRINTFFLUSH();
-  	if (sendState==0){
-  		// Blicking state.
+  	if (sendState==SEND_STATE_BLINKING){
+  		// Blinking state.
+  		
   		if (blinkState >= 2*TIMER_BLINK_COUNT){
-			// Transition to sending state
-			sendState = 1; 
+			// Transition to the sending state, we have reached the required 
+			// amount of warning blinks before this is going to happen.
+			sendState = SEND_STATE_SENDING; 
 			setLeds(curPrivLvl+1);
-			call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+			call BlinkAndSendTimer.startOneShot(TIMER_BLINK_PAUSE_SHORT);
 			return;
   		}
   		
+  		// Turning leds on/off in this state to warn user that 
+  		// privacy level change is about to happen. LEDs signalize next
+  		// privacy level that is going to be broadcasted.
   		if ((blinkState % 2) == 0){
   			setLeds(curPrivLvl+1);
-  			call Timer0.startOneShot(TIMER_BLINK_PAUSE);
+  			call BlinkAndSendTimer.startOneShot(TIMER_BLINK_PAUSE);
   			
   		} else {
   			setLeds(0);	
-  			call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+  			call BlinkAndSendTimer.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+  			
   		}
+  		
+  		// Incremenitng number of blinks.
   		blinkState += 1;
-  	} else if (sendState==1){
+  	} else if (sendState==SEND_STATE_SENDING){
   		// Sending state.
   		
-  		// Increment counter if triggered
+  		// Change privacy level if successfull number of blinks was achieved.
+  		// This happens after first transition to this state.
+  		// Due to sending multiple copies of PL change packets, this state can be entered
+  		// multiple times, but PL is changed only once.
   		if (blinkState >= 2*TIMER_BLINK_COUNT){
   			BS_PRINTF(pl_log_d(TAG, "counterInc()\n"));
   			
   			plvlCounter += 1;
+  			
+  			// Reset current blink state to zero.
+  			// In this particular state, it means that PL was already changed
+  			// and we are just sending copies of PL change message.
   			blinkState = 0;
   		}
   		
   		post sendPlevel();
-  	} else if (sendState==2){
+  	} else if (sendState==SEND_STATE_SENT){
   		// Privacy level state changed.
   		// If it was magic packet, init routing.
   		setLeds(curPrivLvl+1);
   		
+  		// Reset blink counter and change state to signalize successful PL change.
 		blinkState=0;
-		sendState=3;
-		call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
-  		  		
+		sendState=SEND_STATE_SIGNALIZE_SUCCESS;
+		call BlinkAndSendTimer.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+  		
   		BS_PRINTFFLUSH();
-  	} else if (sendState==3){
-  		// finished signalization
-  		if (blinkState >= 4){
-  			sendState=4;
+  	} else if (sendState==SEND_STATE_SIGNALIZE_SUCCESS){
+  		// Signalize success.
+  		//
+  		// If there was required number of blinks reached, stop blinking
+  		// and move to state that does nothing.
+  		if (blinkState >= 2*TIMER_BLINK_SUCCESS_COUNT){
+  			sendState = SEND_STATE_END;
 			setLeds(curPrivLvl+1);
   		}
   		
+  		// Success blinking, tunring LEDs on/off to signalize sending
+  		// (or another event) ended successfully.
   		if ((blinkState % 2) == 0){
   			setLeds(curPrivLvl+1);
-  			call Timer0.startOneShot(TIMER_BLINK_PAUSE);
+  			call BlinkAndSendTimer.startOneShot(TIMER_BLINK_PAUSE);
   			
   		} else {
   			setLeds(0);	
-  			call Timer0.startOneShot(TIMER_BLINK_PAUSE);
+  			call BlinkAndSendTimer.startOneShot(TIMER_BLINK_PAUSE);
   		}
+  		
+  		// Incrementing blinking counter.
   		blinkState += 1;
   		BS_PRINTFFLUSH();
   	}
@@ -308,37 +376,41 @@ implementation {
   
   event void Notify.notify(button_state_t state) {
   		// React on button released event. 
-		if (state == BUTTON_RELEASED && sendState!=3){		// BUTTON_PRESSED
+		if (state == BUTTON_RELEASED && sendState != SEND_STATE_SIGNALIZE_SUCCESS){		// BUTTON_PRESSED
 			BS_PRINTF(pl_log_d(TAG, "buttonReleased\n"));
 			BS_PRINTF(pl_log_d(TAG, "initState %x\n", initState));
 			BS_PRINTFFLUSH();
 			
 			// If radio is not started yet, we have to wait for it.
-			if (initState==0) {
+			if (initState==INIT_STATE_BOOTED) {
+				BS_PRINTF(pl_log_e(TAG, "Cannot send PL change, not booted yet\n"));
 				return;
 			}
 			
 			// Increment privacy level modulo NUM.
 			curPrivLvl = (curPrivLvl + 1) % PLEVEL_NUM;
 			
-			// Start timer with blicking.
+			// Start timer, send state is blinking, thus at first,
+			// user is warned by blinking that PL is
+			// about to change. This supports use case we want to switch
+			// to non-consecutive PL (e.g., from 0 to 3 without going through 1 and 2).
 			blinkState = 0;
-			sendState  = 0;
 			plevelMsgs = 0;
-			call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+			sendState  = SEND_STATE_BLINKING;
+			call BlinkAndSendTimer.startOneShot(TIMER_BLINK_PAUSE_SHORT);
 		}
   }
   
   event void Dispatcher.stateChanged(uint8_t newState){ 
 /*  
   	if (newState==STATE_WORKING){
-  		sendState=3;
+  		sendState=SEND_STATE_SIGNALIZE_SUCCESS;
   		blinkState=0;
   		
   		BS_PRINTF(pl_log_d(TAG, "Dispatcher.stateChanged %u\n", newState));
   		BS_PRINTFFLUSH();
   		
-  		call Timer0.startOneShot(TIMER_BLINK_PAUSE_SHORT);
+  		call BlinkAndSendTimer.startOneShot(TIMER_BLINK_PAUSE_SHORT);
   	}
   	*/
   }
@@ -353,14 +425,14 @@ implementation {
 				
 				plevelMsgs += 1;
 				if (plevelMsgs >= PLEVEL_MSGS){
-					// We have enough messages sent, not sneding anymore.
-					sendState = 2;
+					// We have send required number of PL packets, no sending anymore,
+					sendState = SEND_STATE_SENT;
 				}
 				
-				call Timer0.startOneShot(PLEVEL_WAIT);
+				call BlinkAndSendTimer.startOneShot(PLEVEL_WAIT);
 			}
 			else {
-				call Timer0.startOneShot(250);
+				call BlinkAndSendTimer.startOneShot(250);
 			}
 		}
   }

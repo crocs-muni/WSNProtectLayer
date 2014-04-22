@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<setting>
+<target>project</target>
+<output>build/MotionDetectionMsg.java</output>
+<tools current="java">
+<tool id="java">
+<option id="-java-classname">MotionDetectionMsg</option>
+</tool>
+</tools>
+<format>MessageStruct.h</format>
+<type>MotionDetectionMsg</type>
+</setting>

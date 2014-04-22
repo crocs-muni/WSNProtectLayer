@@ -24,6 +24,7 @@
 
 #include "BaseStation.h"
 
+
 #include <Timer.h>
 #define NEW_PRINTF_SEMANTICS
 
@@ -33,7 +34,7 @@ implementation {
   components MainC;
   components LedsC;
   components BaseStationC as App;
-  components new TimerMilliC() as Timer0;
+  components new TimerMilliC() as BlinkAndSendTimer;
   components new TimerMilliC() as InitTimer; // init timer (radio init)
   components UserButtonC;
   
@@ -43,6 +44,7 @@ implementation {
   components SerialStartC;
   
   components DispatcherC;
+  components SharedDataC;
   components CryptoP;
   components new AMSenderC(AM_CHANGEPL);
   
@@ -52,7 +54,7 @@ implementation {
   
   App.Boot -> MainC;
   App.Leds -> LedsC;
-  App.Timer0 -> Timer0;
+  App.BlinkAndSendTimer -> BlinkAndSendTimer;
   App.InitTimer -> InitTimer;
   App.AMControl -> ProtectLayerC.AMControl;
   
@@ -60,6 +62,7 @@ implementation {
   App.Notify -> UserButtonC;
   
   App.Dispatcher -> DispatcherC;
+  App.SharedData -> SharedDataC;
   App.Crypto -> CryptoP;
   
   App.PrivChangeSend -> AMSenderC;
