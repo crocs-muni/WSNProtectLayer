@@ -123,6 +123,15 @@ implementation {
 		return msg;
 	}
 	
+	/**
+	 * Saves the incoming settings for this node's routing module
+	 * to the SharedData module.
+	 * 
+	 * @param msg Expects a translated RPDPrivDataMsg
+	 * @param  'void* COUNT(len) payload'  a pointer to the packet's payload
+	 * @param  len      the length of the data region pointed to by payload
+	 * @return the incoming message msg 
+	 */
 	event message_t * ConfRPDGet.receive(message_t * msg, void * payload,
 			uint8_t len) {
 		if(len == sizeof(con_rpd_msg_t)) {
@@ -132,6 +141,15 @@ implementation {
 		return msg;
 	}
 	
+	/**
+	 * Saves the incoming settings for this node's key distribution module
+	 * to the SharedData module.
+	 * 
+	 * @param msg Expects a translated KDCPrivDataMsg
+	 * @param  'void* COUNT(len) payload'  a pointer to the packet's payload
+	 * @param  len      the length of the data region pointed to by payload
+	 * @return the incoming message msg 
+	 */
 	event message_t * ConfKDCPDGet.receive(message_t *msg, void *payload, uint8_t len){
 		if(len == sizeof(con_kdcpd_msg_t)) {
 			con_kdcpd_msg_t * kdcm = (con_kdcpd_msg_t * ) payload;
@@ -181,7 +199,8 @@ implementation {
 	}
 
 	/**
-	 * A final event that releases the serialBusy flag
+	 * A final event that releases the serialBusy flag.
+	 * Continue sending the requested data by posting appropriate task.
 	 * 
 	 * @param  'message_t* ONE msg'   the packet which was submitted as a send request
      * @param  error SUCCESS if it was sent successfully, FAIL if it was not,
@@ -194,6 +213,14 @@ implementation {
 		}
 	}
 	
+	/**
+	 * A final event that releases the serialBusy flag.
+	 * Continue sending the requested data by posting appropriate task.
+	 * 
+	 * @param  'message_t* ONE msg'   the packet which was submitted as a send request
+     * @param  error SUCCESS if it was sent successfully, FAIL if it was not,
+     *               ECANCEL if it was cancelled
+	 */
 	event void ConfRPDSend.sendDone(message_t *msg, error_t error){
 		serialBusy = FALSE;
 		if(error == SUCCESS) {
@@ -201,6 +228,13 @@ implementation {
 		}
 	}
 
+	/**
+	 * A final event that releases the serialBusy flag.
+	 * 
+	 * @param  'message_t* ONE msg'   the packet which was submitted as a send request
+     * @param  error SUCCESS if it was sent successfully, FAIL if it was not,
+     *               ECANCEL if it was cancelled
+	 */
 	event void ConfKDCPDSend.sendDone(message_t *msg, error_t error){
 		serialBusy = FALSE;
 	}
@@ -269,6 +303,10 @@ implementation {
 		}
 	}
 	
+	/**
+	 * A task to send local routing module's stored data from SharedData module
+	 * to the pc.
+	 */
 	task void sendRPDMessageTask() {
 		if(! serialBusy) {
 			//TODO data are too big for this packet
@@ -290,6 +328,10 @@ implementation {
 		}
 	}
 
+	/**
+	 * A task to send local key distribution module's stored data from SharedData module
+	 * to the pc.
+	 */
 	task void sendKDCPDMessageTask() {
 		if(! serialBusy) {
 			//TODO data are too big for this packet

@@ -39,14 +39,16 @@ implementation {
     bool m_busy = FALSE;
     bool initialized = FALSE;
 
-      event void Boot.booted() {
-	  memset(&combinedData, 0, sizeof(combinedData));
-      }
+	/**
+	 * Initial memory erase to make sure combinedData are empty.
+	 */
+    event void Boot.booted() {
+		memset(&combinedData, 0, sizeof(combinedData));
+    }
     
     /** 
      * Initialize the combinedData structure to initial zeros
-     */
-    
+     */    
     command error_t PLInit.init() {
         call ResourceArbiter.restoreCombinedDataFromFlash();
         
@@ -160,7 +162,6 @@ implementation {
       */
     command error_t SharedData.getPredistributedKeyForNode(uint16_t nodeId, PL_key_t* predistribKey){
         return call ResourceArbiter.restoreKeyFromFlash(nodeId, predistribKey);
-
     }
     
     /**
@@ -180,6 +181,9 @@ implementation {
 		return EBUSY;
     }
     
+    /**
+     * Default event handler only logs occurrence of the event.
+     */
     default event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result) {
     	pl_log_d(TAG, "saveCombinedDataToFlashDone.\n"); 
 	}
@@ -202,10 +206,19 @@ implementation {
 		return EBUSY;
 	}
     
+    /**
+     * Default event handler only logs occurrence of the event.
+     */
     default event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result) {
-    	
+    	pl_log_d(TAG, "restoreCombinedDataFromFlashDone.\n"); 
     }
 
+	/**
+	 * Restores a single key from flash memory.
+	 * 
+	 * @param neighbourId node id the key is shared with
+	 * @param predistribKey pointer to the returned key 
+	 */
 	command error_t ResourceArbiter.restoreKeyFromFlash(uint16_t neighbourId, PL_key_t* predistribKey){
 		if (!m_busy) {
 			m_busy = TRUE;
@@ -214,11 +227,16 @@ implementation {
 		return EBUSY;
 	}
 	
-	default event void ResourceArbiter.restoreKeyFromFlashDone(error_t result) {}
+	/**
+     * Default event handler only logs occurrence of the event.
+     */
+	default event void ResourceArbiter.restoreKeyFromFlashDone(error_t result) {
+		pl_log_d(TAG, "restoreKeyFromFlashDone.\n");
+	}
 	
     
     /**
-     * Signals the completion of a read operation.
+     * Signals the completion of a key read operation.
      *
      * @param addr starting address of read.
      * @param 'void* COUNT(len) buf' buffer where read data was placed.
@@ -241,10 +259,19 @@ implementation {
      * @param error SUCCESS if the operation was successful, FAIL if
      *   it failed
      */
-    event void KeysDataRead.computeCrcDone(storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error){
+    event void KeysDataRead.computeCrcDone(storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error) {
 }
     
    
+    /**
+     * Signals the completion of a read operation on combined data.
+     *
+     * @param addr starting address of read.
+     * @param 'void* COUNT(len) buf' buffer where read data was placed.
+     * @param len number of bytes read.
+     * @param error SUCCESS if the operation was successful, FAIL if
+     *   it failed
+     */
 	event void SharedDataRead.readDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
 		m_busy = FALSE;
 		
@@ -267,9 +294,28 @@ implementation {
 		call SharedDataWrite.write(0, &combinedData, sizeof(combinedData_t));
 	}
 	
+	/**
+     * Signals the completion of a crc computation.
+     *
+     * @param addr stating address.
+     * @param len number of bytes the crc was computed over.
+     * @param crc the resulting crc value.
+     * @param error SUCCESS if the operation was successful, FAIL if
+     *   it failed
+     */
 	event void SharedDataRead.computeCrcDone(storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error){
 	}
 	
+	
+	/**
+     * Signals the completion of a write operation of combined data.
+     *
+     * @param addr stating address.
+     * @param buf data that have been written.
+     * @param len number of written bytes.
+     * @param error SUCCESS if the operation was successful, FAIL if
+     *   it failed
+     */
 	event void SharedDataWrite.writeDone(storage_addr_t addr, void *buf, storage_len_t len, error_t err) {
     	m_busy = FALSE;
     	signal ResourceArbiter.saveCombinedDataToFlashDone(err);
