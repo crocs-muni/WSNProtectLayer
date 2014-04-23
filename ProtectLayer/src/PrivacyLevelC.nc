@@ -3,8 +3,8 @@
  * Configuration acts as a front-end for the PrivacyLevelP component. 
  * All components using PrivacyLevelP should wire to this configuration not directly to the PrivacyLevelP.
  * The configuration is used to wire the PrivacyLevelP to other components (interface providers).
- * 	@version   0.1
- * 	@date      2012-2013 
+ * 	@version   1.0
+ * 	@date      2012-2014
  **/
 
 #include "ProtectLayerGlobals.h"

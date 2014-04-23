@@ -3,8 +3,8 @@
  * User application should wire to this configuration in order to use security features of the platform. 
  * Packets processed via ProtectLayerC are sent and received via secure platform.
  * 
- * 	@version   0.1
- * 	@date      2012-2013
+ * 	@version   1.0
+ * 	@date      2012-2014
  * 
  **/
 

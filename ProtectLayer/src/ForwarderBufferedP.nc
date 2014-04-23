@@ -1,11 +1,4 @@
-#include "ProtectLayerGlobals.h"
 
-/**
- * This if only a draft implementation!
- * Forwarding should be done like in CTP engine, with retransmit timer
- * and with tasks.
- * 
- */
 #include "ProtectLayerGlobals.h"
 module ForwarderBufferedP 
 {

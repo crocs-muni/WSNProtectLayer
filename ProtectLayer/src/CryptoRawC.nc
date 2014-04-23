@@ -1,8 +1,8 @@
 /** 
  *  Wiring component for cryptographic functions providing CryptoRaw interface via CryptoRawP implementation.
  *  This component wires CryptoRawC to implementation from CryptoRawP and connects to Init interface for automatic initialization.
- *  @version   0.1
- * 	@date      2012-2013
+ *  @version   1.0
+ * 	@date      2012-2014
  */
 #include "ProtectLayerGlobals.h"
 configuration CryptoRawC {
