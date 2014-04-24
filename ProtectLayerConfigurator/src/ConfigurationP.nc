@@ -316,7 +316,6 @@ implementation {
 	 */
 	task void sendSDMessageTask() {
 		if(! serialBusy) {
-			//TODO data are too big for this packet
 			con_sd_msg_t * csm = (con_sd_msg_t * ) call PacketSD.getPayload(&packet,
 					sizeof(con_sd_msg_t));
 
@@ -427,7 +426,6 @@ implementation {
 	 */
 	task void sendPPCPDMessageTask() {
 		if(! serialBusy) {
-			//TODO data are too big for this packet
 			con_ppcpd_msg_t * ppcm = (con_ppcpd_msg_t * ) call PacketPPCPD.getPayload(&packet,
 					sizeof(con_ppcpd_msg_t));
 
@@ -448,7 +446,6 @@ implementation {
 	
 	task void sendRPDMessageTask() {
 		if(! serialBusy) {
-			//TODO data are too big for this packet
 			con_rpd_msg_t * rm = (con_rpd_msg_t * ) call PacketRPD.getPayload(&packet,
 					sizeof(con_rpd_msg_t));
 
@@ -469,7 +466,6 @@ implementation {
 
 	task void sendKDCPDMessageTask() {
 		if(! serialBusy) {
-			//TODO data are too big for this packet
 			con_kdcpd_msg_t * kdcm = (con_kdcpd_msg_t * ) call PacketKDCPD.getPayload(&packet,
 					(uint8_t)sizeof(con_kdcpd_msg_t));
 
@@ -500,11 +496,11 @@ implementation {
 	}
 
 	event void ResourceArbiter.saveCombinedDataToFlashDone(error_t result){
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 	}
 
 	event void ResourceArbiter.restoreCombinedDataFromFlashDone(error_t result){
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 	}
 
 	event void ResourceArbiter.saveKeyToFlashDone(error_t result){
