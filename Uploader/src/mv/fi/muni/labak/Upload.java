@@ -1,8 +1,8 @@
 package mv.fi.muni.labak;
 
 /**
- * Java-side application for testing configuration setting via serial port 
- * communication. It prototypes the communication with nodes via serial port.
+ * Java-side application for pre-loading configuration, mainly pairwise keys,
+ * setting via serial port communication.
  *
  * @author Filip Jurnecka
  */
