@@ -107,10 +107,13 @@ implementation{
 		
 		pl_printf("IDSForwarderP: Sender of the alert is %d and receiver is %d.\n", idsmsg-> sender, idsmsg->receiver);
 		// If the packet was addressed to someone else, do not forward the message to anyone
-		if (idsmsg->receiver != TOS_NODE_ID) {
+		if (idsmsg->firstHop != 0x01)
+		
+		if (idsmsg->receiver != TOS_NODE_ID && idsmsg->firstHop != 0x01) {
 			return msg;
 		}
-		
+		//Not first hop anymore
+		idsmsg->firstHop = 0x00;
 		// Change the sender for another hop 
 		idsmsg->sender = TOS_NODE_ID;
 		// Change the receiver for another hop

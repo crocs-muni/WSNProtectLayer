@@ -276,6 +276,7 @@ typedef struct IDSMsg {
 	uint16_t sender;	/**< sender (TOS_NODE_ID) */
 	uint16_t receiver;	/**< receiver of this message */
 	uint16_t nodeID;	/**< ID of a node we send the alert about */
+	uint8_t firstHop;  /**< indicates whether this is the first hop of the message */
 	uint16_t dropping;
 //	uint8_t reputation;	/**< reputation */
 /*@}*/	

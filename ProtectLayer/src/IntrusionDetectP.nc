@@ -180,6 +180,7 @@ implementation {
                     idspkt->sender = TOS_NODE_ID;
                     idspkt->receiver = call Route.getParentID();
                     idspkt->nodeID = receiver;
+                    idspkt->firstHop = 0x01;
                     idspkt->dropping = (uint16_t) 100 - dropping;
                     
                     if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(IDSMsg_t)) == SUCCESS) {
