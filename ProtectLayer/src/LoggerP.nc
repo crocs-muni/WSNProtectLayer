@@ -55,7 +55,6 @@ implementation {
    		//if (call SerialControl.start() != SUCCESS)
    		//	return FAIL;
    		
-   		//TODO zmenit na pouze nahrani aplikace?
    		/*   		
    		memoryBusy = TRUE;
    		if (call BlockWrite.erase() != SUCCESS)
@@ -184,11 +183,11 @@ implementation {
 	}
 
 	event void BlockRead.computeCrcDone(storage_addr_t addr, storage_len_t len, uint16_t crc, error_t error){
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 	}
 	
 	event void BlockWrite.writeDone(storage_addr_t addr, void *buf, storage_len_t len, error_t error){
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 	}
 
 	event void BlockWrite.eraseDone(error_t error){
@@ -196,6 +195,6 @@ implementation {
 	}
 
 	event void BlockWrite.syncDone(error_t error){
-		// TODO Auto-generated method stub
+		// Auto-generated method stub
 	}
 }
