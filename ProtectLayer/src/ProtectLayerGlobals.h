@@ -2,8 +2,8 @@
  *      File with constants and structures. 
  *      Intended for early include into multiple components.
  *  	@author    Petr Svenda
- *  	@version   0.1
- *  	@date      2012-2013
+ *  	@version   1.0
+ *  	@date      2012-2014
  *  
  */
 #ifndef PROTECTLAYERGLOBALS_H

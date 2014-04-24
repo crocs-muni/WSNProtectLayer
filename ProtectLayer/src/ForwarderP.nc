@@ -1,9 +1,9 @@
 #include "ProtectLayerGlobals.h"
 
 /**
- * This if only a draft implementation!
- * Forwarding should be done like in CTP engine, with retransmit timer
- * and with tasks.
+ * Forwarding component. Used to forward received messages.
+ * Receives messages that should be forwarded by the node from the Privacy component
+ * and sends it back to that componenet so it can be forwarded. It is some sort of loopback.
  * 
  */
 module ForwarderP 

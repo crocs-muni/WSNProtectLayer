@@ -2,7 +2,7 @@
  *      Debug logging.
  *  	@author    Dusan Klinec (ph4r05)
  *  	@version   0.1
- *  	@date      1. 2. 2014 
+ *  	@date      2014 
  */
  
 #ifndef PROTECTLAYERLOG_H_

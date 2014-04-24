@@ -1,8 +1,8 @@
 /** 
  *  Interface for functions related to key distribution.
  *  This interface specifies functions available in split-phase manner related to key distribution. New key discovery to direct neigbor can be initiated and key to base station or other node can be obtained.
- * 	@version   0.1
- * 	@date      2012-2013
+ * 	@version   1.0
+ * 	@date      2012-2014
  */
 #include "ProtectLayerGlobals.h"
 interface KeyDistrib {

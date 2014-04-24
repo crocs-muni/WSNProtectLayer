@@ -1,8 +1,8 @@
 /**
  * The implementation of privacy component. It is abstracted by configuration PrivacyC.
  * 
- * 	@version   0.1
- * 	@date      2012-2013
+ * 	@version   1.0
+ * 	@date      2012-2014
  * 
  **/
 
@@ -81,9 +81,7 @@ implementation {
     command error_t PLInit.init() {
         
         m_privData = call SharedData.getPPCPrivData();
-        // TODO PL setting probably here?
         m_privData->priv_level = PLEVEL_0;
-        //call KeyDistrib.selfTest();
         return SUCCESS;
     }
     
@@ -441,7 +439,7 @@ recv_finish:
 	            // If type = privacyLevelChange, broadcast to others, receiver is 
 	            // ignored in that case, MAC computation as well.
 	            
-	            //TODO add payload len check
+	     
 	            sReq.len += sizeof(SPHeader_t);
 	            
 	            spHeader = (SPHeader_t *) call Packet.getPayload(sReq.msg, sReq.len);
@@ -458,7 +456,7 @@ recv_finish:
 	            	SET_PHANTOM_WALK(spHeader,TRUE);
 	            } 
 	            
-	            // Debugging, TODO:REMOVE.
+	            // Debugging
 	            // Copies first 8 bytes of the payload before encryption to the SPheader.
 	            // Facilitates debugging during tests since it SPHeader is not encrypted
 	            // and thus visible on sniffers and base station without decryption.
@@ -780,14 +778,14 @@ recv_finish:
 	    call Packet.clear(msg);
 	}
     command uint8_t MessagePacket.payloadLength(message_t* msg) {
-	    //TODO return value depending on privacy level 
+	    // return value depending on privacy level 
 	    return (uint8_t) (call Packet.payloadLength(msg) - sizeof(SPHeader_t));
 	}
     command void MessagePacket.setPayloadLength(message_t* msg, uint8_t len) {
 	    call Packet.setPayloadLength(msg, (uint8_t)(len + sizeof(SPHeader_t)));
 	}
     command uint8_t MessagePacket.maxPayloadLength() {
-	    //TODO return value depending on privacy level 
+	    // return value depending on privacy level 
 	    return (uint8_t)(call Packet.maxPayloadLength() - sizeof(SPHeader_t));
 	}
     command void* MessagePacket.getPayload(message_t* msg, uint8_t len) {

@@ -1,8 +1,8 @@
 /**
  * Interface that provides basic commands necessary for packet forwarding. 
  * 
- * 	@version   0.1
- * 	@date      2012-2013 
+ * 	@version   1.0
+ * 	@date      2012-2014 
  */
 
 #include "ProtectLayerGlobals.h"

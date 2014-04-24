@@ -1,8 +1,8 @@
 /** 
  *  Wiring component for cryptographic functions providing Crypto interface via CryptoP implementation.
  *  This component wires CryptoC to implementation from CryptoP and connects to Init interface for automatic initialization.
- *  @version   0.1
- * 	@date      2012-2013
+ *  @version   1.0
+ * 	@date      2012-2014
  */
 #include "ProtectLayerGlobals.h"
 configuration CryptoC {

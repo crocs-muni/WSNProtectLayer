@@ -1,3 +1,8 @@
+/** 
+ *  Abstraction for DispatcherP component.
+ *  @version   1.0
+ * 	@date      2012-2014
+ */
 
 #include "ProtectLayerGlobals.h"
 

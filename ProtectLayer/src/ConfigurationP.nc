@@ -4,8 +4,8 @@
  * This module offers functionality to set and get the node's
  * configuration over an AM channel.
  * 
- *  @version   0.1
- * 	@date      2012-2013
+ *  @version   1.0
+ * 	@date      2012-2014
  */
 
 #include "ProtectLayerGlobals.h"

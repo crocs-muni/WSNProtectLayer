@@ -1,7 +1,7 @@
 /**
  * Interface Intrusion Detect provides commands for IDS management.
- *  @version   0.1
- * 	@date      2012-2013
+ *  @version   1.0
+ * 	@date      2012-2014
  */
 
 #include "ProtectLayerGlobals.h"

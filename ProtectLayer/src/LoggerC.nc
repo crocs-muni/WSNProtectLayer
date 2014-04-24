@@ -1,8 +1,8 @@
 /**
  * Configuration that sets the logging to be performed via USB.
  * 
- * 	@version   0.1
- * 	@date      2012-2013
+ * 	@version   1.0
+ * 	@date      2012-2014
  */
 
 #ifndef TOSSIM

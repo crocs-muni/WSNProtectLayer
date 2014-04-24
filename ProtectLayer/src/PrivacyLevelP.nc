@@ -3,8 +3,8 @@
  * It should implement the mechanism for privacy level interchange and handle privacy level related messages received.
  * The component implements PrivacyLevel interface.
  * 
- * 	@version   0.1
- * 	@date      2012-2013
+ * 	@version   1.0
+ * 	@date      2012-2014
  **/
 
 

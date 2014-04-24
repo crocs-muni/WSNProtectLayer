@@ -1,8 +1,8 @@
 /** 
  *  Component providing implementation of CryptoRaw interface.
  *  A module providing actual implementation of CryptoRaw interafce in split-phase manner.
- *  @version   0.1
- * 	@date      2012-2013
+ *  @version   1.0
+ * 	@date      2012-2014
  */
 #include "ProtectLayerGlobals.h"
 #include "AES.h" //AES constants
