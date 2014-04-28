@@ -3,12 +3,10 @@
  * All components using IntrusionDetectP should wire to this configuration not directly to the IntrusionDetectP.
  * The configuration is used to wire the IntrusionDetectP to other components (interface providers).
  * 
+ *  @version   1.0
+ * 	@date      2012-2014
  **/
  
-#ifndef TOSSIM
-#include "StorageVolumes.h"
-#endif
-
 #include "ProtectLayerGlobals.h"
 configuration IntrusionDetectC{
 	provides {
