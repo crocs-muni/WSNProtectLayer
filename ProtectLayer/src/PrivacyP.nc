@@ -308,24 +308,24 @@ recv_finish:
 
         // Dropper functionality => if I am specific node, I will drop the packet with some probability
 #ifdef DROPPING
-	if (TOS_NODE_ID == 22 || TOS_NODE_ID == 46) {
-		if (call Random.rand16() % 100 < DROPPING_RATE) {
-			pl_printf("Dropper: I am dropper, packet is dropped!\n");				
-			return msg;
+		if (TOS_NODE_ID == 22 || TOS_NODE_ID == 46) {
+			if (call Random.rand16() % 100 < DROPPING_RATE) {
+				pl_printf("Dropper: I am dropper, packet is dropped!\n");				
+				return msg;
+			}
 		}
-	}
 #endif
         
         // Get new message_t to be returned.
         if (m_receiveBuffer[m_recNextToStore].isEmpty)
         {
         	atomic{
-            tmpMsg = m_receiveBuffer[m_recNextToStore].msg; 
-            m_receiveBuffer[m_recNextToStore].msg = msg;
-            m_receiveBuffer[m_recNextToStore].payload = payload;
-            m_receiveBuffer[m_recNextToStore].len = len;
-            m_receiveBuffer[m_recNextToStore].isEmpty = 0;
-            m_recNextToStore = (m_recNextToStore+1)%RECEIVE_BUFFER_LEN; // update pointer to next position to which next msg will be stored
+	            tmpMsg = m_receiveBuffer[m_recNextToStore].msg; 
+	            m_receiveBuffer[m_recNextToStore].msg = msg;
+	            m_receiveBuffer[m_recNextToStore].payload = payload;
+	            m_receiveBuffer[m_recNextToStore].len = len;
+	            m_receiveBuffer[m_recNextToStore].isEmpty = 0;
+	            m_recNextToStore = (m_recNextToStore+1)%RECEIVE_BUFFER_LEN; // update pointer to next position to which next msg will be stored
             }
             
             //pl_log_d(TAG, " 1 LowerREceive.receive, buffer #%u,p=%p\n", m_recNextToStore, msg);//  
@@ -581,6 +581,24 @@ recv_finish:
         // Pass prepared message to the lower layer for sending.
         rval = call LowerAMSend.send(sReq.addr,sReq.msg,sReq.len);
         if(rval == SUCCESS) {
+#if PL_LOG_MAX_LEVEL >= 7
+			char str[3*sizeof(message_t)];
+			unsigned char * pin = sReq.msg;
+		    const char * hex = "0123456789ABCDEF";
+		    char * pout = str;
+		    int i = 0;
+		    for(; i < sReq.len-1; ++i){
+		        *pout++ = hex[(*pin>>4)&0xF];
+		        *pout++ = hex[(*pin++)&0xF];
+		        *pout++ = ':';
+		    }
+		    *pout++ = hex[(*pin>>4)&0xF];
+		    *pout++ = hex[(*pin)&0xF];
+		    *pout = 0;
+		
+			pl_log_s(TAG, "task_forwardMessage;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, sReq.addr, sReq.len);
+			printfflush();
+#endif        	
             // Message accepted for sending by lower AM layer.
             m_radioBusy=TRUE; 
             

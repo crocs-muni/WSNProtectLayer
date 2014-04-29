@@ -26,6 +26,9 @@ implementation{
  	bool m_busy = FALSE;
  	am_addr_t m_msgIDSAlertAddr;
  	
+ 	// Logging tag for this component
+    static const char *TAG = "IDSForwP";
+	
 	//
 	// interface Init
 	//
@@ -55,6 +58,24 @@ implementation{
 			
 			if (call AMSend.send(AM_BROADCAST_ADDR, sendMsg, sizeof(IDSMsg_t)) == SUCCESS)
 			{
+#if PL_LOG_MAX_LEVEL >= 7
+				char str[3*sizeof(sendMsg)];
+				unsigned char * pin = sendMsg;
+			    const char * hex = "0123456789ABCDEF";
+			    char * pout = str;
+			    int i = 0;
+			    for(; i < sizeof(IDSMsg_t)-1; ++i){
+			        *pout++ = hex[(*pin>>4)&0xF];
+			        *pout++ = hex[(*pin++)&0xF];
+			        *pout++ = ':';
+			    }
+			    *pout++ = hex[(*pin>>4)&0xF];
+			    *pout++ = hex[(*pin)&0xF];
+			    *pout = 0;
+			
+				pl_log_s(TAG, "task_forwardMessage1;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(IDSMsg_t));
+				printfflush();
+#endif
 //				pl_printf("task_forwardMessage sent with success\n");
 				m_busy = TRUE;
 				return;
@@ -82,6 +103,24 @@ implementation{
 		m_lastMsg = sendMsg;
 		if (call AMSend.send(AM_BROADCAST_ADDR, sendMsg, sizeof(IDSMsg_t)) == SUCCESS)
 		{
+#if PL_LOG_MAX_LEVEL >= 7
+			char str[3*sizeof(sendMsg)];
+			unsigned char * pin = sendMsg;
+		    const char * hex = "0123456789ABCDEF";
+		    char * pout = str;
+		    int i = 0;
+		    for(; i < sizeof(IDSMsg_t)-1; ++i){
+		        *pout++ = hex[(*pin>>4)&0xF];
+		        *pout++ = hex[(*pin++)&0xF];
+		        *pout++ = ':';
+		    }
+		    *pout++ = hex[(*pin>>4)&0xF];
+		    *pout++ = hex[(*pin)&0xF];
+		    *pout = 0;
+		
+			pl_log_s(TAG, "task_forwardMessage2;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(IDSMsg_t));
+			printfflush();
+#endif
 //				pl_printf("task_forwardMessage sent with success\n");
 			m_busy = TRUE;
 			call SendQueue.dequeue();
@@ -102,8 +141,7 @@ implementation{
 	// interfrace Receive
 	//
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
-		IDSMsg_t* idsmsg;
-		idsmsg = (IDSMsg_t*)payload;
+		IDSMsg_t* idsmsg = (IDSMsg_t*)payload;
 		
 		pl_printf("IDSForwarderP: Sender of the alert is %d and receiver is %d.\n", idsmsg-> sender, idsmsg->receiver);
 		// If the packet was addressed to someone else, do not forward the message to anyone

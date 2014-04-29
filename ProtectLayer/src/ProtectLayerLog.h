@@ -15,6 +15,7 @@
 #define PL_LOG_DEBUG 4
 #define PL_LOG_TRACE 5
 #define PL_LOG_DTRACE 6
+#define PL_LOG_SIM 7
 
 #ifdef DEBUG_PRINTF
 #define NEW_PRINTF_SEMANTICS
@@ -37,6 +38,7 @@
  *  - 4: debug
  *  - 5: trace
  *  - 6: more detailed trace
+ *  - 7: simulation info
  *
  * Default: 4
  */
@@ -48,7 +50,7 @@
  * Internal function for logging messages with severity level and message class.
  */
 void PLPrintDbg(int lvl, const char* messageClass, const char* formatString, ...);
-static const char *ltexts[] = { "F:", "E:", " W:", "I:", "D:", "T:", "C:"};
+static const char *ltexts[] = { "F:", "E:", " W:", "I:", "D:", "T:", "C:", "S:"};
 
 /**
  * Returns maximal log level allowed.
@@ -89,6 +91,7 @@ static const char *ltexts[] = { "F:", "E:", " W:", "I:", "D:", "T:", "C:"};
 #define pl_log_d(tag, format, ...) pl_log(4, tag, format, ## __VA_ARGS__)
 #define pl_log_t(tag, format, ...) pl_log(5, tag, format, ## __VA_ARGS__)
 #define pl_log_c(tag, format, ...) pl_log(6, tag, format, ## __VA_ARGS__)
+#define pl_log_s(tag, format, ...) pl_log(7, tag, format, ## __VA_ARGS__)
 
 //
 // Varargs has following issues [http://www.eskimo.com/~scs/cclass/int/sx11c.html]
@@ -113,46 +116,52 @@ void PLPrintDbg(int lvl, const char* messageClass, const char* formatString, ...
     va_end(args);
 }
 
-#if PL_LOG_MAX_LEVEL >= 0
+#if PL_LOG_MAX_LEVEL >= 0 && !defined(LOG_ONLY_SIM)
 #define PLPrintDbg_0(lvl,tag,format, ...) PLPrintDbg_int(lvl, tag, format, ## __VA_ARGS__)
 #else
 #define PLPrintDbg_0(lvl,tag,format, ...) do{ }while(0)
 #endif
 
-#if PL_LOG_MAX_LEVEL >= 1
+#if PL_LOG_MAX_LEVEL >= 1 && !defined(LOG_ONLY_SIM)
 #define PLPrintDbg_1(lvl,tag,format, ...) PLPrintDbg_int(lvl, tag, format, ## __VA_ARGS__)
 #else
 #define PLPrintDbg_1(lvl,tag,format, ...) do{ }while(0)
 #endif
 
-#if PL_LOG_MAX_LEVEL >= 2
+#if PL_LOG_MAX_LEVEL >= 2 && !defined(LOG_ONLY_SIM)
 #define PLPrintDbg_2(lvl,tag,format, ...) PLPrintDbg_int(lvl, tag, format, ## __VA_ARGS__)
 #else
 #define PLPrintDbg_2(lvl,tag,format, ...) do{ }while(0)
 #endif
 
-#if PL_LOG_MAX_LEVEL >= 3
+#if PL_LOG_MAX_LEVEL >= 3 && !defined(LOG_ONLY_SIM)
 #define PLPrintDbg_3(lvl,tag,format, ...) PLPrintDbg_int(lvl, tag, format, ## __VA_ARGS__)
 #else
 #define PLPrintDbg_3(lvl,tag,format, ...) do{ }while(0)
 #endif
 
-#if PL_LOG_MAX_LEVEL >= 4
+#if PL_LOG_MAX_LEVEL >= 4 && !defined(LOG_ONLY_SIM)
 #define PLPrintDbg_4(lvl,tag,format, ...) PLPrintDbg_int(lvl, tag, format, ## __VA_ARGS__)
 #else
 #define PLPrintDbg_4(lvl,tag,format, ...) do{ }while(0)
 #endif
 
-#if PL_LOG_MAX_LEVEL >= 5
+#if PL_LOG_MAX_LEVEL >= 5 && !defined(LOG_ONLY_SIM)
 #define PLPrintDbg_5(lvl,tag,format, ...) PLPrintDbg_int(lvl, tag, format, ## __VA_ARGS__)
 #else
 #define PLPrintDbg_5(lvl,tag,format, ...) do{ }while(0)
 #endif
 
-#if PL_LOG_MAX_LEVEL >= 6
+#if PL_LOG_MAX_LEVEL >= 6 && !defined(LOG_ONLY_SIM)
 #define PLPrintDbg_6(lvl,tag,format, ...) PLPrintDbg_int(lvl, tag, format, ## __VA_ARGS__)
 #else
 #define PLPrintDbg_6(lvl,tag,format, ...) do{ }while(0)
+#endif
+
+#if PL_LOG_MAX_LEVEL >= 7
+#define PLPrintDbg_7(lvl,tag,format, ...) PLPrintDbg_int(lvl, tag, format, ## __VA_ARGS__)
+#else
+#define PLPrintDbg_7(lvl,tag,format, ...) do{ }while(0)
 #endif
 
 #else
@@ -174,7 +183,8 @@ void PLPrintDbg(int lvl, const char* messageClass, const char* formatString, ...
 #define pl_log_i(tag,format, ...) 
 #define pl_log_d(tag,format, ...) 
 #define pl_log_t(tag,format, ...) 
-#define pl_log_c(tag,format, ...) 
+#define pl_log_c(tag,format, ...)
+#define pl_log_s(tag,format, ...) 
 
 #endif
 #endif // PROTECTLAYERLOG_H_ 

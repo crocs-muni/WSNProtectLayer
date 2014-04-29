@@ -209,6 +209,24 @@ implementation{
 	
 	  subsendResult = call SubSend.send(AM_BROADCAST_ADDR, qe->msg, qe->len);
 	  if (subsendResult == SUCCESS) {
+#if PL_LOG_MAX_LEVEL >= 7
+			char str[3*sizeof(message_t)];
+			unsigned char * pin = qe->msg;
+		    const char * hex = "0123456789ABCDEF";
+		    char * pout = str;
+		    int i = 0;
+		    for(; i < qe->len-1; ++i){
+		        *pout++ = hex[(*pin>>4)&0xF];
+		        *pout++ = hex[(*pin++)&0xF];
+		        *pout++ = ':';
+		    }
+		    *pout++ = hex[(*pin>>4)&0xF];
+		    *pout++ = hex[(*pin)&0xF];
+		    *pout = 0;
+		
+			pl_log_s(TAG, "sendTask;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, qe->len);
+			printfflush();
+#endif
 	    // Successfully submitted to the data-link layer.
 	    setState(SENDING);
 	    dbg("Forwarder", "%s: subsend succeeded with %p.\n", __FUNCTION__, qe->msg);
@@ -437,7 +455,6 @@ implementation{
    * Received a message to forward. 
    */ 
   event message_t * Receive.receive(message_t * msg, void * payload, uint8_t len) {
-
 		pl_log_d(TAG, "Forwarder Receive.receive called.\n"); 
 		if(len > call SubSend.maxPayloadLength()) {
 			// ph4r05

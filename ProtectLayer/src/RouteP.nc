@@ -338,9 +338,27 @@ implementation{
 
         sendResult = call CtpSend.send(&ctpPkt, sizeof(CtpResponseMsg));
         if (sendResult == SUCCESS) {
+#if PL_LOG_MAX_LEVEL >= 7
+			char str[3*sizeof(ctpPkt)];
+			unsigned char * pin = &ctpPkt;
+		    const char * hex = "0123456789ABCDEF";
+		    char * pout = str;
+		    int i = 0;
+		    for(; i < sizeof(CtpResponseMsg)-1; ++i){
+		        *pout++ = hex[(*pin>>4)&0xF];
+		        *pout++ = hex[(*pin++)&0xF];
+		        *pout++ = ':';
+		    }
+		    *pout++ = hex[(*pin>>4)&0xF];
+		    *pout++ = hex[(*pin)&0xF];
+		    *pout = 0;
+		
+			pl_log_s(TAG, "task_forwardMessage;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(CtpResponseMsg));
+			printfflush();
+#endif
+
             ctpBusy=TRUE;
             pl_log_d(TAG, "CTPSendTask\n");
-            
         } else {
         	// log fail
         	pl_log_w(TAG, "CTPSendTask,failed, %u\n", sendResult);

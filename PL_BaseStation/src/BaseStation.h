@@ -3,6 +3,9 @@
 #ifndef BLINKTORADIO_H
 #define BLINKTORADIO_H
 
+#define LOG_ONLY_SIM
+#define PL_LOG_MAX_LEVEL 7
+
 // This is basestation definition fro protect layer
 #define THIS_IS_BS
 //#define USE_CTP

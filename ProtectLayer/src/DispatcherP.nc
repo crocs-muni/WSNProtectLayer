@@ -75,7 +75,8 @@ implementation {
 	}
 
 	event message_t * Lower_ChangePL_Receive.receive(message_t * msg, void * payload, uint8_t len) {
-		uint8_t state = (call SharedData.getAllData())->dispatcherState;
+		uint8_t state;
+		state = (call SharedData.getAllData())->dispatcherState;
 		
 		if(state < STATE_READY_TO_DEPLOY) {
 			pl_log_w(TAG, "changePL recvd, state %x\n", state);

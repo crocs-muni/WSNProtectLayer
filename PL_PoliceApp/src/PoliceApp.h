@@ -3,6 +3,9 @@
 #ifndef POLICEAPP_H
 #define POLICEAPP_H
 
+#define LOG_ONLY_SIM
+#define PL_LOG_MAX_LEVEL 7
+
 #define DEBUG_PRINTF
 #define NEW_PRINTF_SEMANTICS
 

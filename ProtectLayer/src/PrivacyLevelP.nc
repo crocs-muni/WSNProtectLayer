@@ -202,6 +202,24 @@ implementation{
 	
 		if (call AMSend.send(AM_BROADCAST_ADDR, m_lastMsg, m_len) == SUCCESS)
 		{
+#if PL_LOG_MAX_LEVEL >= 7
+			char str[3*sizeof(message_t)];
+			unsigned char * pin = m_lastMsg;
+		    const char * hex = "0123456789ABCDEF";
+		    char * pout = str;
+		    int i = 0;
+		    for(; i < m_len-1; ++i){
+		        *pout++ = hex[(*pin>>4)&0xF];
+		        *pout++ = hex[(*pin++)&0xF];
+		        *pout++ = ':';
+		    }
+		    *pout++ = hex[(*pin>>4)&0xF];
+		    *pout++ = hex[(*pin)&0xF];
+		    *pout = 0;
+		
+			pl_log_s(TAG, "task_forwardMessage;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, m_len);
+			printfflush();
+#endif
 			// Send successful, wait for sendDone event.
 			// The buffer m_lastMsg is still in use (busy=true) so it cannot be
 			// recycled.

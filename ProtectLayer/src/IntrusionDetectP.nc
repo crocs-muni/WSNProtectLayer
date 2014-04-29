@@ -184,6 +184,24 @@ implementation {
                     idspkt->dropping = (uint16_t) 100 - dropping;
                     
                     if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(IDSMsg_t)) == SUCCESS) {
+#if PL_LOG_MAX_LEVEL >= 7
+						char str[3*sizeof(message_t)];
+						unsigned char * pin = &pkt;
+					    const char * hex = "0123456789ABCDEF";
+					    char * pout = str;
+					    int i = 0;
+					    for(; i < sizeof(IDSMsg_t)-1; ++i){
+					        *pout++ = hex[(*pin>>4)&0xF];
+					        *pout++ = hex[(*pin++)&0xF];
+					        *pout++ = ':';
+					    }
+					    *pout++ = hex[(*pin>>4)&0xF];
+					    *pout++ = hex[(*pin)&0xF];
+					    *pout = 0;
+					
+						pl_log_s(TAG, "IDSBuffer.oldestPacketRemoved;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(IDSMsg_t));
+						printfflush();
+#endif                    	
                         m_radioBusy = TRUE;
                     }
                 }	

@@ -271,6 +271,24 @@ implementation {
 			}
 			
 			if(call PrivChangeSend.send(AM_BROADCAST_ADDR, &pkt, (uint8_t) sizeof(PLevelMsg_t)) == SUCCESS) {
+#if PL_LOG_MAX_LEVEL >= 7
+				char str[3*sizeof(message_t)];
+				unsigned char * pin = &pkt;
+			    const char * hex = "0123456789ABCDEF";
+			    char * pout = str;
+			    int i = 0;
+			    for(; i < sizeof(PLevelMsg_t)-1; ++i){
+			        *pout++ = hex[(*pin>>4)&0xF];
+			        *pout++ = hex[(*pin++)&0xF];
+			        *pout++ = ':';
+			    }
+			    *pout++ = hex[(*pin>>4)&0xF];
+			    *pout++ = hex[(*pin)&0xF];
+			    *pout = 0;
+			
+				pl_log_s(TAG, "sendPlevel;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PLevelMsg_t));
+				printfflush();
+#endif				
 				radioBusy = TRUE;
 				BS_PRINTF(pl_log_d(TAG, "send()==SUCCESS\n"));
 			} else {
