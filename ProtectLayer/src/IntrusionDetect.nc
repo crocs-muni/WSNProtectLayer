@@ -8,14 +8,6 @@
 interface IntrusionDetect {
 	
 	/**
-	 * Command that returns reputation of node "nodeId"
-	 * 
-	 * @param nodeId ID of node
-	 * 
-	 * @returns NODE_REPUTATION reputation of a node.
-	 */
-	
-	/**
 	 * Command that switches the IDS off.
 	 */
 	command void switchIDSoff();

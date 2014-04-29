@@ -77,21 +77,30 @@ implementation {
         return SUCCESS;
     }
     
+    /**
+     * A command that can switch the IDS off
+     */
     command void IntrusionDetect.switchIDSoff(){
         ids_status = IDS_OFF;
     }
     
+    /**
+     * A command that can switch the IDS on. IDS is on by default.
+     */
     command void IntrusionDetect.switchIDSon(){
         ids_status = IDS_ON;
     }
     
+    /**
+     * A command that can be used to reset the statistics of the IDS.
+     */
     command void IntrusionDetect.resetIDS(){
     	call IDSBuffer.resetBuffer();
-
     }
     
-    
-    // Messages passed to the IDS from privacy component
+    /**
+     * Messages passed to the IDS from privacy component
+     */
     event message_t * ReceiveMsgCopy.receive(message_t *msg, void *payload, uint8_t len){
         
         uint32_t hashedPacket;
@@ -141,6 +150,12 @@ implementation {
         
     }
     
+    /**
+     * An event signaled from IDSBuffer informing about a dropped packet.
+     * 
+     * @param sender id of a node that sent the dropped packet
+     * @param receiver id of a node that did not forward the dropped packet
+     */
     event void IDSBuffer.oldestPacketRemoved(uint16_t sender, uint16_t receiver){
         
         IDSMsg_t* idspkt;
@@ -166,10 +181,10 @@ implementation {
                         return;
                     }
 
-                    // We do not send alert after any packet received.
+                    // We do not send alert after any packet received, but after IDS_ALERT_RATE alerts.
                     alertCounter++;
                     if (alertCounter > 1) {
-                    	if (alertCounter >= 10) {
+                    	if (alertCounter >= IDS_ALERT_RATE) {
                     		alertCounter = 0;
                     	}
                     	return;
@@ -209,6 +224,12 @@ implementation {
         }
     }
     
+    /**
+     * An event signaled from IDSBuffer informing about a forwarded packet.
+     * 
+     * @param sender id of a node that sent the forwarded packet
+     * @param receiver id of a node that forwarded the forwarded packet
+     */
     event void IDSBuffer.packetForwarded(uint16_t sender, uint16_t receiver){
         savedData = call SharedData.getNodeState(sender);
         savedData->idsData.nb_forwarded++;
@@ -271,7 +292,9 @@ implementation {
         return msg;
     }
     
-    
+    /**
+     * Event signaling that a message from IDS was successfully send out
+     */
     event void AMSend.sendDone(message_t *msg, error_t error){
         m_radioBusy = FALSE;
     }
