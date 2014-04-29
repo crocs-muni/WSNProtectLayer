@@ -21,6 +21,9 @@ implementation{
 	void removeForwardedPacket(uint16_t* sender, uint16_t* receiver, uint32_t* hashedPacket, uint8_t id);
 	void removeOldestPacket();
 
+ 	// Logging tag for this component
+    static const char *TAG = "IDSBufferP";
+
 	command void IDSBuffer.resetBuffer() {
 		oldestPacketIndex = 0;
 		counter = 0;
@@ -32,10 +35,10 @@ implementation{
 		
 		// Is this packet addressed to monitored neighbor? => buffer it!
 		if (call SharedData.getNodeState(*receiver) != NULL && *receiver != TOS_BS_NODE_ID) {
-			pl_printf("IDSBuffer: receiver %d of this packet is monitored -> buffer the packet!\n", *receiver);
+			pl_log_i(TAG, "IDSBuffer: receiver %d of this packet is monitored -> buffer the packet!\n", *receiver);
 			// Is the buffer full?
 			if (counter == IDS_BUFFER_SIZE) {
-				pl_printf("IDSBuffer: IDS buffer is full -> remove oldest packet.\n");
+				pl_log_i(TAG, "IDSBuffer: IDS buffer is full -> remove oldest packet.\n");
 				removeOldestPacket();
 			}
 			// Insert packet!
@@ -44,15 +47,15 @@ implementation{
 
 		// Is this packet sent by monitored neighbor? => update buffer!
 		if (call SharedData.getNodeState(*sender) != NULL && *sender != TOS_BS_NODE_ID) {
-			pl_printf("IDSBuffer: sender %d of this packet is monitored -> update the buffer!\n", *sender);
+			pl_log_i(TAG, "IDSBuffer: sender %d of this packet is monitored -> update the buffer!\n", *sender);
 			// Is this packet already stored in the buffer?
 			for (i = 0; i < counter; i++) {
-				pl_printf("IDSBuffer: hash is: %lu, hash in the buffer is: %lu\n.", *hashedPacket, idsBuffer[i].hashedPacket);
-				pl_printf("IDSBuffer: node sending is %d and buffered receiver is %d.\n", *sender, idsBuffer[i].receiver);
+				pl_log_i(TAG, "IDSBuffer: hash is: %lu, hash in the buffer is: %lu\n.", *hashedPacket, idsBuffer[i].hashedPacket);
+				pl_log_i(TAG, "IDSBuffer: node sending is %d and buffered receiver is %d.\n", *sender, idsBuffer[i].receiver);
 				
 				if (*hashedPacket == idsBuffer[i].hashedPacket && *sender == idsBuffer[i].receiver) {
 					
-					pl_printf("IDSBuffer: packet found in the buffer\n.");
+					pl_log_i(TAG, "IDSBuffer: packet found in the buffer\n.");
 					
 					// Mark the packet as forwarded and remove it from the buffer
 					removeForwardedPacket(sender, receiver, hashedPacket, i);
@@ -70,13 +73,13 @@ implementation{
 		packetToBuffer.receiver = *receiver;
 		idsBuffer[counter] = packetToBuffer;
 		counter++;
-		pl_printf("IDSBuffer: Packet inserted, hash is %lu IDS buffer contains %d packets.\n", packetToBuffer.hashedPacket, counter);
+		pl_log_i(TAG, "IDSBuffer: Packet inserted, hash is %lu IDS buffer contains %d packets.\n", packetToBuffer.hashedPacket, counter);
 	}
 	
 	void removeForwardedPacket(uint16_t* sender, uint16_t* receiver, uint32_t* hashedPacket, uint8_t id) {
 		uint8_t i;
 		
-		pl_printf("IDSBuffer: removeForwardedPacket called\n.");
+		pl_log_i(TAG, "IDSBuffer: removeForwardedPacket called\n.");
 		
 		if (counter == 0) {
 			return;
@@ -91,7 +94,7 @@ implementation{
 		for(i = id; i < counter; i++) {
         	memcpy(&idsBuffer[i], &idsBuffer[i + 1], sizeof(idsBufferedPacket_t));
         }
-        pl_printf("IDSBuffer: Forwarded packet removed, IDS buffer contains %d packets.\n", counter);
+        pl_log_i(TAG, "IDSBuffer: Forwarded packet removed, IDS buffer contains %d packets.\n", counter);
 	}
 	
 	void removeOldestPacket() {
@@ -103,7 +106,7 @@ implementation{
         	memcpy(&idsBuffer[(i + oldestPacketIndex) % IDS_BUFFER_SIZE], &idsBuffer[(i + oldestPacketIndex + 1) % IDS_BUFFER_SIZE], sizeof(idsBufferedPacket_t));
         }
         
-        pl_printf("IDSBuffer: Oldest packet removed, IDS buffer contains %d packets.\n", counter);
+        pl_log_i(TAG, "IDSBuffer: Oldest packet removed, IDS buffer contains %d packets.\n", counter);
 		// To improve effectiveness, check following:
 //		oldestPacketIndex == (oldestPacketIndex + 1) % IDS_BUFFER_SIZE;
 	}

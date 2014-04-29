@@ -113,7 +113,7 @@ implementation {
 			return msg;
 		}
 
-        pl_printf("IDSState: A copy of a message from Privacy component received. Sender is %d.\n", spHeader->sender);
+        pl_log_i(TAG, "IDSState: A copy of a message from Privacy component received. Sender is %d.\n", spHeader->sender);
 
         savedData = call SharedData.getNodeState(spHeader->receiver);
         
@@ -126,11 +126,11 @@ implementation {
         	if (savedData->idsData.nb_received >= 4294967295u) {
         		savedData->idsData.nb_received = 0;
         		savedData->idsData.nb_forwarded = 0;
-        		pl_printf("IDSState: counters of received and forwarded packets were reset.\n");
+        		pl_log_i(TAG, "IDSState: counters of received and forwarded packets were reset.\n");
         	}
             savedData->idsData.nb_received++;
 
-            pl_printf("IDSState: Receiver %d is our neighbor, PRR incremented.\n", spHeader->receiver); 
+            pl_log_i(TAG, "IDSState: Receiver %d is our neighbor, PRR incremented.\n", spHeader->receiver); 
 
         }
         
@@ -166,9 +166,9 @@ implementation {
 
         dropping = savedData->idsData.nb_forwarded * 100 / savedData->idsData.nb_received;
 
-        pl_printf("IDSState: Neighbor %d dropped a packet. IDS alert may be sent. Alert counter: %d\n", receiver, alertCounter);
+        pl_log_i(TAG, "IDSState: Neighbor %d dropped a packet. IDS alert may be sent. Alert counter: %d\n", receiver, alertCounter);
         
-        pl_printf("IDSState: Packet forwarded: %lu\n. Packet received: %lu. Dropping: %d\n.", savedData->idsData.nb_forwarded, savedData->idsData.nb_received, (100-dropping) );        
+        pl_log_i(TAG, "IDSState: Packet forwarded: %lu\n. Packet received: %lu. Dropping: %d\n.", savedData->idsData.nb_forwarded, savedData->idsData.nb_received, (100-dropping) );        
         
         // Did we listen enough packets from the node?
         if (savedData->idsData.nb_received > IDS_MIN_PACKET_RECEIVED) {
@@ -189,7 +189,7 @@ implementation {
                     	}
                     	return;
                     }
-                    pl_printf("IDSState: Neighbor %d dropped too many packets. IDS alert will be sent.\n", receiver);
+                    pl_log_i(TAG, "IDSState: Neighbor %d dropped too many packets. IDS alert will be sent.\n", receiver);
                     
                     idspkt->source = TOS_NODE_ID;
                     idspkt->sender = TOS_NODE_ID;
@@ -234,7 +234,7 @@ implementation {
         savedData = call SharedData.getNodeState(sender);
         savedData->idsData.nb_forwarded++;
 
-        pl_printf("IDSState: Neighbor %d forwarded packet.\n", sender); 
+        pl_log_i(TAG, "IDSState: Neighbor %d forwarded packet.\n", sender); 
 
     }
     
@@ -256,7 +256,7 @@ implementation {
     		return msg;
     	}
 
-        pl_printf("IDSState: A copy of an IDSAlert from IDSForwarder received. Sender: %d, receiver: %d.\n", sender, receiver); 
+        pl_log_i(TAG, "IDSState: A copy of an IDSAlert from IDSForwarder received. Sender: %d, receiver: %d.\n", sender, receiver); 
 
 		savedData = call SharedData.getNodeState(receiver); 
         
@@ -269,11 +269,11 @@ implementation {
         	if (savedData->idsData.nb_received >= 4294967295u) {
         		savedData->idsData.nb_received = 0;
         		savedData->idsData.nb_forwarded = 0;
-        		pl_printf("IDSState: counters of received and forwarded packets were reset.\n");
+        		pl_log_i(TAG, "IDSState: counters of received and forwarded packets were reset.\n");
         	}
             savedData->idsData.nb_received++;
 
-            pl_printf("IDSState: Receiver %d is our neighbor, PRR incremented.\n", receiver); 
+            pl_log_i(TAG, "IDSState: Receiver %d is our neighbor, PRR incremented.\n", receiver); 
 
         }
         

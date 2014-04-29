@@ -43,7 +43,7 @@ implementation{
 		if (m_busy)
 		{
 			// radio busy,
-			pl_printf("IDSForwarder: Radio in forwarder busy.\n");
+			pl_log_e(TAG, "IDSForwarder: Radio in forwarder busy.\n");
 			return; 	
 		}
 		
@@ -83,7 +83,7 @@ implementation{
 			else
 			{
 				//send failed,
-				pl_printf("Error: IDSForwarderP task_forward send failed.\n");
+				pl_log_e(TAG, "Error: IDSForwarderP task_forward send failed.\n");
 				m_lastMsgWasIDSAlert = FALSE;
 				signal IDSAlertSend.sendDone(sendMsg, FAIL);
 				post task_forwardMessage();
@@ -128,7 +128,7 @@ implementation{
 		else
 		{
 			//send failed,
-			dbg("Error","IDSForwarderP task_forward send failed.\n");
+			pl_log_e(TAG, "Error","IDSForwarderP task_forward send failed.\n");
 			call SendQueue.dequeue();
 			call Pool.put(sendMsg);
 			post task_forwardMessage();
@@ -143,7 +143,7 @@ implementation{
 	event message_t * Receive.receive(message_t *msg, void *payload, uint8_t len){
 		IDSMsg_t* idsmsg = (IDSMsg_t*)payload;
 		
-		pl_printf("IDSForwarderP: Sender of the alert is %d and receiver is %d.\n", idsmsg-> sender, idsmsg->receiver);
+		pl_log_i(TAG, "IDSForwarderP: Sender of the alert is %d and receiver is %d.\n", idsmsg-> sender, idsmsg->receiver);
 		// If the packet was addressed to someone else, do not forward the message to anyone
 		
 		if (idsmsg->receiver != TOS_NODE_ID && idsmsg->firstHop != 0x01) {
@@ -164,7 +164,7 @@ implementation{
 			}
 			else
 			{
-				dbg("Privacy","ForwarderP, receive buffer full, pool empty.\n");
+				pl_log_i(TAG, "Privacy","ForwarderP, receive buffer full, pool empty.\n");
 				return msg;
 			}
 	}
