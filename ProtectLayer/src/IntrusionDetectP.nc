@@ -95,6 +95,12 @@ implementation {
      * A command that can be used to reset the statistics of the IDS.
      */
     command void IntrusionDetect.resetIDS(){
+    	uint16_t i;
+    	
+    	for (i = 0; i < MAX_NEIGHBOR_COUNT; i++) {
+            pSavedData[i].idsData.nb_received = 0;
+            pSavedData[i].idsData.nb_forwarded = 0;
+        }	
     	call IDSBuffer.resetBuffer();
     }
     

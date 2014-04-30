@@ -24,11 +24,22 @@ implementation{
  	// Logging tag for this component
     static const char *TAG = "IDSBufferP";
 
+	/**
+	 * Command that is used to reset the buffer
+	 */
 	command void IDSBuffer.resetBuffer() {
 		oldestPacketIndex = 0;
 		counter = 0;
 	}
-
+	
+	/**
+	 * Command that is used to inser a packet into the buffer
+	 * or find a packet that was already stored is now forwarded
+	 * 
+	 * @param sender sender of the packet to be stored/updated.
+	 * @pararm receiver receiver of the packet to be stored/updated.
+	 * @param hashedPacket hash of the packet as the identificator of the packet.
+	 */
 	command void IDSBuffer.insertOrUpdate(uint16_t* sender, uint16_t* receiver, uint32_t* hashedPacket){
 
 		uint8_t i;
