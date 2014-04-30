@@ -233,6 +233,14 @@ implementation {
         sender = idsmsg->sender;
         receiver = idsmsg->receiver;
 
+		//TODO:
+		// We stopped monitoring IDS alerts because since flooding was incorporated,
+		// it generates cyclical producig of IDS alerts.
+		// Note: the first step to monitor IDS alerts again is exluding "firstHop" item
+		// from computation of the hash
+		//TODO:
+		return msg;
+		
 		// If the IDS is off => return
     	if (ids_status == IDS_OFF) {
     		return msg;
