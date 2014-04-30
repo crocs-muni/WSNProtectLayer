@@ -172,7 +172,7 @@ implementation{
 	//
 	// interface AMSend
 	//
-	event void AMSend.sendDone(message_t *msg, error_t error){		
+	event void AMSend.sendDone(message_t *msg, error_t error){
 		if (m_lastMsg == msg) {
 			if (m_lastMsgWasIDSAlert)
       		{
