@@ -267,11 +267,7 @@ implementation {
 
         }
         
-        if (len < sizeof(SPHeader_t)){
-        	return msg;
-        }
-        
-        call Crypto.hashDataShortB( ((uint8_t*) payload) + sizeof(SPHeader_t), 0, len - sizeof(SPHeader_t), &hashedPacket);
+        call Crypto.hashDataShortB( ((uint8_t*) payload), 0, len, &hashedPacket);
         
         // AES (or another cryptographic function) of the payload should be computed in order
         // to identify content of the messages
