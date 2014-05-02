@@ -310,7 +310,7 @@ recv_finish:
 #ifdef DROPPING
 		if (TOS_NODE_ID == 22 || TOS_NODE_ID == 46) {
 			if (call Random.rand16() % 100 < DROPPING_RATE) {
-				pl_printf("Dropper: I am dropper, packet is dropped!\n");				
+				pl_log_d(TAG, "Dropper: I am dropper, packet is dropped!\n");				
 				return msg;
 			}
 		}
@@ -587,7 +587,7 @@ recv_finish:
 		    const char * hex = "0123456789ABCDEF";
 		    char * pout = str;
 		    int i = 0;
-		    for(; i < sReq.len-1; ++i){
+		    for(; i < sReq.len+sizeof(message_header_t)-1; ++i){
 		        *pout++ = hex[(*pin>>4)&0xF];
 		        *pout++ = hex[(*pin++)&0xF];
 		        *pout++ = ':';
@@ -596,7 +596,8 @@ recv_finish:
 		    *pout++ = hex[(*pin)&0xF];
 		    *pout = 0;
 		
-			pl_log_s(TAG, "task_forwardMessage;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, sReq.addr, sReq.len);
+//			pl_log_s(TAG, "task_forwardMessage;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, spHeader->receiver, sReq.len);
+			pl_log_s(TAG, "msg=%s;src=%u;dst=%u;type=%u;len=%u\n", str, TOS_NODE_ID, spHeader->receiver, spHeader->msgType, sReq.len+sizeof(message_header_t));
 			printfflush();
 #endif        	
             // Message accepted for sending by lower AM layer.

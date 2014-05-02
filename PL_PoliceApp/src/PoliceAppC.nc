@@ -49,7 +49,7 @@ implementation {
   static const char *TAG = "PL_App";
 
   void setLeds(uint16_t val) {
-      printf("NodeState, setLeds%u\n", val);
+      pl_log_d(TAG,"NodeState, setLeds%u\n", val);
 
       if (val & 0x01) call Leds.led0Toggle();
       if (val & 0x02) call Leds.led1Toggle();
@@ -90,7 +90,7 @@ implementation {
       	call TimerStillAlive.startPeriodic(TIMER_STILL_ALIVE);
       	
       	// not used now call TimerMSNDetect.startPeriodic(TIMER_MSN_DETECTED);
-      	printf("NodeState, Radio started successfully.\n");
+      	pl_log_d(TAG, "NodeState, Radio started successfully.\n");
       	
 	    call Leds.led2On();
       }
@@ -122,24 +122,24 @@ implementation {
       btrpkt->nodeid = TOS_NODE_ID;
       btrpkt->counter = counter;
       if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PoliceAppMsg_StillAlive)) == SUCCESS) {
-#if PL_LOG_MAX_LEVEL >= 7
-		char str[3*sizeof(message_t)];
-		unsigned char * pin = &pkt;
-		const char * hex = "0123456789ABCDEF";
-		char * pout = str;
-		int i = 0;
-		for(; i < sizeof(PoliceAppMsg_StillAlive)-1; ++i){
-			*pout++ = hex[(*pin>>4)&0xF];
-			*pout++ = hex[(*pin++)&0xF];
-			*pout++ = ':';
-	    }
-		*pout++ = hex[(*pin>>4)&0xF];
-		*pout++ = hex[(*pin)&0xF];
-		*pout = 0;
-			
-		pl_log_s(TAG, "sendPlevel;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PoliceAppMsg_StillAlive));
-		printfflush();
-#endif      	
+//#if PL_LOG_MAX_LEVEL >= 7
+//		char str[3*sizeof(message_t)];
+//		unsigned char * pin = &pkt;
+//		const char * hex = "0123456789ABCDEF";
+//		char * pout = str;
+//		int i = 0;
+//		for(; i < sizeof(PoliceAppMsg_StillAlive)-1; ++i){
+//			*pout++ = hex[(*pin>>4)&0xF];
+//			*pout++ = hex[(*pin++)&0xF];
+//			*pout++ = ':';
+//	    }
+//		*pout++ = hex[(*pin>>4)&0xF];
+//		*pout++ = hex[(*pin)&0xF];
+//		*pout = 0;
+//			
+//		pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PoliceAppMsg_StillAlive));
+//		printfflush();
+//#endif      	
         busy = TRUE;
       }
     } else post stillAlive();
@@ -152,7 +152,7 @@ implementation {
 
   task void MSNDetected(){
   	
-    printf("NodeState, TimerMSNDetect fired.\n");
+    pl_log_d(TAG, "NodeState, TimerMSNDetect fired.\n");
 
     counter++;
     if (!busy) {
@@ -164,26 +164,25 @@ implementation {
       btrpkt->messageType = MSGTYPE_MSNDETECTED;
       btrpkt->nodeid = TOS_NODE_ID;
       btrpkt->counter = counter;
-      if (call AMSend.send(AM_BROADCAST_ADDR, 
-          &pkt, sizeof(PoliceAppMsg_MSNDetected)) == SUCCESS) {
-#if PL_LOG_MAX_LEVEL >= 7
-		char str[3*sizeof(message_t)];
-		unsigned char * pin = &pkt;
-		const char * hex = "0123456789ABCDEF";
-		char * pout = str;
-		int i = 0;
-		for(; i < sizeof(PoliceAppMsg_MSNDetected)-1; ++i){
-			*pout++ = hex[(*pin>>4)&0xF];
-			*pout++ = hex[(*pin++)&0xF];
-			*pout++ = ':';
-	    }
-		*pout++ = hex[(*pin>>4)&0xF];
-		*pout++ = hex[(*pin)&0xF];
-		*pout = 0;
-			
-		pl_log_s(TAG, "sendPlevel;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PoliceAppMsg_MSNDetected));
-		printfflush();
-#endif
+      if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PoliceAppMsg_MSNDetected)) == SUCCESS) {
+//#if PL_LOG_MAX_LEVEL >= 7
+//		char str[3*sizeof(message_t)];
+//		unsigned char * pin = &pkt;
+//		const char * hex = "0123456789ABCDEF";
+//		char * pout = str;
+//		int i = 0;
+//		for(; i < sizeof(PoliceAppMsg_MSNDetected)-1; ++i){
+//			*pout++ = hex[(*pin>>4)&0xF];
+//			*pout++ = hex[(*pin++)&0xF];
+//			*pout++ = ':';
+//	    }
+//		*pout++ = hex[(*pin>>4)&0xF];
+//		*pout++ = hex[(*pin)&0xF];
+//		*pout = 0;
+//			
+//		pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PoliceAppMsg_MSNDetected));
+//		printfflush();
+//#endif
         busy = TRUE;
       }
     } else post MSNDetected();
@@ -195,7 +194,7 @@ implementation {
   }
 
   task void movementDetected(){
-  	printf("NodeState, movementDetected.\n");
+  	pl_log_d(TAG, "NodeState, movementDetected.\n");
     //setLeds(1);
 	call Leds.led0Toggle();
     counter++;
@@ -209,24 +208,24 @@ implementation {
       btrpkt->nodeid = TOS_NODE_ID;
       btrpkt->counter = counter;
       if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PoliceAppMsg_MovementDetected)) == SUCCESS) {
-#if PL_LOG_MAX_LEVEL >= 7
-		char str[3*sizeof(message_t)];
-		unsigned char * pin = &pkt;
-		const char * hex = "0123456789ABCDEF";
-		char * pout = str;
-		int i = 0;
-		for(; i < sizeof(PoliceAppMsg_MovementDetected)-1; ++i){
-			*pout++ = hex[(*pin>>4)&0xF];
-			*pout++ = hex[(*pin++)&0xF];
-			*pout++ = ':';
-	    }
-		*pout++ = hex[(*pin>>4)&0xF];
-		*pout++ = hex[(*pin)&0xF];
-		*pout = 0;
-			
-		pl_log_s(TAG, "sendPlevel;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PoliceAppMsg_MovementDetected));
-		printfflush();
-#endif
+//#if PL_LOG_MAX_LEVEL >= 7
+//		char str[3*sizeof(message_t)];
+//		unsigned char * pin = &pkt;
+//		const char * hex = "0123456789ABCDEF";
+//		char * pout = str;
+//		int i = 0;
+//		for(; i < sizeof(PoliceAppMsg_MovementDetected)-1; ++i){
+//			*pout++ = hex[(*pin>>4)&0xF];
+//			*pout++ = hex[(*pin++)&0xF];
+//			*pout++ = ':';
+//	    }
+//		*pout++ = hex[(*pin>>4)&0xF];
+//		*pout++ = hex[(*pin)&0xF];
+//		*pout = 0;
+//			
+//		pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PoliceAppMsg_MovementDetected));
+//		printfflush();
+//#endif
            busy = TRUE;
       }
     } else post movementDetected();
@@ -237,7 +236,7 @@ implementation {
   }
   
   task void movementMSNDetected(){
-  	printf("NodeState, movementMSNDetected.\n");
+  	pl_log_d(TAG, "NodeState, movementMSNDetected.\n");
     call Leds.led1Toggle();
 //    setLeds(2);
 
@@ -252,24 +251,24 @@ implementation {
       btrpkt->nodeid = TOS_NODE_ID;
       btrpkt->counter = counter;
       if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(PoliceAppMsg_MovementDetected)) == SUCCESS) {
-#if PL_LOG_MAX_LEVEL >= 7
-		char str[3*sizeof(message_t)];
-		unsigned char * pin = &pkt;
-		const char * hex = "0123456789ABCDEF";
-		char * pout = str;
-		int i = 0;
-		for(; i < sizeof(PoliceAppMsg_MovementDetected)-1; ++i){
-			*pout++ = hex[(*pin>>4)&0xF];
-			*pout++ = hex[(*pin++)&0xF];
-			*pout++ = ':';
-	    }
-		*pout++ = hex[(*pin>>4)&0xF];
-		*pout++ = hex[(*pin)&0xF];
-		*pout = 0;
-			
-		pl_log_s(TAG, "sendPlevel;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PoliceAppMsg_MovementDetected));
-		printfflush();
-#endif
+//#if PL_LOG_MAX_LEVEL >= 7
+//		char str[3*sizeof(message_t)];
+//		unsigned char * pin = &pkt;
+//		const char * hex = "0123456789ABCDEF";
+//		char * pout = str;
+//		int i = 0;
+//		for(; i < sizeof(PoliceAppMsg_MovementDetected)-1; ++i){
+//			*pout++ = hex[(*pin>>4)&0xF];
+//			*pout++ = hex[(*pin++)&0xF];
+//			*pout++ = ':';
+//	    }
+//		*pout++ = hex[(*pin>>4)&0xF];
+//		*pout++ = hex[(*pin)&0xF];
+//		*pout = 0;
+//			
+//		pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PoliceAppMsg_MovementDetected));
+//		printfflush();
+//#endif
            busy = TRUE;
       }
     } else post movementMSNDetected();
@@ -286,7 +285,7 @@ implementation {
   }
 
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
-    printf("PoliceAppC, Message received.\n");
+    pl_log_d(TAG, "PoliceAppC, Message received.\n");
 /*
     // Distinguish between different message types 	
     if ((*(nx_uint16_t*) payload) == MSGTYPE_STILLALIVE) {

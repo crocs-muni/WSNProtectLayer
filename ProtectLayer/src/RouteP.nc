@@ -353,7 +353,7 @@ implementation{
 		    *pout++ = hex[(*pin)&0xF];
 		    *pout = 0;
 		
-			pl_log_s(TAG, "task_forwardMessage;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(CtpResponseMsg));
+			pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(CtpResponseMsg));
 			printfflush();
 #endif
 

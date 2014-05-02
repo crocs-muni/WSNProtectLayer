@@ -277,7 +277,7 @@ implementation {
 			    const char * hex = "0123456789ABCDEF";
 			    char * pout = str;
 			    int i = 0;
-			    for(; i < sizeof(PLevelMsg_t)-1; ++i){
+			    for(; i < sizeof(PLevelMsg_t)+sizeof(message_header_t)-1; ++i){
 			        *pout++ = hex[(*pin>>4)&0xF];
 			        *pout++ = hex[(*pin++)&0xF];
 			        *pout++ = ':';
@@ -286,7 +286,7 @@ implementation {
 			    *pout++ = hex[(*pin)&0xF];
 			    *pout = 0;
 			
-				pl_log_s(TAG, "sendPlevel;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PLevelMsg_t));
+				pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PLevelMsg_t)+sizeof(message_header_t));
 				printfflush();
 #endif				
 				radioBusy = TRUE;
