@@ -15,11 +15,17 @@
 // hop-by-hop forwarding to base station (Has more slots for messages
 // than default forwarder which has only one slot.).
 //#define USE_BUFFERED_FORWARDER 1
+#ifdef USE_BUFFERED_FORWARDER
+#warning " *** WARNING: USE_BUFFERED_FORWARDER is enabled! ***"
+#endif
 
 // Defines that first 8 bytes of the payload should be copied
 // to the SPHeader (unencrypted). Helps to demonstrate functionality
-// of the prototype during experiment. TODO: REMOVE THIS
-#define PLAINTEXT_DEMO 1
+// of the prototype during experiment. TODO: DISABLE THIS
+//#define PLAINTEXT_DEMO 1
+#ifdef PLAINTEXT_DEMO
+#warning " *** WARNING: PLAINTEXT_DEMO is enabled! ***"
+#endif
 
 // Conditional compilation for hop by hop encryption.
 // Warning: DO NOT USE THIS OPTION!!!
@@ -28,7 +34,7 @@
 #warning " *** WARNING: Hop-by-hop encryption is enabled! ***"
 #endif
 
-#define CTP_DUMP_NEIGHBORS
+
 
 #ifdef CTP_QUICK_INIT
 #warning " *** CTP QUICK INIT is defined, should not be in production! ***"
@@ -104,7 +110,6 @@ typedef enum _error_values {
 enum {
   AM_PROTECTLAYERRADIO = 128,
   AM_LOG_MSG = 129,
-  AM_CON_GET_MSG = 130,
   AM_CON_SD_MSG = 131,
   AM_CON_PPCPD_MSG = 132,
   AM_CON_RPD_MSG = 133,
