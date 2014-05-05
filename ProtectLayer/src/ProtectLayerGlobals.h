@@ -132,7 +132,7 @@ enum {
   IDS_DROPPING_THRESHOLD = 50,
   IDS_MIN_PACKET_RECEIVED = 10,
   IDS_FORWARDER_SEND_BUFFER_LEN = 4,
-  IDS_ALERT_RATE = 10,
+  IDS_ALERT_RATE = 100,
   DROPPING_RATE = 75,
   PHANTOM_JUMPS=3,
   MAC_LENGTH = 16,
@@ -350,6 +350,7 @@ typedef struct IDSData {
 	//uint8_t neighbor_reputation;	/**< reputation of a neighbor */
 	uint32_t nb_received;	/**< number of received messages */
 	uint32_t nb_forwarded;
+	uint16_t alertCounter;
 	
 /*@}*/
 } IDSData_t;

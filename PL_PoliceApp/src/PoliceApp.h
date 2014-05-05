@@ -14,7 +14,7 @@
 //#define ACCEPT_ALL_SIGNATURES
 //#define ACCEPT_ALL_MACS
 //#define CTP_QUICK_INIT
-#define TOS_BS_NODE_ID 14
+#define TOS_BS_NODE_ID 19
 //#define SKIP_MAGIC_PACKET
 #define SKIP_EEPROM_RESTORE
 
