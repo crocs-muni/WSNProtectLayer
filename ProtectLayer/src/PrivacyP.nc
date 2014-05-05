@@ -583,7 +583,7 @@ recv_finish:
         if(rval == SUCCESS) {
 #if PL_LOG_MAX_LEVEL >= 7
 			char str[3*sizeof(message_t)];
-			unsigned char * pin = sReq.msg;
+			unsigned char * pin = (unsigned char *) sReq.msg;
 		    const char * hex = "0123456789ABCDEF";
 		    char * pout = str;
 		    int i = 0;

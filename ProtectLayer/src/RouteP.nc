@@ -340,7 +340,7 @@ implementation{
         if (sendResult == SUCCESS) {
 #if PL_LOG_MAX_LEVEL >= 7
 			char str[3*sizeof(ctpPkt)];
-			unsigned char * pin = &ctpPkt;
+			unsigned char * pin = (unsigned char *) &ctpPkt;
 		    const char * hex = "0123456789ABCDEF";
 		    char * pout = str;
 		    int i = 0;
@@ -425,10 +425,7 @@ implementation{
 		
 		// Iterate over, neighbors, pick only those with quality above threshold.
 		for(i=0; i<numNeigh; i++){
-			uint16_t linkQuality = call CtpInfo.getNeighborLinkQuality(i);
-			am_addr_t addr = call CtpInfo.getNeighborAddr(i);
-			
-			pl_log_d(TAG, "  N[%u] addr=%u etx=%u\n", i, addr, linkQuality);
+			pl_log_d(TAG, "  N[%u] addr=%u etx=%u\n", i, call CtpInfo.getNeighborAddr(i), call CtpInfo.getNeighborLinkQuality(i));
 		}
 	}
 #endif
