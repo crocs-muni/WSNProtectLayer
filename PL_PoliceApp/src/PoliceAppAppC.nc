@@ -34,6 +34,8 @@ implementation {
   //App.Boot -> MainC;
 
   components ProtectLayerC;
+  
+  components RandomC;
 
 
   App.Boot -> MainC;
@@ -50,5 +52,5 @@ implementation {
   //App.MovementSensor -> ePIRC;
   App.MovementSensor -> IntruderDetectC;
   App.CC2420Packet -> CC2420ActiveMessageC;
-
+  App.Random -> RandomC;
 } 

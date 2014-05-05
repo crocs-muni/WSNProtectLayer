@@ -167,6 +167,8 @@ implementation {
         IDSMsg_t* idspkt;
         
         uint16_t dropping;
+        //TODO comment out!!
+        return;
         
         savedData = call SharedData.getNodeState(receiver);
 

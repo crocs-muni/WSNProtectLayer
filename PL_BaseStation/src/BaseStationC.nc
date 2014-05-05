@@ -460,12 +460,35 @@ implementation {
   //
   uint8_t count = 0;
   uint8_t tmpLen;
+  uint32_t saCtr = 0;
   
   message_t* ONE receive(message_t* ONE msg, void* payload, uint8_t len);
   event message_t *RadioSnoop.receive[am_id_t id](message_t *msg, void *payload, uint8_t len) {
     return receive(msg, payload, len);
   }
   event message_t *RadioReceive.receive[am_id_t id](message_t *msg, void *payload, uint8_t len) {
+	if (id == AM_PROTECTLAYERRADIO) {
+#if PL_LOG_MAX_LEVEL >= 7
+			char str[3*sizeof(message_t)];
+			unsigned char * pin = (unsigned char *) msg;
+		    const char * hex = "0123456789ABCDEF";
+		    char * pout = str;
+		    int i = 0;
+		    for(; i < len+sizeof(message_header_t)-1; ++i){
+		        *pout++ = hex[(*pin>>4)&0xF];
+		        *pout++ = hex[(*pin++)&0xF];
+		        *pout++ = ':';
+		    }
+		    *pout++ = hex[(*pin>>4)&0xF];
+		    *pout++ = hex[(*pin)&0xF];
+		    *pout = 0;
+		
+			pl_log_s(TAG, "msg=%s;len=%u\n", str, len+sizeof(message_header_t));
+			printfflush();
+#endif
+		pl_log_s(TAG, "Still alive counter: %u\n", ++saCtr);
+		printfflush();
+	}  	
     return receive(msg, payload, len);
   }
   

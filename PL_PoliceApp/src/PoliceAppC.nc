@@ -32,6 +32,7 @@ module PoliceAppC {
   uses interface SplitControl as AMControl;
   uses interface MovementSensor;
   uses interface CC2420Packet;
+  uses interface Random;
 }
 implementation {
 
@@ -87,7 +88,7 @@ implementation {
       } else {
       	
       	// Radio was initialized properly.
-      	call TimerStillAlive.startPeriodic(TIMER_STILL_ALIVE);
+      	call TimerStillAlive.startOneShot(TIMER_STILL_ALIVE + (call Random.rand16() % 500));
       	
       	// not used now call TimerMSNDetect.startPeriodic(TIMER_MSN_DETECTED);
       	pl_log_d(TAG, "NodeState, Radio started successfully.\n");
@@ -282,6 +283,7 @@ implementation {
     if (&pkt == msg) {
       busy = FALSE;
     }
+    call TimerStillAlive.startOneShot(TIMER_STILL_ALIVE);
   }
 
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len){
