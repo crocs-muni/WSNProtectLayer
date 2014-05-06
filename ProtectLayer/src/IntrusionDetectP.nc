@@ -45,7 +45,6 @@ implementation {
     //NODE_REPUTATION reputation;
     SavedData_t* savedData;
     IDS_STATUS ids_status = IDS_ON;
-    uint8_t alertCounter = 0;
     //	uint32_t offset_write = 0;
     
     static const char *TAG = "IntrusionDetectP";
@@ -118,7 +117,7 @@ implementation {
 		if (ids_status == IDS_OFF) {
 			return msg;
 		}
-
+		
         pl_log_i(TAG, "IDSState: A copy of a message from Privacy component received. Sender is %d.\n", spHeader->sender);
 
         savedData = call SharedData.getNodeState(spHeader->receiver);
@@ -167,8 +166,6 @@ implementation {
         IDSMsg_t* idspkt;
         
         uint16_t dropping;
-        //TODO comment out!!
-        return;
         
         savedData = call SharedData.getNodeState(receiver);
 
@@ -190,10 +187,10 @@ implementation {
                     }
 
                     // We do not send alert after any packet received, but after IDS_ALERT_RATE alerts.
-                    alertCounter++;
-                    if (alertCounter > 1) {
-                    	if (alertCounter >= IDS_ALERT_RATE) {
-                    		alertCounter = 0;
+                    savedData->idsData.alertCounter++;
+                    if (savedData->idsData.alertCounter > 1) {
+                    	if (savedData->idsData.alertCounter >= IDS_ALERT_RATE) {
+                    		savedData->idsData.alertCounter = 0;
                     	}
                     	return;
                     }
