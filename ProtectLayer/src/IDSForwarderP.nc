@@ -59,7 +59,7 @@ implementation{
 			if (call AMSend.send(AM_BROADCAST_ADDR, sendMsg, sizeof(IDSMsg_t)) == SUCCESS)
 			{
 #if PL_LOG_MAX_LEVEL >= 7
-				char str[3*sizeof(sendMsg)];
+				char str[3*sizeof(message_t)];
 				unsigned char * pin = (unsigned char *) sendMsg;
 			    const char * hex = "0123456789ABCDEF";
 			    char * pout = str;
@@ -73,7 +73,7 @@ implementation{
 			    *pout++ = hex[(*pin)&0xF];
 			    *pout = 0;
 			
-				pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, call Route.getParentID(), sizeof(IDSMsg_t)+sizeof(message_header_t));
+				pl_log_s(TAG, "msg=%s;src=%2u;dst=%2u;len=%u\n", str, TOS_NODE_ID, call Route.getParentID(), sizeof(IDSMsg_t)+sizeof(message_header_t));
 				printfflush();
 #endif
 //				pl_printf("task_forwardMessage sent with success\n");
@@ -104,7 +104,7 @@ implementation{
 		if (call AMSend.send(AM_BROADCAST_ADDR, sendMsg, sizeof(IDSMsg_t)) == SUCCESS)
 		{
 #if PL_LOG_MAX_LEVEL >= 7
-			char str[3*sizeof(sendMsg)];
+			char str[3*sizeof(message_t)];
 			unsigned char * pin = (unsigned char *) sendMsg;
 		    const char * hex = "0123456789ABCDEF";
 		    char * pout = str;
@@ -118,7 +118,7 @@ implementation{
 		    *pout++ = hex[(*pin)&0xF];
 		    *pout = 0;
 		
-			pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, call Route.getParentID(), sizeof(IDSMsg_t)+sizeof(message_header_t));
+			pl_log_s(TAG, "msg=%s;src=%2u;dst=%2u;len=%u\n", str, TOS_NODE_ID, call Route.getParentID(), sizeof(IDSMsg_t)+sizeof(message_header_t));
 			printfflush();
 #endif
 //				pl_printf("task_forwardMessage sent with success\n");

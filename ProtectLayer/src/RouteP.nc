@@ -344,7 +344,7 @@ implementation{
 		    const char * hex = "0123456789ABCDEF";
 		    char * pout = str;
 		    int i = 0;
-		    for(; i < sizeof(CtpResponseMsg)-1; ++i){
+		    for(; i < sizeof(CtpResponseMsg)+sizeof(message_header_t)-1; ++i){
 		        *pout++ = hex[(*pin>>4)&0xF];
 		        *pout++ = hex[(*pin++)&0xF];
 		        *pout++ = ':';
@@ -353,7 +353,7 @@ implementation{
 		    *pout++ = hex[(*pin)&0xF];
 		    *pout = 0;
 		
-			pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(CtpResponseMsg));
+			pl_log_s(TAG, "msg=%s;src=%2u;dst=%2u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(CtpResponseMsg)+sizeof(message_header_t));
 			printfflush();
 #endif
 

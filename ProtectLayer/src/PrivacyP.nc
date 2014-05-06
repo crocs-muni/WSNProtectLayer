@@ -597,7 +597,7 @@ recv_finish:
 		    *pout = 0;
 		
 //			pl_log_s(TAG, "task_forwardMessage;msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, spHeader->receiver, sReq.len);
-			pl_log_s(TAG, "msg=%s;src=%u;dst=%u;type=%u;len=%u\n", str, TOS_NODE_ID, spHeader->receiver, spHeader->msgType, sReq.len+sizeof(message_header_t));
+			pl_log_s(TAG, "msg=%s;src=%2u;dst=%2u;type=%u;len=%u\n", str, TOS_NODE_ID, spHeader->receiver, spHeader->msgType, sReq.len+sizeof(message_header_t));
 			printfflush();
 #endif        	
             // Message accepted for sending by lower AM layer.

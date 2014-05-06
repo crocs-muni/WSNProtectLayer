@@ -14,7 +14,7 @@
 // Define following constant if you want to use buffered forwarder for 
 // hop-by-hop forwarding to base station (Has more slots for messages
 // than default forwarder which has only one slot.).
-#define USE_BUFFERED_FORWARDER 1
+//#define USE_BUFFERED_FORWARDER 1
 #ifdef USE_BUFFERED_FORWARDER
 #warning " *** WARNING: USE_BUFFERED_FORWARDER is enabled! ***"
 #endif

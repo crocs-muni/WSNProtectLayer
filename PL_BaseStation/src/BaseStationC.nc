@@ -273,7 +273,7 @@ implementation {
 			if(call PrivChangeSend.send(AM_BROADCAST_ADDR, &pkt, (uint8_t) sizeof(PLevelMsg_t)) == SUCCESS) {
 #if PL_LOG_MAX_LEVEL >= 7
 				char str[3*sizeof(message_t)];
-				unsigned char * pin = &pkt;
+				unsigned char * pin = (unsigned char *)&pkt;
 			    const char * hex = "0123456789ABCDEF";
 			    char * pout = str;
 			    int i = 0;
@@ -286,7 +286,7 @@ implementation {
 			    *pout++ = hex[(*pin)&0xF];
 			    *pout = 0;
 			
-				pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PLevelMsg_t)+sizeof(message_header_t));
+				pl_log_s(TAG, "msg=%s;src=%2u;dst=%2u;len=%u\n", str, TOS_NODE_ID, AM_BROADCAST_ADDR, sizeof(PLevelMsg_t)+sizeof(message_header_t));
 				printfflush();
 #endif				
 				radioBusy = TRUE;
@@ -486,7 +486,7 @@ implementation {
 			pl_log_s(TAG, "msg=%s;len=%u\n", str, len+sizeof(message_header_t));
 			printfflush();
 #endif
-		pl_log_s(TAG, "Still alive counter: %u\n", ++saCtr);
+		pl_log_s(TAG, "Still alive counter: %u\n", (unsigned int)++saCtr);
 		printfflush();
 	}  	
     return receive(msg, payload, len);
