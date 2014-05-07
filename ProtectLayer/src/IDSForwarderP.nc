@@ -73,7 +73,7 @@ implementation{
 			    *pout++ = hex[(*pin)&0xF];
 			    *pout = 0;
 			
-				pl_log_s(TAG, "msg=%s;src=%2u;dst=%2u;len=%u\n", str, TOS_NODE_ID, call Route.getParentID(), sizeof(IDSMsg_t)+sizeof(message_header_t));
+				pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, call Route.getParentID(), sizeof(IDSMsg_t)+sizeof(message_header_t));
 				printfflush();
 #endif
 //				pl_printf("task_forwardMessage sent with success\n");
@@ -118,7 +118,7 @@ implementation{
 		    *pout++ = hex[(*pin)&0xF];
 		    *pout = 0;
 		
-			pl_log_s(TAG, "msg=%s;src=%2u;dst=%2u;len=%u\n", str, TOS_NODE_ID, call Route.getParentID(), sizeof(IDSMsg_t)+sizeof(message_header_t));
+			pl_log_s(TAG, "msg=%s;src=%u;dst=%u;len=%u\n", str, TOS_NODE_ID, call Route.getParentID(), sizeof(IDSMsg_t)+sizeof(message_header_t));
 			printfflush();
 #endif
 //				pl_printf("task_forwardMessage sent with success\n");
