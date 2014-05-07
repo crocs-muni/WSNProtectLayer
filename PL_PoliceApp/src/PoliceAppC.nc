@@ -88,7 +88,7 @@ implementation {
       } else {
       	
       	// Radio was initialized properly.
-      	call TimerStillAlive.startOneShot(TIMER_STILL_ALIVE + (call Random.rand16() % 500));
+      	call TimerStillAlive.startOneShot(TIMER_STILL_ALIVE + (call Random.rand16() % 5000));
       	
       	// not used now call TimerMSNDetect.startPeriodic(TIMER_MSN_DETECTED);
       	pl_log_d(TAG, "NodeState, Radio started successfully.\n");

@@ -51,6 +51,8 @@ implementation {
   // FWDing
   components ActiveMessageC as Radio;
   components SerialActiveMessageC as Serial;
+
+  components CC2420ActiveMessageC;
   
   App.Boot -> MainC;
   App.Leds -> LedsC;
@@ -81,5 +83,7 @@ implementation {
   App.RadioReceive -> Radio.Receive;
   App.RadioSnoop -> Radio.Snoop;
   App.RadioPacket -> Radio;
-  App.RadioAMPacket -> Radio;	
+  App.RadioAMPacket -> Radio;
+
+  App.CC2420Packet -> CC2420ActiveMessageC;	
 } 

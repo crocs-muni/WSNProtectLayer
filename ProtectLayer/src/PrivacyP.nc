@@ -26,6 +26,11 @@ module PrivacyP {
         
         interface Timer<TMilli> as RetxmitTimer;
         interface Random;
+        
+#ifndef THIS_IS_BS        
+        interface CC2420Config;
+#endif
+		interface PacketAcknowledgements;
     }
     
     provides {
@@ -61,6 +66,11 @@ implementation {
     uint8_t m_recNextToProcess=0;
     uint8_t m_recNextToStore=0;
     
+    // TODO
+    uint8_t ackLen;
+    uint16_t ackAddress;
+    uint8_t ackRetransmission;
+    
     static void startRetxmitTimer(uint16_t mask, uint16_t offset);
     
     //
@@ -79,11 +89,19 @@ implementation {
     }
     
     command error_t PLInit.init() {
+    	
+    	//TODO
+        call CC2420Config.setAutoAck(TRUE, FALSE);
+        call CC2420Config.sync();
         
         m_privData = call SharedData.getPPCPrivData();
         m_privData->priv_level = PLEVEL_0;
         return SUCCESS;
     }
+    
+    event void CC2420Config.syncDone(error_t error) {
+    	
+    } 
     
     //
     //	Privacy interface
@@ -577,9 +595,18 @@ recv_finish:
         if (m_nextId == MSG_APP) {
         	passToIDS(sReq.msg, spHeader, sReq.len);
         }
+        
+        //TODO
+        call PacketAcknowledgements.requestAck(sReq.msg);
 		
         // Pass prepared message to the lower layer for sending.
-        rval = call LowerAMSend.send(sReq.addr,sReq.msg,sReq.len);
+//        rval = call LowerAMSend.send(sReq.addr,sReq.msg,sReq.len);
+		rval = call LowerAMSend.send(spHeader->receiver,sReq.msg,sReq.len);
+		// TODO
+		ackLen = sReq.len;
+		ackAddress = spHeader->receiver;
+		ackRetransmission = 5;
+		
         if(rval == SUCCESS) {
 #if PL_LOG_MAX_LEVEL >= 7
 			char str[3*sizeof(message_t)];
@@ -699,6 +726,17 @@ recv_finish:
 	    //test if our message was sent
 	    if (m_lastMsg != msg)
 	    return;
+	    
+	    //TODO
+	    if (call PacketAcknowledgements.wasAcked(msg)) {
+	    	pl_log_s(TAG, "Packet was acknowledged");
+	    } else {
+	    	pl_log_s(TAG, "Packet was not acknowledged");
+	    	ackRetransmission--;
+	    	if (ackRetransmission > 0)
+	    		call LowerAMSend.send(ackAddress, msg, ackLen);
+	    }
+	    
 	    
 	    // Send done -> send operation ended, buffer is not needed anymore, can be released
 	    // for new incoming messages. Reset buffer, move to next ID, set radio not busy.
@@ -871,7 +909,17 @@ recv_finish:
 	
 	
 	command error_t Init.init() { return SUCCESS; }
-    command error_t PLInit.init() { return SUCCESS; }
+//    command error_t PLInit.init() { return SUCCESS; }
+	command error_t PLInit.init() {
+		     	//TODO
+//        call CC2420Config.setAutoAck(TRUE, FALSE);
+//        call CC2420Config.sync();
+//        
+		return SUCCESS;
+	}
+	// TODO
+//	event void CC2420Config.syncDone(error_t error) {}
+	
     command PRIVACY_LEVEL Privacy.getCurrentPrivacyLevel(){ return 0; }
     event void PrivacyLevel.privacyLevelChanged(error_t status, PRIVACY_LEVEL newPrivacyLevel){ }
     event message_t* LowerReceive.receive(message_t* msg, void* payload, uint8_t len) { return msg; } 

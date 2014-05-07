@@ -118,6 +118,9 @@ implementation {
 			return msg;
 		}
 		
+		// TODO: remove!!!
+		return msg;
+		
         pl_log_i(TAG, "IDSState: A copy of a message from Privacy component received. Sender is %d.\n", spHeader->sender);
 
         savedData = call SharedData.getNodeState(spHeader->receiver);

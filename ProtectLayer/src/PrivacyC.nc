@@ -41,12 +41,16 @@ implementation {
     components new TimerMilliC() as RetxmitTimer;
     components RandomC;
     
+    // TODO
+#ifndef THIS_IS_BS    
+    components CC2420ControlC;
+#endif
+    
 #ifdef USE_BUFFERED_FORWARDER
 	components ForwarderBufferedC;
 #else    
     components ForwarderC;
 #endif
-
 
 	MainC.SoftwareInit -> PrivacyP.Init; //auto init phase 1
 		
@@ -78,4 +82,10 @@ implementation {
     PrivacyP.Dispatcher -> DispatcherC;
     PrivacyP.RetxmitTimer -> RetxmitTimer;
     PrivacyP.Random -> RandomC;
+    
+    // TODO
+#ifndef THIS_IS_BS
+	PrivacyP.CC2420Config -> CC2420ControlC;
+#endif
+	PrivacyP.PacketAcknowledgements -> AMSenderC;
 }

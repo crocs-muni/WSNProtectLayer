@@ -73,6 +73,8 @@ module BaseStationC {
   uses interface Receive as RadioSnoop[am_id_t id];
   uses interface Packet as RadioPacket;
   uses interface AMPacket as RadioAMPacket;
+
+  uses interface CC2420Packet;
 }
 implementation {
   enum {
