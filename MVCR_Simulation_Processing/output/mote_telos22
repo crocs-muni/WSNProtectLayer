@@ -1,0 +1,1 @@
+Thread[Thread-1,5,main]serial@/dev/mote_telos22:115200 died - exiting (java.io.IOException: Could not open /dev/mote_telos22: TOSComm JNI library runtime error: open: No such file or directory)
