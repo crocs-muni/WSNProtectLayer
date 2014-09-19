@@ -4,7 +4,9 @@
 TinyOS layer for configurable protection of message privacy, intrusion detection and key distribution
 
 Design and implementation was supported by project VG20102014031 of Ministry of Interior, Czech Republic
-"Experimentální vývoj bezpečnostní softwarové platformy se systémem detekce průniku a režimy ochrany soukromí pro bezdrátové senzorové sítě" (in Czech)
+"Experimentální vývoj bezpečnostní softwarové platformy se systémem detekce průniku a režimy ochrany soukromí pro bezdrátové senzorové sítě" (in Czech).
+
+Following people are (were) involved: Vashek Matyas, Petr Svenda, Andriy Stetsko, Jiri Kur, Filip Jurnecka, Martin Stehlik, Tobias Smolka, Dusan Klinec, Roman Zilka, Jaromir Dobias, Vit Bukac, Marcel Gazdik and Lukas Nemec.
 
 
 ##How to get ProtectLayer##
